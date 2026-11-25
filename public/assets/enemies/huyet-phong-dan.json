@@ -1,0 +1,787 @@
+{
+  "frames": [
+    {
+      "filename": "huyet-phong-dan 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 1",
+      "frame": {
+        "x": 112,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 2",
+      "frame": {
+        "x": 224,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 3",
+      "frame": {
+        "x": 336,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 4",
+      "frame": {
+        "x": 448,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 5",
+      "frame": {
+        "x": 0,
+        "y": 80,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 6",
+      "frame": {
+        "x": 112,
+        "y": 80,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 7",
+      "frame": {
+        "x": 224,
+        "y": 80,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 8",
+      "frame": {
+        "x": 336,
+        "y": 80,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 9",
+      "frame": {
+        "x": 448,
+        "y": 80,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 10",
+      "frame": {
+        "x": 0,
+        "y": 160,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 11",
+      "frame": {
+        "x": 112,
+        "y": 160,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 12",
+      "frame": {
+        "x": 224,
+        "y": 160,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 13",
+      "frame": {
+        "x": 336,
+        "y": 160,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 14",
+      "frame": {
+        "x": 448,
+        "y": 160,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 15",
+      "frame": {
+        "x": 0,
+        "y": 240,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 16",
+      "frame": {
+        "x": 112,
+        "y": 240,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 17",
+      "frame": {
+        "x": 224,
+        "y": 240,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 18",
+      "frame": {
+        "x": 336,
+        "y": 240,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 19",
+      "frame": {
+        "x": 448,
+        "y": 240,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 20",
+      "frame": {
+        "x": 0,
+        "y": 320,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 21",
+      "frame": {
+        "x": 112,
+        "y": 320,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 22",
+      "frame": {
+        "x": 224,
+        "y": 320,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 23",
+      "frame": {
+        "x": 336,
+        "y": 320,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 24",
+      "frame": {
+        "x": 448,
+        "y": 320,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 25",
+      "frame": {
+        "x": 0,
+        "y": 400,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 26",
+      "frame": {
+        "x": 112,
+        "y": 400,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 27",
+      "frame": {
+        "x": 224,
+        "y": 400,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 28",
+      "frame": {
+        "x": 336,
+        "y": 400,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 29",
+      "frame": {
+        "x": 448,
+        "y": 400,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 30",
+      "frame": {
+        "x": 0,
+        "y": 480,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 31",
+      "frame": {
+        "x": 112,
+        "y": 480,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 32",
+      "frame": {
+        "x": 224,
+        "y": 480,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    },
+    {
+      "filename": "huyet-phong-dan 33",
+      "frame": {
+        "x": 336,
+        "y": 480,
+        "w": 112,
+        "h": 80
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 112,
+        "h": 80
+      },
+      "duration": 71
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "huyet-phong-dan.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 560,
+      "h": 560
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "huyet-phong-dan",
+        "from": 0,
+        "to": 33,
+        "direction": "forward"
+      }
+    ],
+    "pixelfx": {
+      "id": "critters/bat",
+      "name": "Bat",
+      "fps": 14,
+      "loop": true,
+      "frames": 34,
+      "frameSize": [
+        112,
+        80
+      ],
+      "pivot": [
+        56,
+        40
+      ],
+      "columns": 5
+    }
+  }
+}

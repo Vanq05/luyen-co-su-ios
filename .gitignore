@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+ios/App/Pods/
+tools/pixelfx/records/
+tools/gh/
+tools/gh.zip
+.DS_Store

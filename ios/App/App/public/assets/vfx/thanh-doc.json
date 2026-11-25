@@ -1,0 +1,457 @@
+{
+  "frames": [
+    {
+      "filename": "thanh-doc 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 1",
+      "frame": {
+        "x": 184,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 2",
+      "frame": {
+        "x": 368,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 3",
+      "frame": {
+        "x": 552,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 4",
+      "frame": {
+        "x": 0,
+        "y": 104,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 5",
+      "frame": {
+        "x": 184,
+        "y": 104,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 6",
+      "frame": {
+        "x": 368,
+        "y": 104,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 7",
+      "frame": {
+        "x": 552,
+        "y": 104,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 8",
+      "frame": {
+        "x": 0,
+        "y": 208,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 9",
+      "frame": {
+        "x": 184,
+        "y": 208,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 10",
+      "frame": {
+        "x": 368,
+        "y": 208,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 11",
+      "frame": {
+        "x": 552,
+        "y": 208,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 12",
+      "frame": {
+        "x": 0,
+        "y": 312,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 13",
+      "frame": {
+        "x": 184,
+        "y": 312,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 14",
+      "frame": {
+        "x": 368,
+        "y": 312,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 15",
+      "frame": {
+        "x": 552,
+        "y": 312,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 16",
+      "frame": {
+        "x": 0,
+        "y": 416,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 17",
+      "frame": {
+        "x": 184,
+        "y": 416,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    },
+    {
+      "filename": "thanh-doc 18",
+      "frame": {
+        "x": 368,
+        "y": 416,
+        "w": 184,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 184,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 184,
+        "h": 104
+      },
+      "duration": 63
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "thanh-doc.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 736,
+      "h": 520
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "thanh-doc",
+        "from": 0,
+        "to": 18,
+        "direction": "forward"
+      }
+    ],
+    "pixelfx": {
+      "id": "ice/frost-breath",
+      "name": "Frost breath",
+      "fps": 16,
+      "loop": true,
+      "frames": 19,
+      "frameSize": [
+        184,
+        104
+      ],
+      "pivot": [
+        12,
+        50
+      ],
+      "columns": 4
+    }
+  }
+}

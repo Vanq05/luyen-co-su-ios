@@ -1,0 +1,875 @@
+{
+  "frames": [
+    {
+      "filename": "viem-linh-co 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 1",
+      "frame": {
+        "x": 128,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 2",
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 3",
+      "frame": {
+        "x": 384,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 4",
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 5",
+      "frame": {
+        "x": 640,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 6",
+      "frame": {
+        "x": 0,
+        "y": 104,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 7",
+      "frame": {
+        "x": 128,
+        "y": 104,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 8",
+      "frame": {
+        "x": 256,
+        "y": 104,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 9",
+      "frame": {
+        "x": 384,
+        "y": 104,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 10",
+      "frame": {
+        "x": 512,
+        "y": 104,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 11",
+      "frame": {
+        "x": 640,
+        "y": 104,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 12",
+      "frame": {
+        "x": 0,
+        "y": 208,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 13",
+      "frame": {
+        "x": 128,
+        "y": 208,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 14",
+      "frame": {
+        "x": 256,
+        "y": 208,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 15",
+      "frame": {
+        "x": 384,
+        "y": 208,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 16",
+      "frame": {
+        "x": 512,
+        "y": 208,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 17",
+      "frame": {
+        "x": 640,
+        "y": 208,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 18",
+      "frame": {
+        "x": 0,
+        "y": 312,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 19",
+      "frame": {
+        "x": 128,
+        "y": 312,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 20",
+      "frame": {
+        "x": 256,
+        "y": 312,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 21",
+      "frame": {
+        "x": 384,
+        "y": 312,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 22",
+      "frame": {
+        "x": 512,
+        "y": 312,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 23",
+      "frame": {
+        "x": 640,
+        "y": 312,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 24",
+      "frame": {
+        "x": 0,
+        "y": 416,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 25",
+      "frame": {
+        "x": 128,
+        "y": 416,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 26",
+      "frame": {
+        "x": 256,
+        "y": 416,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 27",
+      "frame": {
+        "x": 384,
+        "y": 416,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 28",
+      "frame": {
+        "x": 512,
+        "y": 416,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 29",
+      "frame": {
+        "x": 640,
+        "y": 416,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 30",
+      "frame": {
+        "x": 0,
+        "y": 520,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 31",
+      "frame": {
+        "x": 128,
+        "y": 520,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 32",
+      "frame": {
+        "x": 256,
+        "y": 520,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 33",
+      "frame": {
+        "x": 384,
+        "y": 520,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 34",
+      "frame": {
+        "x": 512,
+        "y": 520,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 35",
+      "frame": {
+        "x": 640,
+        "y": 520,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 36",
+      "frame": {
+        "x": 0,
+        "y": 624,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    },
+    {
+      "filename": "viem-linh-co 37",
+      "frame": {
+        "x": 128,
+        "y": 624,
+        "w": 128,
+        "h": 104
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 104
+      },
+      "duration": 83
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "viem-linh-co.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 768,
+      "h": 728
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "viem-linh-co",
+        "from": 0,
+        "to": 37,
+        "direction": "forward"
+      }
+    ],
+    "pixelfx": {
+      "id": "critters/wisp",
+      "name": "Wisp",
+      "fps": 12,
+      "loop": true,
+      "frames": 38,
+      "frameSize": [
+        128,
+        104
+      ],
+      "pivot": [
+        64,
+        96
+      ],
+      "columns": 6
+    }
+  }
+}

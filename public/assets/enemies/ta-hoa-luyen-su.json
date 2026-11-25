@@ -1,0 +1,207 @@
+{
+  "frames": [
+    {
+      "filename": "ta-hoa-luyen-su 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 1",
+      "frame": {
+        "x": 40,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 2",
+      "frame": {
+        "x": 80,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 3",
+      "frame": {
+        "x": 120,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 4",
+      "frame": {
+        "x": 0,
+        "y": 44,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 5",
+      "frame": {
+        "x": 40,
+        "y": 44,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 6",
+      "frame": {
+        "x": 80,
+        "y": 44,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    },
+    {
+      "filename": "ta-hoa-luyen-su 7",
+      "frame": {
+        "x": 120,
+        "y": 44,
+        "w": 40,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 44
+      },
+      "duration": 100
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "ta-hoa-luyen-su.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 160,
+      "h": 88
+    },
+    "scale": "1",
+    "pixelfx": {
+      "id": "custom/ta-hoa-luyen-su",
+      "name": "ta-hoa-luyen-su",
+      "fps": 10,
+      "loop": true,
+      "frames": 8,
+      "frameSize": [
+        40,
+        44
+      ],
+      "pivot": [
+        20,
+        36
+      ],
+      "columns": 4
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "appId": "com.luyencosu.roguelike",
+  "appName": "Luyện Cổ Sư",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#0d0c12",
+  "ios": {
+    "contentInset": "never",
+    "preferredContentMode": "mobile",
+    "limitsNavigationsToAppBoundDomains": true
+  }
+}

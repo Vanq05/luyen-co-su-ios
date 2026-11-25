@@ -1,0 +1,207 @@
+{
+  "frames": [
+    {
+      "filename": "thiet-giap-bo-cap 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 1",
+      "frame": {
+        "x": 44,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 2",
+      "frame": {
+        "x": 88,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 3",
+      "frame": {
+        "x": 132,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 4",
+      "frame": {
+        "x": 0,
+        "y": 40,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 5",
+      "frame": {
+        "x": 44,
+        "y": 40,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 6",
+      "frame": {
+        "x": 88,
+        "y": 40,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    },
+    {
+      "filename": "thiet-giap-bo-cap 7",
+      "frame": {
+        "x": 132,
+        "y": 40,
+        "w": 44,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 40
+      },
+      "duration": 83
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "thiet-giap-bo-cap.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 176,
+      "h": 80
+    },
+    "scale": "1",
+    "pixelfx": {
+      "id": "custom/thiet-giap-bo-cap",
+      "name": "thiet-giap-bo-cap",
+      "fps": 12,
+      "loop": true,
+      "frames": 8,
+      "frameSize": [
+        44,
+        40
+      ],
+      "pivot": [
+        22,
+        26
+      ],
+      "columns": 4
+    }
+  }
+}

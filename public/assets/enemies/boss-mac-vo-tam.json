@@ -1,0 +1,303 @@
+{
+  "frames": [
+    {
+      "filename": "boss-mac-vo-tam 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 1",
+      "frame": {
+        "x": 60,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 2",
+      "frame": {
+        "x": 120,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 3",
+      "frame": {
+        "x": 180,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 4",
+      "frame": {
+        "x": 0,
+        "y": 62,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 5",
+      "frame": {
+        "x": 60,
+        "y": 62,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 6",
+      "frame": {
+        "x": 120,
+        "y": 62,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 7",
+      "frame": {
+        "x": 180,
+        "y": 62,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 8",
+      "frame": {
+        "x": 0,
+        "y": 124,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 9",
+      "frame": {
+        "x": 60,
+        "y": 124,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 10",
+      "frame": {
+        "x": 120,
+        "y": 124,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    },
+    {
+      "filename": "boss-mac-vo-tam 11",
+      "frame": {
+        "x": 180,
+        "y": 124,
+        "w": 60,
+        "h": 62
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 62
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 62
+      },
+      "duration": 100
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "boss-mac-vo-tam.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 240,
+      "h": 186
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "boss-mac-vo-tam",
+        "from": 0,
+        "to": 11,
+        "direction": "forward"
+      }
+    ],
+    "pixelfx": {
+      "id": "lcs/boss-mac-vo-tam",
+      "name": "Boss Mac Vo Tam",
+      "fps": 10,
+      "loop": true,
+      "frames": 12,
+      "frameSize": [
+        60,
+        62
+      ],
+      "pivot": [
+        30,
+        46
+      ],
+      "columns": 4
+    }
+  }
+}

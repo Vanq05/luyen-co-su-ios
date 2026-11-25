@@ -1,0 +1,14 @@
+<!-- Merge these keys into ios/App/App/Info.plist after running `npx cap add ios` -->
+<key>UIInterfaceOrientation</key>
+<string>UIInterfaceOrientationLandscapeRight</string>
+<key>UISupportedInterfaceOrientations</key>
+<array>
+  <string>UIInterfaceOrientationLandscapeLeft</string>
+  <string>UIInterfaceOrientationLandscapeRight</string>
+</array>
+<key>UIRequiresFullScreen</key>
+<true/>
+<key>UIStatusBarHidden</key>
+<true/>
+<key>UIViewControllerBasedStatusBarAppearance</key>
+<false/>

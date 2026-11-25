@@ -1,0 +1,347 @@
+{
+  "frames": [
+    {
+      "filename": "huyet-tinh 0",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 1",
+      "frame": {
+        "x": 56,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 2",
+      "frame": {
+        "x": 112,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 3",
+      "frame": {
+        "x": 168,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 4",
+      "frame": {
+        "x": 0,
+        "y": 60,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 5",
+      "frame": {
+        "x": 56,
+        "y": 60,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 6",
+      "frame": {
+        "x": 112,
+        "y": 60,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 7",
+      "frame": {
+        "x": 168,
+        "y": 60,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 8",
+      "frame": {
+        "x": 0,
+        "y": 120,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 9",
+      "frame": {
+        "x": 56,
+        "y": 120,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 10",
+      "frame": {
+        "x": 112,
+        "y": 120,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 11",
+      "frame": {
+        "x": 168,
+        "y": 120,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 12",
+      "frame": {
+        "x": 0,
+        "y": 180,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    },
+    {
+      "filename": "huyet-tinh 13",
+      "frame": {
+        "x": 56,
+        "y": 180,
+        "w": 56,
+        "h": 60
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 60
+      },
+      "duration": 83
+    }
+  ],
+  "meta": {
+    "app": "https://github.com/patch-gg/pixelfx",
+    "version": "1",
+    "image": "huyet-tinh.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 224,
+      "h": 240
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "huyet-tinh",
+        "from": 0,
+        "to": 13,
+        "direction": "forward"
+      }
+    ],
+    "pixelfx": {
+      "id": "pickups/heart-pickup",
+      "name": "Heart pickup",
+      "fps": 12,
+      "loop": true,
+      "frames": 14,
+      "frameSize": [
+        56,
+        60
+      ],
+      "pivot": [
+        28,
+        52
+      ],
+      "columns": 4
+    }
+  }
+}

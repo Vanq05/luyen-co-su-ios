@@ -1,0 +1,41 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      unsigned:
+        description: "Build unsigned IPA (for Sideloadly / AltStore without Apple Dev cert)"
+        required: false
+        default: "true"
+
+jobs:
+  build-ipa:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build and package LuyenCoSu.ipa
+        run: |
+          sed -i '' 's/\r$//' scripts/build-ipa.sh
+          if [ "${{ inputs.unsigned || 'true' }}" = "true" ]; then
+            UNSIGNED_IPA=1 bash scripts/build-ipa.sh
+          else
+            UNSIGNED_IPA=0 bash scripts/build-ipa.sh
+          fi
+
+      - name: Upload LuyenCoSu.ipa Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LuyenCoSu-iOS-IPA
+          path: build/LuyenCoSu.ipa
