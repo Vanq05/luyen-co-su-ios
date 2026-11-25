@@ -1,3 +1,4 @@
+import { ROBE_STYLES, SECTS } from "../account/AccountManager.js";
 import { createGuInstance } from "./GuDatabase.js";
 
 /**
@@ -8,13 +9,20 @@ import { createGuInstance } from "./GuDatabase.js";
  * - Mốc Phản Phệ 100%: Tẩu Hỏa Nhập Ma 5s (mất máu liên tục mỗi giây, sau đó reset về 0%).
  */
 export class PlayerController {
-  constructor() {
+  constructor(charData = null) {
     this.x = 288;
     this.y = 220;
     this.radius = 8;
     this.baseSpeed = 80;
     this.facing = 0;
     this.moving = false;
+
+    this.characterName = "Vô Danh Cổ Sư";
+    this.sectId = "thanh_nguyet";
+    this.robeStyle = "jade";
+    this.sectSpeedBonus = 0;
+    this.sectLifesteal = 0;
+    this.sectFirePoisonBonus = 0;
 
     this.maxHp = 180;
     this.hp = 180;
@@ -40,13 +48,34 @@ export class PlayerController {
     this.animState = "idle";
     this.animTime = 0;
 
-    // 6 Cổ Trùng Nhất Chuyển khởi đầu + 5 ô Không Khiếu
-    const initPassive = createGuInstance("thiet_cot");
-    const initS1 = createGuInstance("nguyet_quang");
-    const initS2 = createGuInstance("thanh_doc");
-    const initMove = createGuInstance("anh_bo");
-    const initUlt = createGuInstance("hoa_than");
-    const initSpare = createGuInstance("huyet_nha");
+    this.unlockedRecipes = new Set();
+    this.kills = 0;
+
+    this.applyCharacterSetup(charData);
+  }
+
+  applyCharacterSetup(charData = null) {
+    const sect = SECTS[charData?.sectId] ?? SECTS.thanh_nguyet;
+    const robe = ROBE_STYLES[charData?.robeStyle] ? charData.robeStyle : sect.robeDefault;
+    this.characterName = charData?.name ?? "Vô Danh Cổ Sư";
+    this.sectId = sect.id;
+    this.robeStyle = robe;
+
+    this.maxHp = sect.stats.maxHp;
+    this.hp = sect.stats.maxHp;
+    this.maxMp = sect.stats.maxMp;
+    this.mp = sect.stats.maxMp;
+    this.mpRegen = sect.stats.mpRegen;
+    this.sectSpeedBonus = sect.stats.speedBonus ?? 0;
+    this.sectLifesteal = sect.stats.lifesteal ?? 0;
+    this.sectFirePoisonBonus = sect.stats.firePoisonBonus ?? 0;
+
+    const initPassive = createGuInstance(sect.starterPassive);
+    const initS1 = createGuInstance(sect.starterSkill1);
+    const initS2 = createGuInstance(sect.starterSkill2);
+    const initMove = createGuInstance(sect.starterMove);
+    const initUlt = createGuInstance(sect.starterUlt);
+    const initSpare = createGuInstance(sect.starterSpare);
 
     this.bag = [initPassive, initS1, initS2, initMove, initUlt, initSpare];
     this.equipped = {
@@ -56,16 +85,25 @@ export class PlayerController {
       move: initMove.uid,
       ult: initUlt.uid,
     };
-
-    this.unlockedRecipes = new Set();
-    this.kills = 0;
   }
 
-  restoreFromSnapshot(snap, unlockedRecipes = []) {
+  restoreFromSnapshot(snap, unlockedRecipes = [], charData = null) {
+    if (charData) this.applyCharacterSetup(charData);
     if (!snap) return;
-    this.maxHp = snap.maxHp ?? 180;
+    if (snap.sectId && SECTS[snap.sectId]) {
+      this.sectId = snap.sectId;
+      const st = SECTS[snap.sectId].stats;
+      this.mpRegen = st.mpRegen;
+      this.sectSpeedBonus = st.speedBonus ?? 0;
+      this.sectLifesteal = st.lifesteal ?? 0;
+      this.sectFirePoisonBonus = st.firePoisonBonus ?? 0;
+    }
+    if (snap.robeStyle && ROBE_STYLES[snap.robeStyle]) {
+      this.robeStyle = snap.robeStyle;
+    }
+    this.maxHp = snap.maxHp ?? this.maxHp;
     this.hp = Math.max(1, Math.min(this.maxHp, snap.hp ?? this.maxHp));
-    this.maxMp = snap.maxMp ?? 100;
+    this.maxMp = snap.maxMp ?? this.maxMp;
     this.mp = Math.max(0, Math.min(this.maxMp, snap.mp ?? this.maxMp));
     this.corruption = Math.max(0, Math.min(99, snap.corruption ?? 0));
     this.kills = snap.kills ?? 0;
@@ -127,7 +165,7 @@ export class PlayerController {
   }
 
   getMoveSpeed() {
-    let mult = 1;
+    let mult = 1 + (this.sectSpeedBonus ?? 0);
     for (const g of this.getAllEquipped()) {
       if (g.speedMod) mult += g.speedMod;
     }
@@ -142,8 +180,16 @@ export class PlayerController {
     return Math.min(0.65, armor);
   }
 
-  getDamageMultiplier() {
-    return this.corruption >= 50 || this.tauHoaTimer > 0 ? 1.25 : 1.0;
+  getDamageMultiplier(gu = null) {
+    let mult = this.corruption >= 50 || this.tauHoaTimer > 0 ? 1.25 : 1.0;
+    if (
+      gu &&
+      (this.sectFirePoisonBonus ?? 0) > 0 &&
+      (gu.element === "Viêm" || gu.element === "Độc" || gu.element === "Viêm/Độc")
+    ) {
+      mult += this.sectFirePoisonBonus;
+    }
+    return mult;
   }
 
   getIncomingDamageMultiplier() {

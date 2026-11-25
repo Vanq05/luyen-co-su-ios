@@ -1,9 +1,0 @@
-{
-  "name": "Luyện Cổ Sư",
-  "short_name": "Luyện Cổ Sư",
-  "start_url": "./index.html",
-  "display": "fullscreen",
-  "orientation": "landscape",
-  "background_color": "#0d0c12",
-  "theme_color": "#16141f"
-}

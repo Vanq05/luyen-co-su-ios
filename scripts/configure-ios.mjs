@@ -14,6 +14,7 @@ import { encodePNG } from "../tools/pixelfx/tools/lib/png.mjs";
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const IOS_APP_DIR = join(ROOT, "ios", "App", "App");
 const INFO_PLIST_PATH = join(IOS_APP_DIR, "Info.plist");
+const PBXPROJ_PATH = join(ROOT, "ios", "App", "App.xcodeproj", "project.pbxproj");
 const ICON_PATH = join(
   IOS_APP_DIR,
   "Assets.xcassets",
@@ -190,5 +191,22 @@ function generateAppIcon() {
   console.log(`[configure-ios] Generated 1024x1024 pixel-art AppIcon at ${ICON_PATH}`);
 }
 
+function bumpProjectVersion() {
+  if (!existsSync(PBXPROJ_PATH)) {
+    throw new Error(`Không tìm thấy ${PBXPROJ_PATH}.`);
+  }
+  const pbx = readFileSync(PBXPROJ_PATH, "utf8");
+  const matches = [...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)];
+  const currentMax = matches.reduce((max, m) => Math.max(max, Number(m[1]) || 1), 1);
+  const nextVersion = currentMax + 1;
+  const updated = pbx.replace(
+    /CURRENT_PROJECT_VERSION = [^;]+;/g,
+    `CURRENT_PROJECT_VERSION = ${nextVersion};`
+  );
+  writeFileSync(PBXPROJ_PATH, updated, "utf8");
+  console.log(`[configure-ios] Bumped CURRENT_PROJECT_VERSION -> ${nextVersion}`);
+}
+
 patchInfoPlist();
+bumpProjectVersion();
 generateAppIcon();

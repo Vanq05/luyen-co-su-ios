@@ -1,4 +1,4 @@
-import { AccountManager, getRealmInfo } from "./account/AccountManager.js";
+import { AccountManager } from "./account/AccountManager.js";
 import { AssetLoader } from "./engine/AssetLoader.js";
 import { GameLoop } from "./engine/GameLoop.js";
 import { PixelRenderer } from "./engine/PixelRenderer.js";
@@ -9,6 +9,7 @@ import { PlayerController } from "./combat/PlayerController.js";
 import { WorldSimulation } from "./combat/WorldSimulation.js";
 import { GuFusionModal } from "./fusion/GuFusionModal.js";
 import { AccountModal } from "./ui/AccountModal.js";
+import { GateScreens } from "./ui/GateScreens.js";
 import { TouchControlsHUD } from "./ui/TouchControlsHUD.js";
 
 const canvas = document.getElementById("game-canvas");
@@ -30,141 +31,32 @@ let hud = null;
 let input = null;
 let modal = null;
 let accountModal = null;
+let gateScreens = null;
 let isPaused = true;
-let currentOverlayKind = "loading";
+let inGameplay = false;
 let autoSaveTimer = 0;
 
-function renderAccountStatusBar() {
-  const realm = getRealmInfo(account.profile.cultivation_exp);
-  if (account.isLoggedIn()) {
-    const syncLabel =
-      account.syncStatus === "syncing"
-        ? "Đang đồng bộ..."
-        : account.syncStatus === "error"
-          ? "Lỗi đồng bộ (đã lưu máy)"
-          : "Đã đồng bộ Cloud";
-    return `
-      <div class="overlay-account-pill">
-        <div style="text-align:left">
-          <strong style="color:#4de6b0">☁️ ${account.profile.dao_hieu}</strong> · ${realm.title}<br/>
-          <span style="font-size:10px;color:#968fa3">💎 ${account.profile.nguyen_thach} Nguyên Thạch · ${syncLabel}</span>
-        </div>
-        <button id="btn-overlay-account" type="button" class="mini-hud-btn">Hồ Sơ / Đổi Acc</button>
-      </div>
-    `;
-  }
-  return `
-    <div class="overlay-account-pill">
-      <div style="text-align:left">
-        <strong style="color:#d6b16a">📴 Chế Độ Khách (Lưu Cục Bộ)</strong><br/>
-        <span style="font-size:10px;color:#968fa3">Đăng nhập để sao lưu Cloud vĩnh viễn khi đổi máy</span>
-      </div>
-      <button id="btn-overlay-account" type="button" class="mini-hud-btn">🔑 Đăng Nhập / ĐK</button>
-    </div>
-  `;
-}
+function launchCharacterRun({ slotIndex, resumeRun = false, floorNumber = 1 }) {
+  const charData = account.selectCharacter(slotIndex);
+  if (!charData) return;
 
-function showOverlay(kind) {
-  currentOverlayKind = kind;
-  isPaused = true;
-  overlayRoot.classList.add("is-open");
-
-  if (kind === "loading") {
-    overlayRoot.innerHTML = `
-      <div class="overlay-card">
-        <div class="overlay-title">LUYỆN CỔ SƯ</div>
-        <div class="overlay-sub">Đang triệu hồi tài nguyên Cổ Trùng & kết nối Đạo Tịch...</div>
-      </div>
-    `;
+  if (resumeRun && charData.active_run) {
+    const snap = charData.active_run;
+    player = new PlayerController(charData);
+    player.restoreFromSnapshot(snap, charData.unlocked_recipes ?? [], charData);
+    startRun(snap.floorNumber ?? 1, snap);
     return;
   }
 
-  const maxFloor = account.profile.highest_floor_unlocked ?? 1;
-  const activeRun = account.profile.active_run;
-
-  if (kind === "start") {
-    const continueBtn = activeRun
-      ? `<button id="btn-continue-run" type="button" class="overlay-btn" style="border-color:#ffd86e;background:#332612">▶️ Tiếp Tục (Tầng ${activeRun.floorNumber} · HP ${activeRun.hp}/${activeRun.maxHp})</button>`
-      : "";
-
-    overlayRoot.innerHTML = `
-      <div class="overlay-card">
-        <div class="overlay-title">LUYỆN CỔ SƯ</div>
-        <div class="overlay-sub">
-          Roguelike Cổ Phong · Vượt 3 tầng Bí Cảnh, thu thập Cổ Trùng, rèn Nhị Chuyển tại Trạm Luyện Cổ.<br/>
-          <b>Trái:</b> Joystick 360° (hoặc WASD) · <b>Phải:</b> Kéo-thả ngắm chiêu (hoặc Space/J/K/L).
-        </div>
-        ${renderAccountStatusBar()}
-        <div class="overlay-btn-row">
-          ${continueBtn}
-          <button type="button" class="overlay-btn" data-start-floor="1">⚔️ Tầng 1 · Rừng Chướng Khí</button>
-          <button type="button" class="overlay-btn" data-start-floor="2" ${maxFloor < 2 ? "disabled" : ""}>${maxFloor < 2 ? "🔒 Tầng 2" : "💀 Tầng 2 · Mộ Địa"}</button>
-          <button type="button" class="overlay-btn" data-start-floor="3" ${maxFloor < 3 ? "disabled" : ""}>${maxFloor < 3 ? "🔒 Tầng 3" : "🔥 Tầng 3 · Cổ Quật"}</button>
-        </div>
-      </div>
-    `;
-  } else if (kind === "victory") {
-    overlayRoot.innerHTML = `
-      <div class="overlay-card">
-        <div class="overlay-title" style="color:#4de6b0">ĐẠI THÀNH CỔ TÔN!</div>
-        <div class="overlay-sub">
-          Ngươi đã phá nát Vạn Cổ Tà Lô, chinh phục Tam Tầng Bí Cảnh.<br/>
-          Quái đã trảm trận này: ${player.kills} · Cổ Phương đã mở: ${account.profile.unlocked_recipes.length}/3.
-        </div>
-        ${renderAccountStatusBar()}
-        <div class="overlay-btn-row">
-          <button type="button" class="overlay-btn" data-start-floor="1">🔄 Luân Hồi Chinh Phục Lại</button>
-        </div>
-      </div>
-    `;
-  } else if (kind === "gameover") {
-    overlayRoot.innerHTML = `
-      <div class="overlay-card">
-        <div class="overlay-title" style="color:#ff3855">ĐẠO TÂM TAN VỠ</div>
-        <div class="overlay-sub">
-          Huyết Khí đã cạn tại ${world.getFloorDef().name}.<br/>
-          Tu Vi, Nguyên Thạch & Cổ Phương (${account.profile.unlocked_recipes.length}/3) đã được bảo toàn trong tài khoản!
-        </div>
-        ${renderAccountStatusBar()}
-        <div class="overlay-btn-row">
-          <button type="button" class="overlay-btn" data-start-floor="1">🔄 Tái Nhập Bí Cảnh</button>
-        </div>
-      </div>
-    `;
-  }
-
-  overlayRoot.querySelector("#btn-overlay-account")?.addEventListener("click", () => {
-    accountModal?.open();
-  });
-
-  overlayRoot.querySelector("#btn-continue-run")?.addEventListener("click", () => {
-    sfx.unlock();
-    resumeActiveRun();
-  });
-
-  overlayRoot.querySelectorAll("[data-start-floor]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      sfx.unlock();
-      const startFloor = Number(btn.dataset.startFloor) || 1;
-      player = new PlayerController();
-      player.unlockedRecipes = new Set(account.profile.unlocked_recipes ?? []);
-      account.recordRunStarted();
-      startRun(startFloor, null);
-    });
-  });
-}
-
-function resumeActiveRun() {
-  const snap = account.profile.active_run;
-  if (!snap) return;
-  player = new PlayerController();
-  player.restoreFromSnapshot(snap, account.profile.unlocked_recipes ?? []);
-  startRun(snap.floorNumber ?? 1, snap);
+  player = new PlayerController(charData);
+  player.unlockedRecipes = new Set(charData.unlocked_recipes ?? []);
+  account.recordRunStarted();
+  startRun(floorNumber, null);
 }
 
 function startRun(floorNum, restoreSnapshot = null) {
   overlayRoot.classList.remove("is-open");
-  currentOverlayKind = "playing";
+  inGameplay = true;
 
   world = new WorldSimulation({
     player,
@@ -172,8 +64,21 @@ function startRun(floorNum, restoreSnapshot = null) {
     sfx,
     account,
     onStateChange: () => {
-      if (world.phase === "victory") showOverlay("victory");
-      else if (world.phase === "gameover") showOverlay("gameover");
+      if (world.phase === "victory") {
+        inGameplay = false;
+        isPaused = true;
+        gateScreens?.openResult("victory", {
+          kills: player.kills,
+          floorName: world.getFloorDef().name,
+        });
+      } else if (world.phase === "gameover") {
+        inGameplay = false;
+        isPaused = true;
+        gateScreens?.openResult("gameover", {
+          kills: player.kills,
+          floorName: world.getFloorDef().name,
+        });
+      }
       hud?.syncState(player, world);
     },
   });
@@ -207,6 +112,18 @@ function startRun(floorNum, restoreSnapshot = null) {
   isPaused = false;
 }
 
+function switchToCharacterSelect() {
+  if (world && inGameplay) {
+    account.saveActiveRunSnapshot(player, world);
+    account.syncCloud();
+  }
+  modalRoot.classList.remove("is-open");
+  accountModalRoot.classList.remove("is-open");
+  inGameplay = false;
+  isPaused = true;
+  gateScreens?.openCharSelect();
+}
+
 function initUI() {
   hud = new TouchControlsHUD({
     hudRoot: hudLayer,
@@ -225,12 +142,12 @@ function initUI() {
     },
     onCancel: () => {},
     onOpenBag: () => {
-      if (!world || player.isDead) return;
+      if (!world || player.isDead || !inGameplay) return;
       isPaused = true;
       modal?.open("aperture");
     },
     onContextAction: () => {
-      if (!world) return;
+      if (!world || !inGameplay) return;
       if (world.phase === "cauldron") {
         isPaused = true;
         modal?.open("fusion");
@@ -239,7 +156,7 @@ function initUI() {
       }
     },
     onSecondaryAction: () => {
-      if (!world) return;
+      if (!world || !inGameplay) return;
       if (world.phase === "cauldron") {
         world.summonBossNow();
       }
@@ -250,8 +167,7 @@ function initUI() {
       btn.textContent = sfx.muted ? "🔇 Tắt" : "🔊 Âm";
     },
     onOpenAccount: () => {
-      isPaused = true;
-      accountModal?.open();
+      switchToCharacterSelect();
     },
   });
 
@@ -260,13 +176,22 @@ function initUI() {
     accountManager: account,
     sfx,
     onClose: () => {
-      if (currentOverlayKind === "playing" && !modalRoot.classList.contains("is-open")) {
+      if (!inGameplay) {
+        gateScreens?.render();
+      } else if (!modalRoot.classList.contains("is-open")) {
         isPaused = false;
-      } else if (currentOverlayKind !== "playing") {
-        showOverlay(currentOverlayKind);
       }
       hud?.syncAccountBadge(account);
     },
+  });
+
+  gateScreens = new GateScreens({
+    overlayRoot,
+    account,
+    assets,
+    sfx,
+    onEnterGame: (opts) => launchCharacterRun(opts),
+    onOpenAccountModal: () => accountModal?.open(),
   });
 
   account.onChange(() => {
@@ -276,8 +201,10 @@ function initUI() {
       sfx.setMuted(m);
       hud.muteBtn.textContent = m ? "🔇 Tắt" : "🔊 Âm";
     }
-    if (currentOverlayKind !== "playing" && !accountModalRoot.classList.contains("is-open")) {
-      showOverlay(currentOverlayKind);
+    if (!inGameplay && overlayRoot.classList.contains("is-open") && !accountModalRoot.classList.contains("is-open")) {
+      if (gateScreens?.screen === "char_select") {
+        gateScreens.render();
+      }
     }
   });
 
@@ -292,20 +219,29 @@ function initUI() {
   });
 }
 
-async function boot() {
-  showOverlay("loading");
+function boot() {
   initUI();
+  // Hiển thị ngay cổng Login / Chọn Nhân Vật (không bao giờ treo chờ mạng hoặc PNG!)
+  gateScreens.openInitialScreen();
 
+  // Tải sprite PNG dưới nền; tải xong tự động vẽ lại preview nhân vật trên bệ đá
+  loadManifestAssets(assets)
+    .then(() => {
+      if (!inGameplay && gateScreens) {
+        gateScreens.render();
+      }
+    })
+    .catch((err) => {
+      console.warn("[assets] Background sprite load warning:", err);
+    });
+
+  // Đồng bộ Cloud dưới nền nếu đã có phiên đăng nhập từ lần trước
   if (account.isLoggedIn()) {
-    await account.pullFromCloud();
+    account.pullFromCloud().catch(() => {});
   }
 
-  await loadManifestAssets(assets, "./assets/manifest.json");
-  showOverlay("start");
-
-  // Tự lưu khi chuyển app xuống nền trên iPhone hoặc ẩn tab
   const saveBeforeHide = () => {
-    if (world && currentOverlayKind === "playing") {
+    if (world && inGameplay) {
       account.saveActiveRunSnapshot(player, world);
       account.syncCloud();
     }
@@ -317,7 +253,7 @@ async function boot() {
 
   const loop = new GameLoop({
     onUpdate: (dt) => {
-      if (!isPaused && world) {
+      if (!isPaused && world && inGameplay) {
         account.tickPlaytime(dt);
         world.update(dt, input);
         hud.syncState(player, world);
@@ -331,7 +267,7 @@ async function boot() {
       }
     },
     onRender: () => {
-      if (world) {
+      if (world && inGameplay) {
         world.render(renderer, input);
       } else {
         renderer.clear("#0d0c12");

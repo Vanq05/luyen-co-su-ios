@@ -43,7 +43,6 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
-  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,7 +53,7 @@ body {
 #game-canvas {
   width: 100%;
   height: 100%;
-  max-width: calc(100dvh * (16 / 9));
+  max-width: calc(100vh * (16 / 9));
   max-height: calc(100vw * (9 / 16));
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
@@ -512,7 +511,7 @@ body {
 
 .modal-card {
   width: min(720px, 96vw);
-  max-height: 92dvh;
+  max-height: 92vh;
   background: #16141f;
   border: 1.5px solid var(--bronze);
   border-radius: 10px;
@@ -971,4 +970,426 @@ body {
 .overlay-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* === NINJA SCHOOL GATE SCREENS (LOGIN -> 3-SLOT CHAR SELECT -> CHAR CREATE) === */
+.overlay-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 177, 106, 0.45);
+  background: rgba(156, 122, 68, 0.14);
+  color: var(--bronze-bright);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.boot-diag {
+  margin-top: 10px;
+  max-height: 120px;
+  overflow: auto;
+  text-align: left;
+  padding: 8px;
+  border-radius: 6px;
+  background: #0b0910;
+  border: 1px solid rgba(255, 56, 85, 0.5);
+  color: #ff9aa8;
+  font-size: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.boot-diag.hidden {
+  display: none;
+}
+
+.gate-shell {
+  width: min(860px, 96vw);
+  max-height: 94vh;
+  background: rgba(18, 15, 26, 0.96);
+  border: 1.5px solid var(--bronze);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.gate-shell--login {
+  width: min(440px, 94vw);
+  text-align: center;
+}
+
+.gate-header-crest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gate-sub {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.gate-panel--auth {
+  text-align: left;
+  background: #110e19;
+  border: 1px solid rgba(156, 122, 68, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.gate-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.gate-tabs .tab-btn {
+  flex: 1;
+  text-align: center;
+}
+
+.gate-auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.gate-btn-primary {
+  width: 100%;
+  border-color: var(--jade-glow);
+  background: linear-gradient(180deg, #1b4a3a, #102b22);
+}
+
+.gate-btn-guest {
+  width: 100%;
+  padding: 7px 10px;
+  text-align: center;
+  border-color: rgba(156, 122, 68, 0.5);
+  color: #e6d7b8;
+}
+
+.gate-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(156, 122, 68, 0.32);
+  flex-wrap: wrap;
+}
+
+.gate-topbar-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gate-brand {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--bronze-bright);
+  letter-spacing: 0.8px;
+}
+
+.gate-acc-info {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.gate-acc-info b {
+  color: #d8fff2;
+}
+
+.gate-acc-info em {
+  font-style: normal;
+  color: var(--jade-glow);
+}
+
+.gate-topbar-right {
+  display: flex;
+  gap: 6px;
+}
+
+.gate-pedestals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.pedestal-card {
+  background: linear-gradient(180deg, #1b1727 0%, #100e17 100%);
+  border: 1.5px solid rgba(156, 122, 68, 0.42);
+  border-radius: 10px;
+  padding: 8px 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+}
+
+.pedestal-card.is-occupied {
+  border-color: var(--sect-col, var(--bronze-bright));
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.65);
+}
+
+.pedestal-card--empty {
+  border-style: dashed;
+  justify-content: space-between;
+}
+
+.pedestal-top-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.pedestal-slot-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--bronze-bright);
+}
+
+.pedestal-del-btn {
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 56, 85, 0.4);
+  background: rgba(48, 16, 26, 0.7);
+  color: #ff98a7;
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pedestal-del-btn.is-armed {
+  background: #a81c36;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.pedestal-hero-wrap,
+.pedestal-altar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+}
+
+.pedestal-canvas,
+#create-preview-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.pedestal-empty-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.pedestal-name {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.pedestal-realm {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+.pedestal-floor-picks {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.floor-pill {
+  flex: 1;
+  padding: 3px 4px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #14111d;
+  color: var(--text-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.floor-pill.is-selected {
+  border-color: var(--bronze-bright);
+  background: #2b2316;
+  color: var(--bronze-bright);
+}
+
+.floor-pill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pedestal-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.pedestal-play-btn,
+.pedestal-create-btn {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 10.5px;
+}
+
+.pedestal-play-btn.is-resume {
+  border-color: #ffd86e;
+  background: #332612;
+  color: #fff2cc;
+}
+
+/* Màn hình Tạo Nhân Vật */
+.gate-create-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.25fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.gate-create-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #110e19;
+  border: 1px solid rgba(156, 122, 68, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.create-preview-box {
+  width: 92px;
+  height: 86px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: radial-gradient(circle, #221d33 0%, #0d0c12 80%);
+  border: 1px solid rgba(214, 177, 106, 0.35);
+}
+
+.robe-picker-block {
+  width: 100%;
+}
+
+.robe-pills-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.robe-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #191624;
+  color: var(--text-primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.robe-pill.is-selected {
+  border-color: var(--robe-col, #4de6b0);
+  background: #232033;
+}
+
+.robe-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.sect-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sect-card {
+  text-align: left;
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 3px solid var(--sect-col, #4de6b0);
+  background: #171422;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.sect-card.is-selected {
+  border-color: var(--sect-col, #4de6b0);
+  background: #221d33;
+}
+
+.sect-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11.5px;
+}
+
+.sect-card-head strong {
+  color: var(--sect-col, var(--bronze-bright));
+}
+
+.sect-card-head span {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+.sect-card-bonus {
+  margin-top: 2px;
+  font-size: 10px;
+  color: #e6fff6;
+}
+
+.sect-card-gu {
+  margin-top: 2px;
+  font-size: 9.5px;
+  color: var(--bronze-bright);
+}
+
+@media (max-height: 410px) {
+  .gate-shell {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .overlay-title {
+    font-size: 18px;
+  }
+  .pedestal-hero-wrap,
+  .pedestal-altar-empty {
+    min-height: 54px;
+  }
 }

@@ -145,7 +145,7 @@ export class TouchControlsHUD {
         </div>
 
         <div class="right-top-hud">
-          <button id="btn-open-account" type="button" class="mini-hud-btn">👤 Đạo Tịch</button>
+          <button id="btn-open-account" type="button" class="mini-hud-btn">🔄 Đổi NV</button>
           <button id="btn-mute-sfx" type="button" class="mini-hud-btn">🔊 Âm</button>
         </div>
       </div>
@@ -188,17 +188,9 @@ export class TouchControlsHUD {
 
   syncAccountBadge(account) {
     if (!this.accountBtn) return;
-    if (!account?.isLoggedIn()) {
-      this.accountBtn.textContent = "👤 Đăng Nhập";
-      return;
-    }
-    const dot =
-      account.syncStatus === "syncing"
-        ? "⏳"
-        : account.syncStatus === "error"
-          ? "⚠️"
-          : "☁️";
-    this.accountBtn.textContent = `${dot} ${account.profile.dao_hieu}`;
+    const ch = account?.getActiveCharacter?.();
+    const label = ch?.name ?? account?.profile?.dao_hieu ?? "Chọn NV";
+    this.accountBtn.textContent = `🔄 Đổi NV · ${label}`;
   }
 
   syncState(player, world) {

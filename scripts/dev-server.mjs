@@ -1,41 +1,42 @@
 #!/usr/bin/env node
 /**
- * Lightweight zero-dependency static dev server for "Luyện Cổ Sư".
- * Serves index.html, src/, and maps public/ paths (e.g. /assets/..., /manifest.webmanifest).
- * Listens on 0.0.0.0 so both desktop browser and iPhone Safari on local Wi-Fi can test touch controls.
+ * Dev server for "Luyện Cổ Sư".
+ * Builds `dist/` via `scripts/build-web.mjs` (esbuild IIFE + embedded JSONs) and serves `dist/`
+ * so local testing runs the exact same classic-script bundle shipped inside the iOS `.ipa`.
  */
 
 import { createServer } from "node:http";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const PUBLIC_DIR = join(ROOT, "public");
+const DIST_DIR = join(ROOT, "dist");
 const PORT = Number(process.env.PORT ?? 4173);
 const HOST = process.env.HOST ?? "0.0.0.0";
+
+execFileSync(process.execPath, [join(ROOT, "scripts", "build-web.mjs")], {
+  stdio: "inherit",
+});
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
-  ".mjs": "application/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".png": "image/png",
   ".gif": "image/gif",
   ".svg": "image/svg+xml",
-  ".webmanifest": "application/manifest+json; charset=utf-8",
 };
 
 function resolveFile(urlPath) {
   const clean = normalize(decodeURIComponent(urlPath.split("?")[0])).replace(/^(\.\.(\/|\\|$))+/, "");
   const rel = clean === "/" || clean === "\\" ? "index.html" : clean.replace(/^[/\\]+/, "");
 
-  const candidates = [join(PUBLIC_DIR, rel), join(ROOT, rel)];
-  for (const file of candidates) {
-    if (existsSync(file) && statSync(file).isFile()) {
-      return file;
-    }
+  const file = join(DIST_DIR, rel);
+  if (existsSync(file) && statSync(file).isFile()) {
+    return file;
   }
   return null;
 }
@@ -59,5 +60,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`[dev-server] Luyện Cổ Sư running at http://127.0.0.1:${PORT}/ (bound ${HOST})`);
+  console.log(`[dev-server] Luyện Cổ Sư (dist/) running at http://127.0.0.1:${PORT}/ (bound ${HOST})`);
 });

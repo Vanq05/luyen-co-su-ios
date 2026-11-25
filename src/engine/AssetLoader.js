@@ -1,22 +1,44 @@
 /**
- * Bộ nạp tài nguyên sprite sheet PNG + JSON xuất từ patch-gg/pixelfx.
- * Chuẩn bị sẵn cho Bước 2 khi sinh nhân vật, tileset, quái và VFX.
+ * Bộ nạp tài nguyên sprite sheet PNG + JSON (nhúng sẵn JSON từ patch-gg/pixelfx).
+ * Không dùng fetch() cục bộ trên iOS capacitor://localhost để tránh treo hoặc màn hình đen.
  */
+import { EMBEDDED_SHEETS } from "../generated/embeddedAssets.js";
+
 export class AssetLoader {
   constructor() {
     this.cache = new Map();
   }
 
-  loadImage(url) {
+  loadImage(url, timeoutMs = 4000) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Không tải được ảnh: ${url}`));
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error(`Timeout tải ảnh (${timeoutMs}ms): ${url}`));
+      }, timeoutMs);
+
+      img.onload = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(img);
+      };
+      img.onerror = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error(`Không tải được ảnh: ${url}`));
+      };
       img.src = url;
     });
   }
 
-  async loadJson(url) {
+  async loadJson(url, embeddedKey = null) {
+    if (embeddedKey && EMBEDDED_SHEETS[embeddedKey]) {
+      return EMBEDDED_SHEETS[embeddedKey];
+    }
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Không tải được JSON (${res.status}): ${url}`);
@@ -28,10 +50,8 @@ export class AssetLoader {
     if (this.cache.has(key)) {
       return this.cache.get(key);
     }
-    const [image, data] = await Promise.all([
-      this.loadImage(pngUrl),
-      this.loadJson(jsonUrl),
-    ]);
+    const data = EMBEDDED_SHEETS[key] ?? (await this.loadJson(jsonUrl));
+    const image = await this.loadImage(pngUrl, 4000);
     const sheet = {
       key,
       image,

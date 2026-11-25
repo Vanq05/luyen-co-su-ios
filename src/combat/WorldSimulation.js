@@ -1,3 +1,4 @@
+import { ROBE_STYLES } from "../account/AccountManager.js";
 import { GAME_HEIGHT, GAME_WIDTH, PALETTE } from "../config/constants.js";
 import { drawSheetFrame, getSheetFrameIndex } from "../engine/SpriteSheet.js";
 import { createGuInstance } from "./GuDatabase.js";
@@ -312,7 +313,7 @@ export class WorldSimulation {
     const events = this._playerEvents();
     this.player.paySkillCost(gu, events);
 
-    const dmgScale = this.player.getDamageMultiplier();
+    const dmgScale = this.player.getDamageMultiplier(gu);
     const ox = this.player.x;
     const oy = this.player.y - 8;
 
@@ -510,6 +511,10 @@ export class WorldSimulation {
     const dmg = Math.max(1, Math.round(rawDmg * (1 - armor)));
     enemy.hp -= dmg;
     enemy.hurtFlash = 0.14;
+
+    if ((this.player.sectLifesteal ?? 0) > 0 && dmg > 0) {
+      this.player.heal(Math.max(1, Math.round(dmg * this.player.sectLifesteal)), false);
+    }
 
     if (gu.poisonDps) {
       enemy.poisonDps = Math.max(enemy.poisonDps, gu.poisonDps);
@@ -1732,7 +1737,17 @@ export class WorldSimulation {
       }
     }
 
-    // Nhân vật chính Cổ Sư
+    // Nhân vật chính Cổ Sư (vòng y phục tông môn dưới chân + sprite pixelfx)
+    const robe = ROBE_STYLES[this.player.robeStyle] ?? ROBE_STYLES.jade;
+    ctx.save();
+    ctx.strokeStyle = robe.auraColor;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(this.player.x, this.player.y + 4, 8, 3.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
     const heroKey = `characters/co-su-${this.player.animState}`;
     const heroSheet = this.assets.get(heroKey) ?? this.assets.get("characters/co-su-idle");
     if (heroSheet) {

@@ -10,8 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#0d0c12" />
     <title>Luyện Cổ Sư — Action Roguelike</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./src/ui/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main id="game-root">
@@ -19,19 +18,40 @@
       <div id="hud-layer"></div>
       <div id="fusion-modal-root"></div>
       <div id="account-modal-root"></div>
-      <div id="overlay-screen" class="is-open"></div>
+      <div id="overlay-screen" class="is-open">
+        <div class="overlay-card gate-boot-card">
+          <div class="overlay-badge">DARK FANTASY PIXEL ROGUELIKE</div>
+          <h1 class="overlay-title">LUYỆN CỔ SƯ</h1>
+          <p id="boot-status" class="overlay-sub">Đang khởi động Cổ Giới...</p>
+          <pre id="boot-diag" class="boot-diag hidden"></pre>
+        </div>
+      </div>
     </main>
 
-    <div id="portrait-guard">
-      <div style="font-size: 16px; font-weight: 700; color: #d6b16a;">
-        Xoay ngang thiết bị để luyện cổ thuận tay nhất
-      </div>
-      <div style="font-size: 12px; color: #968fa3; max-width: 280px;">
-        Luyện Cổ Sư được thiết kế theo bố cục ngang (Joystick trái · 4 Cổ Trùng phải).
-      </div>
-      <button id="portrait-dismiss" type="button">Tiếp tục</button>
-    </div>
-
-    <script type="module" src="./src/main.js"></script>
+    <script>
+      (function () {
+        var shown = false;
+        function showBootError(label, err) {
+          var status = document.getElementById("boot-status");
+          var diag = document.getElementById("boot-diag");
+          if (status && !shown) {
+            status.textContent = "Lỗi khởi động (" + label + "). Vui lòng chụp màn hình này:";
+            shown = true;
+          }
+          if (diag) {
+            diag.classList.remove("hidden");
+            var msg = err && (err.stack || err.message) ? (err.stack || err.message) : String(err);
+            diag.textContent += "[" + label + "] " + msg + "\n";
+          }
+        }
+        window.addEventListener("error", function (e) {
+          showBootError("error", (e && (e.error || e.message)) || "Unknown error");
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+          showBootError("promise", e ? e.reason : "Unhandled rejection");
+        });
+      })();
+    </script>
+    <script defer src="./app.js"></script>
   </body>
 </html>
