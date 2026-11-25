@@ -8,6 +8,7 @@ import { InputManager } from "./input/InputManager.js";
 import { PlayerController } from "./combat/PlayerController.js";
 import { WorldSimulation } from "./combat/WorldSimulation.js";
 import { GuFusionModal } from "./fusion/GuFusionModal.js";
+import { OnlineHubClient } from "./online/OnlineHubClient.js";
 import { AccountModal } from "./ui/AccountModal.js";
 import { GateScreens } from "./ui/GateScreens.js";
 import { TouchControlsHUD } from "./ui/TouchControlsHUD.js";
@@ -22,6 +23,7 @@ const renderer = new PixelRenderer(canvas);
 const assets = new AssetLoader();
 const sfx = new SoundFX();
 const account = new AccountManager();
+const onlineHub = new OnlineHubClient({ account });
 
 sfx.setMuted(Boolean(account.profile.settings?.muted));
 
@@ -36,26 +38,8 @@ let isPaused = true;
 let inGameplay = false;
 let autoSaveTimer = 0;
 
-function launchCharacterRun({ slotIndex, resumeRun = false, floorNumber = 1 }) {
-  const charData = account.selectCharacter(slotIndex);
-  if (!charData) return;
-
-  if (resumeRun && charData.active_run) {
-    const snap = charData.active_run;
-    player = new PlayerController(charData);
-    player.restoreFromSnapshot(snap, charData.unlocked_recipes ?? [], charData);
-    startRun(snap.floorNumber ?? 1, snap);
-    return;
-  }
-
-  player = new PlayerController(charData);
-  player.unlockedRecipes = new Set(charData.unlocked_recipes ?? []);
-  account.recordRunStarted();
-  startRun(floorNumber, null);
-}
-
-function startRun(floorNum, restoreSnapshot = null) {
-  overlayRoot.classList.remove("is-open");
+function mountWorldForCharacter(floorNum, restoreSnapshot = null) {
+  gateScreens?.close();
   inGameplay = true;
 
   world = new WorldSimulation({
@@ -63,8 +47,11 @@ function startRun(floorNum, restoreSnapshot = null) {
     assets,
     sfx,
     account,
+    onlineHub,
     onStateChange: () => {
       if (world.phase === "victory") {
+        account.persistCharacterLoadout(player);
+        account.clearActiveRunSnapshot(true);
         inGameplay = false;
         isPaused = true;
         gateScreens?.openResult("victory", {
@@ -72,6 +59,8 @@ function startRun(floorNum, restoreSnapshot = null) {
           floorName: world.getFloorDef().name,
         });
       } else if (world.phase === "gameover") {
+        account.persistCharacterLoadout(player);
+        account.clearActiveRunSnapshot(true);
         inGameplay = false;
         isPaused = true;
         gateScreens?.openResult("gameover", {
@@ -79,7 +68,8 @@ function startRun(floorNum, restoreSnapshot = null) {
           floorName: world.getFloorDef().name,
         });
       }
-      hud?.syncState(player, world);
+      hud?.syncAccountBadge(account, world);
+      hud?.syncState(player, world, onlineHub);
     },
   });
 
@@ -96,23 +86,74 @@ function startRun(floorNum, restoreSnapshot = null) {
     world,
     sfx,
     account,
+    onlineHub,
     onClose: () => {
       isPaused = false;
-      hud?.syncState(player, world);
+      hud?.syncState(player, world, onlineHub);
     },
     onEquipmentChanged: () => {
+      account.persistCharacterLoadout(player);
       hud?.refreshSlots(player);
-      hud?.syncState(player, world);
+      hud?.syncState(player, world, onlineHub);
+      onlineHub.pushPresence(player, world);
     },
   });
 
   hud.refreshSlots(player);
-  hud.syncState(player, world);
-  hud.syncAccountBadge(account);
+  hud.syncAccountBadge(account, world);
+  hud.syncState(player, world, onlineHub);
   isPaused = false;
+
+  onlineHub.pushPresence(player, world);
+  onlineHub.pollAll();
 }
 
-function switchToCharacterSelect() {
+function enterVanCoThanh(slotIndex) {
+  const charData = account.selectCharacter(slotIndex);
+  if (!charData) return;
+  player = new PlayerController(charData);
+  account.persistCharacterLoadout(player);
+  mountWorldForCharacter(0, null);
+}
+
+function enterDungeonFloor(floorNum) {
+  const charData = account.getActiveCharacter();
+  if (!charData) return;
+  // Giữ nguyên toàn bộ Cổ Nang & Đạo Lộ đã luyện của nhân vật, nạp đầy HP/MP trước khi vào Bí Cảnh
+  account.persistCharacterLoadout(player);
+  player.isDead = false;
+  player.corruption = 0;
+  player.tauHoaTimer = 0;
+  player.recalculatePathStats(true);
+  account.recordRunStarted();
+  mountWorldForCharacter(floorNum, null);
+}
+
+function resumeDungeonRun(slotIndex) {
+  const charData = account.selectCharacter(slotIndex);
+  if (!charData || !charData.active_run) {
+    enterVanCoThanh(slotIndex);
+    return;
+  }
+  const snap = charData.active_run;
+  player = new PlayerController(charData);
+  player.restoreFromSnapshot(snap, charData.unlocked_recipes ?? [], charData);
+  mountWorldForCharacter(snap.floorNumber ?? 1, snap);
+}
+
+function handleTopRightAction() {
+  if (world && inGameplay && world.floorNumber > 0) {
+    // Đang ở trong Bí Cảnh -> Rút lui an toàn về Vạn Cổ Thành giữ nguyên thu hoạch!
+    account.persistCharacterLoadout(player);
+    account.clearActiveRunSnapshot(true);
+    modalRoot.classList.remove("is-open");
+    player.isDead = false;
+    player.recalculatePathStats(true);
+    mountWorldForCharacter(0, null);
+    return;
+  }
+
+  // Đang ở Vạn Cổ Thành -> Lưu và quay ra bệ 3 nhân vật
   if (world && inGameplay) {
     account.saveActiveRunSnapshot(player, world);
     account.syncCloud();
@@ -148,7 +189,17 @@ function initUI() {
     },
     onContextAction: () => {
       if (!world || !inGameplay) return;
-      if (world.phase === "cauldron") {
+      if (world.phase === "town") {
+        const act = hud.ctxBtn?.dataset.townAct || "fusion";
+        isPaused = true;
+        if (act === "mirror") {
+          gateScreens?.openMirror(account.getActiveCharacter());
+        } else if (act === "stele") {
+          gateScreens?.openLeaderboard();
+        } else {
+          modal?.open("fusion");
+        }
+      } else if (world.phase === "cauldron") {
         isPaused = true;
         modal?.open("fusion");
       } else if (world.phase === "floor_clear") {
@@ -157,7 +208,10 @@ function initUI() {
     },
     onSecondaryAction: () => {
       if (!world || !inGameplay) return;
-      if (world.phase === "cauldron") {
+      if (world.phase === "town") {
+        isPaused = true;
+        gateScreens?.openDungeonSelect();
+      } else if (world.phase === "cauldron") {
         world.summonBossNow();
       }
     },
@@ -167,7 +221,10 @@ function initUI() {
       btn.textContent = sfx.muted ? "🔇 Tắt" : "🔊 Âm";
     },
     onOpenAccount: () => {
-      switchToCharacterSelect();
+      handleTopRightAction();
+    },
+    onSendChat: async (msg) => {
+      await onlineHub.sendChat(msg);
     },
   });
 
@@ -181,30 +238,49 @@ function initUI() {
       } else if (!modalRoot.classList.contains("is-open")) {
         isPaused = false;
       }
-      hud?.syncAccountBadge(account);
+      hud?.syncAccountBadge(account, world);
     },
   });
 
   gateScreens = new GateScreens({
     overlayRoot,
     account,
-    assets,
+    onlineHub,
     sfx,
-    onEnterGame: (opts) => launchCharacterRun(opts),
+    onEnterTown: (slotIdx) => enterVanCoThanh(slotIdx),
+    onEnterDungeon: (floorNum) => enterDungeonFloor(floorNum),
+    onResumeRun: (slotIdx) => resumeDungeonRun(slotIdx),
+    onAppearanceUpdated: (updatedChar) => {
+      if (updatedChar) {
+        player.characterName = updatedChar.name;
+        player.setAppearance(updatedChar.appearance);
+        onlineHub.pushPresence(player, world);
+      }
+      isPaused = false;
+      hud?.syncAccountBadge(account, world);
+    },
+    onCloseToWorld: () => {
+      isPaused = false;
+    },
     onOpenAccountModal: () => accountModal?.open(),
   });
 
+  onlineHub.onChange(() => {
+    hud?.syncOnlineFeed(onlineHub);
+    if (world && inGameplay && world.phase === "town") {
+      hud?.syncState(player, world, onlineHub);
+    }
+    if (!inGameplay && gateScreens?.screen === "leaderboard") {
+      gateScreens.render();
+    }
+  });
+
   account.onChange(() => {
-    hud?.syncAccountBadge(account);
+    hud?.syncAccountBadge(account, world);
     if (hud?.muteBtn) {
       const m = Boolean(account.profile.settings?.muted);
       sfx.setMuted(m);
       hud.muteBtn.textContent = m ? "🔇 Tắt" : "🔊 Âm";
-    }
-    if (!inGameplay && overlayRoot.classList.contains("is-open") && !accountModalRoot.classList.contains("is-open")) {
-      if (gateScreens?.screen === "char_select") {
-        gateScreens.render();
-      }
     }
   });
 
@@ -221,24 +297,20 @@ function initUI() {
 
 function boot() {
   initUI();
-  // Hiển thị ngay cổng Login / Chọn Nhân Vật (không bao giờ treo chờ mạng hoặc PNG!)
   gateScreens.openInitialScreen();
 
-  // Tải sprite PNG dưới nền; tải xong tự động vẽ lại preview nhân vật trên bệ đá
-  loadManifestAssets(assets)
-    .then(() => {
-      if (!inGameplay && gateScreens) {
+  loadManifestAssets(assets).catch((err) => {
+    console.warn("[assets] Background sprite load warning:", err);
+  });
+
+  if (account.isLoggedIn()) {
+    account.pullFromCloud().then(() => {
+      if (!inGameplay && gateScreens?.screen === "char_select") {
         gateScreens.render();
       }
-    })
-    .catch((err) => {
-      console.warn("[assets] Background sprite load warning:", err);
     });
-
-  // Đồng bộ Cloud dưới nền nếu đã có phiên đăng nhập từ lần trước
-  if (account.isLoggedIn()) {
-    account.pullFromCloud().catch(() => {});
   }
+  onlineHub.pollAll();
 
   const saveBeforeHide = () => {
     if (world && inGameplay) {
@@ -253,10 +325,13 @@ function boot() {
 
   const loop = new GameLoop({
     onUpdate: (dt) => {
+      if (world && inGameplay) {
+        onlineHub.tick(dt, { player, world });
+      }
       if (!isPaused && world && inGameplay) {
         account.tickPlaytime(dt);
         world.update(dt, input);
-        hud.syncState(player, world);
+        hud.syncState(player, world, onlineHub);
 
         autoSaveTimer += dt;
         if (autoSaveTimer >= 20) {

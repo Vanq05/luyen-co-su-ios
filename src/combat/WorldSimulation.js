@@ -1,4 +1,4 @@
-import { ROBE_STYLES } from "../account/AccountManager.js";
+import { getCharacterSheets } from "../character/CharacterSpriteBuilder.js";
 import { GAME_HEIGHT, GAME_WIDTH, PALETTE } from "../config/constants.js";
 import { drawSheetFrame, getSheetFrameIndex } from "../engine/SpriteSheet.js";
 import { createGuInstance } from "./GuDatabase.js";
@@ -13,15 +13,16 @@ const STARTER_POOL = ["nguyet_quang", "huyet_nha", "thanh_doc", "thiet_cot", "an
  * - Hệ thống đạn, AoE, gai xương, phân thân, hiệu ứng VFX pixelfx.
  */
 export class WorldSimulation {
-  constructor({ player, assets, sfx, account, onStateChange }) {
+  constructor({ player, assets, sfx, account, onlineHub, onStateChange }) {
     this.player = player;
     this.assets = assets;
     this.sfx = sfx;
     this.account = account;
+    this.onlineHub = onlineHub;
     this.onStateChange = onStateChange;
 
-    this.floorNumber = 1;
-    this.phase = "waves"; // "waves" | "cauldron" | "boss" | "floor_clear" | "victory" | "gameover"
+    this.floorNumber = 0;
+    this.phase = "town"; // "town" | "waves" | "cauldron" | "boss" | "floor_clear" | "victory" | "gameover"
     this.waveIndex = 0;
 
     this.time = 0;
@@ -31,7 +32,9 @@ export class WorldSimulation {
     this.camera = { x: 0, y: 0 };
 
     this.cauldron = { x: WORLD_WIDTH * 0.5, y: WORLD_HEIGHT * 0.5, radius: 22, active: false };
-    this.portal = { x: WORLD_WIDTH * 0.5, y: 64, radius: 20, active: false };
+    this.portal = { x: WORLD_WIDTH * 0.5, y: 62, radius: 22, active: false };
+    this.mirrorAltar = { x: 168, y: 176, radius: 16 };
+    this.rankStele = { x: 408, y: 176, radius: 16 };
 
     this.hazards = [];
     this.obstacles = [];
@@ -47,21 +50,20 @@ export class WorldSimulation {
     this.floatingTexts = [];
     this.telegraphs = [];
 
-    this.loadFloor(1);
+    this.loadFloor(0);
   }
 
   getFloorDef() {
-    return FLOOR_DEFS[this.floorNumber];
+    return FLOOR_DEFS[this.floorNumber] ?? FLOOR_DEFS[0];
   }
 
   loadFloor(num) {
     this.floorNumber = num;
-    const def = FLOOR_DEFS[num];
-    this.phase = "waves";
+    const def = this.getFloorDef();
     this.waveIndex = 0;
 
     this.player.x = WORLD_WIDTH * 0.5;
-    this.player.y = WORLD_HEIGHT - 56;
+    this.player.y = num === 0 ? 236 : WORLD_HEIGHT - 56;
     this.player.dashTimer = 0;
 
     this.hazards = def.hazards.map((h) => ({ ...h, cooldown: 0, activeTimer: 0, warnTimer: 0 }));
@@ -77,10 +79,17 @@ export class WorldSimulation {
     this.vfxEffects = [];
     this.telegraphs = [];
 
-    this.cauldron.active = false;
-    this.portal.active = false;
-
-    this._spawnWave(0);
+    if (num === 0) {
+      this.phase = "town";
+      this.cauldron.active = true;
+      this.portal.active = true;
+      this.addFloatingText(this.player.x, this.player.y - 28, "Vạn Cổ Thành · Khu An Toàn Online", "#4de6b0");
+    } else {
+      this.phase = "waves";
+      this.cauldron.active = false;
+      this.portal.active = false;
+      this._spawnWave(0);
+    }
     this.onStateChange?.();
   }
 
@@ -290,6 +299,19 @@ export class WorldSimulation {
   }
 
   getNearbyInteractable() {
+    if (this.phase === "town") {
+      const dCauldron = Math.hypot(this.player.x - this.cauldron.x, this.player.y - this.cauldron.y);
+      const dPortal = Math.hypot(this.player.x - this.portal.x, this.player.y - this.portal.y);
+      const dMirror = Math.hypot(this.player.x - this.mirrorAltar.x, this.player.y - this.mirrorAltar.y);
+      const dStele = Math.hypot(this.player.x - this.rankStele.x, this.player.y - this.rankStele.y);
+      return {
+        inTown: true,
+        nearCauldron: dCauldron <= 48,
+        nearPortal: dPortal <= 48,
+        nearMirror: dMirror <= 42,
+        nearStele: dStele <= 42,
+      };
+    }
     if (this.phase === "cauldron" && this.cauldron.active) {
       const dCauldron = Math.hypot(this.player.x - this.cauldron.x, this.player.y - this.cauldron.y);
       return {
@@ -317,8 +339,17 @@ export class WorldSimulation {
     const ox = this.player.x;
     const oy = this.player.y - 8;
 
+    if (gu.spawnDecoyOnCast && gu.aimType !== "dash") {
+      this.decoys.push({
+        x: ox,
+        y: this.player.y,
+        life: 1.8,
+        maxLife: 1.8,
+        damage: Math.round(22 * dmgScale),
+      });
+    }
+
     if (gu.aimType === "dash") {
-      // Di Chuyển Cổ: Ảnh Bộ Cổ hoặc Bạch Cốt Độn Cổ
       const dist = gu.range * Math.max(0.65, distanceRatio);
       const dashDur = 0.17;
       this.player.dashTimer = dashDur;
@@ -337,16 +368,32 @@ export class WorldSimulation {
         });
       }
 
+      if (gu.leaveFireZone) {
+        const midX = ox + Math.cos(angle) * (dist * 0.5);
+        const midY = this.player.y + Math.sin(angle) * (dist * 0.5);
+        this.zones.push({
+          kind: "player_fire",
+          x: midX,
+          y: midY,
+          radius: 26,
+          life: 2.6,
+          dps: Math.round(18 * dmgScale),
+          tick: 0,
+          color: "#ff7b39",
+        });
+        this._ignitePoisonPools(midX, midY, 34, dmgScale);
+      }
+
       this.spawnVfx(gu.vfxKey ?? "vfx/anh-bo", ox, this.player.y, { scale: 0.75 });
       this.sfx?.play("dash");
       return true;
     }
 
-    if (gu.baseId === "huyet_nha") {
-      // 3 giọt máu bay đuổi
+    if (gu.homing || gu.baseId === "huyet_nha") {
       const count = gu.projectileCount ?? 3;
+      const centerIdx = (count - 1) * 0.5;
       for (let i = 0; i < count; i++) {
-        const spread = (i - 1) * 0.28;
+        const spread = (i - centerIdx) * 0.25;
         const a = angle + spread;
         this.playerProjectiles.push({
           kind: "homing",
@@ -355,12 +402,12 @@ export class WorldSimulation {
           y: oy + Math.sin(a) * 8,
           vx: Math.cos(a) * 145,
           vy: Math.sin(a) * 145,
-          speed: 150,
+          speed: 152,
           radius: gu.radius ?? 7,
           damage: Math.round(gu.damage * dmgScale),
-          pierceLeft: 1,
+          pierceLeft: gu.pierce ?? 1,
           hitIds: new Set(),
-          life: 1.5,
+          life: 1.55,
           homing: true,
           lifesteal: gu.lifesteal ?? 0,
           color: gu.color,
@@ -512,8 +559,8 @@ export class WorldSimulation {
     enemy.hp -= dmg;
     enemy.hurtFlash = 0.14;
 
-    if ((this.player.sectLifesteal ?? 0) > 0 && dmg > 0) {
-      this.player.heal(Math.max(1, Math.round(dmg * this.player.sectLifesteal)), false);
+    if ((this.player.totalLifesteal ?? 0) > 0 && dmg > 0) {
+      this.player.heal(Math.max(1, Math.round(dmg * this.player.totalLifesteal)), false);
     }
 
     if (gu.poisonDps) {
@@ -745,7 +792,16 @@ export class WorldSimulation {
       }
     }
 
-    this.player.update(dt, { moveVec, inCorruptionZone: inCorZone, zoneMult: corMult }, events);
+    this.player.update(
+      dt,
+      {
+        moveVec,
+        inCorruptionZone: inCorZone,
+        zoneMult: corMult,
+        safeZone: this.floorNumber === 0,
+      },
+      events
+    );
 
     // Bạch Cốt Độn Cổ: rải gai xương dọc đường lướt
     if (this.player.dashTimer > 0 && this.player.dashGu?.stunDuration) {
@@ -777,6 +833,10 @@ export class WorldSimulation {
     }
     if (this.cauldron.active) {
       this._pushOut(this.player, this.cauldron.x, this.cauldron.y, this.cauldron.radius + 4);
+    }
+    if (this.floorNumber === 0) {
+      this._pushOut(this.player, this.mirrorAltar.x, this.mirrorAltar.y, this.mirrorAltar.radius + 4);
+      this._pushOut(this.player, this.rankStele.x, this.rankStele.y, this.rankStele.radius + 4);
     }
 
     // Cập nhật bẫy môi trường
@@ -1407,6 +1467,7 @@ export class WorldSimulation {
         } else if (p.kind === "gu") {
           const inst = createGuInstance(p.guId);
           this.player.addGu(inst);
+          this.account?.persistCharacterLoadout(this.player);
           this.addFloatingText(p.x, p.y - 18, `Nhặt ${inst.name}`, "#ffd86e");
           this.sfx?.play("pickup");
         }
@@ -1594,6 +1655,60 @@ export class WorldSimulation {
   }
 
   _renderCauldronAndPortal(ctx) {
+    if (this.floorNumber === 0) {
+      // Vòng đại trận đá trung tâm Vạn Cổ Thành
+      ctx.save();
+      ctx.strokeStyle = "rgba(214, 177, 106, 0.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.cauldron.x, this.cauldron.y, 68, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(77, 230, 176, 0.25)";
+      ctx.beginPath();
+      ctx.arc(this.cauldron.x, this.cauldron.y, 52, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Gương Hóa Hình (bên trái)
+      const mx = this.mirrorAltar.x;
+      const my = this.mirrorAltar.y;
+      ctx.fillStyle = "#1f1b30";
+      ctx.fillRect(mx - 12, my - 4, 24, 12);
+      ctx.strokeStyle = "#d6b16a";
+      ctx.strokeRect(mx - 12, my - 4, 24, 12);
+      ctx.fillStyle = "#5ce1ff";
+      ctx.beginPath();
+      ctx.ellipse(mx, my - 12, 9, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Bia Thiên Kiêu (bên phải)
+      const rx = this.rankStele.x;
+      const ry = this.rankStele.y;
+      ctx.fillStyle = "#262019";
+      ctx.fillRect(rx - 13, ry - 2, 26, 10);
+      ctx.fillStyle = "#3b3123";
+      ctx.fillRect(rx - 9, ry - 24, 18, 24);
+      ctx.strokeStyle = "#ffd86e";
+      ctx.strokeRect(rx - 9, ry - 24, 18, 24);
+      ctx.fillStyle = "#ffd86e";
+      ctx.fillRect(rx - 3, ry - 18, 6, 12);
+
+      // Nhãn kiến trúc trong Vạn Cổ Thành
+      ctx.font = "bold 6px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ffd86e";
+      ctx.fillText("THÁNH ĐỈNH HỢP CỔ", this.cauldron.x, this.cauldron.y + 30);
+      ctx.fillStyle = "#5ef2d6";
+      ctx.fillText("CỔNG BÍ CẢNH", this.portal.x, this.portal.y - 22);
+      ctx.fillStyle = "#94ecff";
+      ctx.fillText("GƯƠNG HÓA HÌNH", mx, my + 18);
+      ctx.fillStyle = "#ffe484";
+      ctx.fillText("BIA THIÊN KIÊU", rx, ry + 18);
+      ctx.restore();
+    }
+
     if (this.cauldron.active) {
       const sheet = this.assets.get("tilesets/tram-luyen-co");
       if (sheet) {
@@ -1616,9 +1731,9 @@ export class WorldSimulation {
 
   _renderPickupsAndDecoys(ctx) {
     for (const d of this.decoys) {
-      const sheet = this.assets.get("characters/co-su-dash");
-      if (sheet) {
-        drawSheetFrame(ctx, sheet, 2, d.x, d.y, { alpha: 0.55 });
+      const dashSheet = this.player.characterSheets?.dash ?? this.assets.get("characters/co-su-dash");
+      if (dashSheet) {
+        drawSheetFrame(ctx, dashSheet, 2, d.x, d.y, { alpha: 0.55 });
       }
     }
 
@@ -1737,25 +1852,69 @@ export class WorldSimulation {
       }
     }
 
-    // Nhân vật chính Cổ Sư (vòng y phục tông môn dưới chân + sprite pixelfx)
-    const robe = ROBE_STYLES[this.player.robeStyle] ?? ROBE_STYLES.jade;
+    // Các Đạo Hữu Online khác đang hiện diện tại Vạn Cổ Thành
+    if (this.floorNumber === 0 && this.onlineHub?.remotePlayers) {
+      for (const rp of this.onlineHub.remotePlayers.values()) {
+        const rpSheets = getCharacterSheets(rp.appearance);
+        const rpSheet = rp.isWalking ? rpSheets.run : rpSheets.idle;
+        const fi = getSheetFrameIndex(rpSheet, rp.animTime ?? this.time, true);
+        const flip = Math.cos(rp.facing ?? 0) < -0.15;
+
+        ctx.save();
+        ctx.strokeStyle = rp.path_color || "#4de6b0";
+        ctx.globalAlpha = 0.42;
+        ctx.beginPath();
+        ctx.ellipse(rp.x, rp.y + 3, 8, 3.2, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        drawSheetFrame(ctx, rpSheet, fi, rp.x, rp.y, { flipX: flip });
+
+        ctx.save();
+        ctx.font = "bold 5.5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = rp.path_color || "#4de6b0";
+        ctx.fillText(`[${rp.path_name || "Tán Tu"}]`, Math.round(rp.x), Math.round(rp.y - 27));
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(rp.name, Math.round(rp.x), Math.round(rp.y - 21));
+        ctx.restore();
+      }
+    }
+
+    // Nhân vật chính Cổ Sư (hiển thị đúng ngoại hình Pixel Art đa lớp tùy chỉnh + hào quang Đạo Lộ)
+    const pathCol = this.player.pathInfo?.color ?? "#4de6b0";
     ctx.save();
-    ctx.strokeStyle = robe.auraColor;
-    ctx.globalAlpha = 0.45;
+    ctx.strokeStyle = pathCol;
+    ctx.globalAlpha = 0.55;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(this.player.x, this.player.y + 4, 8, 3.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(this.player.x, this.player.y + 3, 8.5, 3.5, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
 
-    const heroKey = `characters/co-su-${this.player.animState}`;
-    const heroSheet = this.assets.get(heroKey) ?? this.assets.get("characters/co-su-idle");
+    const customSheets = this.player.characterSheets;
+    const heroSheet =
+      customSheets?.[this.player.animState] ??
+      customSheets?.idle ??
+      this.assets.get(`characters/co-su-${this.player.animState}`) ??
+      this.assets.get("characters/co-su-idle");
     if (heroSheet) {
       const loop = !["dash", "hurt", "death"].includes(this.player.animState);
       const t = this.player.isDead ? this.player.deathTimer : this.player.animTime;
       const fi = getSheetFrameIndex(heroSheet, t, loop);
       const flip = Math.cos(this.player.facing) < -0.15;
       drawSheetFrame(ctx, heroSheet, fi, this.player.x, this.player.y, { flipX: flip });
+    }
+
+    if (this.floorNumber === 0) {
+      ctx.save();
+      ctx.font = "bold 5.5px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = pathCol;
+      ctx.fillText(`[${this.player.pathInfo?.name ?? "Tán Tu"}]`, Math.round(this.player.x), Math.round(this.player.y - 28));
+      ctx.fillStyle = "#ffe9b3";
+      ctx.fillText(this.player.characterName, Math.round(this.player.x), Math.round(this.player.y - 22));
+      ctx.restore();
     }
   }
 

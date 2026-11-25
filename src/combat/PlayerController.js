@@ -1,37 +1,50 @@
-import { ROBE_STYLES, SECTS } from "../account/AccountManager.js";
-import { createGuInstance } from "./GuDatabase.js";
+import {
+  getCharacterSheets,
+  normalizeAppearance,
+} from "../character/CharacterSpriteBuilder.js";
+import {
+  computeCultivationPath,
+  createGuInstance,
+  STARTER_GU_IDS,
+} from "./GuDatabase.js";
 
 /**
  * Trạng thái nhân vật Cổ Sư:
- * - Hệ thống Không Khiếu (5 ô: passive, skill1, skill2, move, ult) + Cổ Nang.
- * - 3 Chỉ số sống còn: Huyết Khí (HP), Chân Nguyên (MP), Độ Phản Phệ (0..100%).
- * - Mốc Phản Phệ >= 50%: +25% sát thương gây ra, +15% sát thương nhận vào.
- * - Mốc Phản Phệ 100%: Tẩu Hỏa Nhập Ma 5s (mất máu liên tục mỗi giây, sau đó reset về 0%).
+ * - Ngoại hình Pixel Art đa lớp tùy chỉnh tự do (`appearance` -> `characterSheets`).
+ * - Con Đường Tu Luyện (`pathInfo`) tự động định hình từ 5 Cổ Trùng trang bị trong Không Khiếu.
+ * - Lưu trữ bền vững Túi Cổ (`bag`) và Trang bị (`equipped`) xuyên suốt các tầng & phiên online.
  */
 export class PlayerController {
   constructor(charData = null) {
     this.x = 288;
     this.y = 220;
     this.radius = 8;
-    this.baseSpeed = 80;
+    this.baseSpeed = 82;
     this.facing = 0;
     this.moving = false;
 
     this.characterName = "Vô Danh Cổ Sư";
-    this.sectId = "thanh_nguyet";
-    this.robeStyle = "jade";
-    this.sectSpeedBonus = 0;
-    this.sectLifesteal = 0;
-    this.sectFirePoisonBonus = 0;
+    this.appearance = normalizeAppearance(null);
+    this.characterSheets = getCharacterSheets(this.appearance);
+
+    this.baseMaxHp = 180;
+    this.baseMaxMp = 100;
+    this.baseMpRegen = 7.2;
 
     this.maxHp = 180;
     this.hp = 180;
     this.maxMp = 100;
     this.mp = 100;
-    this.mpRegen = 7.0;
+    this.mpRegen = 7.2;
 
-    this.corruption = 0; // 0 .. 100
-    this.tauHoaTimer = 0; // > 0 khi đang Tẩu Hỏa Nhập Ma (5s)
+    this.pathInfo = computeCultivationPath([]);
+    this.totalLifesteal = 0;
+    this.firePoisonBonus = 0;
+    this.allDmgBonus = 0;
+    this.cooldownMult = 1.0;
+
+    this.corruption = 0;
+    this.tauHoaTimer = 0;
     this.tauHoaTickTimer = 0;
     this.passiveDrainTick = 0;
 
@@ -48,66 +61,116 @@ export class PlayerController {
     this.animState = "idle";
     this.animTime = 0;
 
+    this.bag = [];
+    this.equipped = {
+      passive: null,
+      skill1: null,
+      skill2: null,
+      move: null,
+      ult: null,
+    };
+
     this.unlockedRecipes = new Set();
     this.kills = 0;
 
     this.applyCharacterSetup(charData);
   }
 
+  setAppearance(rawAppearance) {
+    this.appearance = normalizeAppearance(rawAppearance);
+    this.characterSheets = getCharacterSheets(this.appearance);
+  }
+
   applyCharacterSetup(charData = null) {
-    const sect = SECTS[charData?.sectId] ?? SECTS.thanh_nguyet;
-    const robe = ROBE_STYLES[charData?.robeStyle] ? charData.robeStyle : sect.robeDefault;
     this.characterName = charData?.name ?? "Vô Danh Cổ Sư";
-    this.sectId = sect.id;
-    this.robeStyle = robe;
+    this.setAppearance(charData?.appearance);
+    this.unlockedRecipes = new Set(charData?.unlocked_recipes ?? []);
 
-    this.maxHp = sect.stats.maxHp;
-    this.hp = sect.stats.maxHp;
-    this.maxMp = sect.stats.maxMp;
-    this.mp = sect.stats.maxMp;
-    this.mpRegen = sect.stats.mpRegen;
-    this.sectSpeedBonus = sect.stats.speedBonus ?? 0;
-    this.sectLifesteal = sect.stats.lifesteal ?? 0;
-    this.sectFirePoisonBonus = sect.stats.firePoisonBonus ?? 0;
+    if (Array.isArray(charData?.saved_bag) && charData.saved_bag.length > 0) {
+      this.bag = charData.saved_bag.map((g) => ({ ...g }));
+      this.equipped = {
+        passive: null,
+        skill1: null,
+        skill2: null,
+        move: null,
+        ult: null,
+        ...(charData.saved_equipped ?? {}),
+      };
+    } else {
+      // Khởi tạo túi 6 Cổ Trùng Nhất Chuyển, ưu tiên Cổ ưa thích đầu tiên vào Chủ Động 1
+      const fav = STARTER_GU_IDS.includes(charData?.starterGuId)
+        ? charData.starterGuId
+        : "nguyet_quang";
 
-    const initPassive = createGuInstance(sect.starterPassive);
-    const initS1 = createGuInstance(sect.starterSkill1);
-    const initS2 = createGuInstance(sect.starterSkill2);
-    const initMove = createGuInstance(sect.starterMove);
-    const initUlt = createGuInstance(sect.starterUlt);
-    const initSpare = createGuInstance(sect.starterSpare);
+      const initPassive = createGuInstance("thiet_cot");
+      const initMove = createGuInstance("anh_bo");
+      const activePool = ["nguyet_quang", "huyet_nha", "thanh_doc", "hoa_than"];
+      const orderedActives = [fav, ...activePool.filter((id) => id !== fav)];
 
-    this.bag = [initPassive, initS1, initS2, initMove, initUlt, initSpare];
-    this.equipped = {
-      passive: initPassive.uid,
-      skill1: initS1.uid,
-      skill2: initS2.uid,
-      move: initMove.uid,
-      ult: initUlt.uid,
-    };
+      const s1 = createGuInstance(orderedActives[0]);
+      const s2 = createGuInstance(orderedActives[1]);
+      const ult = createGuInstance(orderedActives[2]);
+      const spare = createGuInstance(orderedActives[3]);
+
+      this.bag = [initPassive, s1, s2, initMove, ult, spare];
+      this.equipped = {
+        passive: initPassive.uid,
+        skill1: s1.uid,
+        skill2: s2.uid,
+        move: initMove.uid,
+        ult: ult.uid,
+      };
+    }
+
+    this.recalculatePathStats(true);
+  }
+
+  recalculatePathStats(refillVitals = false) {
+    const equippedList = this.getAllEquipped();
+    this.pathInfo = computeCultivationPath(equippedList);
+    const pb = this.pathInfo.bonuses ?? {};
+
+    let hpBonus = pb.maxHp ?? 0;
+    let mpBonus = pb.maxMp ?? 0;
+    let regenBonus = pb.mpRegen ?? 0;
+    let lifesteal = pb.lifesteal ?? 0;
+    let firePoison = pb.firePoisonDmg ?? 0;
+    let cdMod = pb.cooldownMod ?? 0;
+
+    for (const g of equippedList) {
+      if (g.maxHpBonus) hpBonus += g.maxHpBonus;
+      if (g.mpRegenBonus) regenBonus += g.mpRegenBonus;
+      if (g.globalLifesteal) lifesteal += g.globalLifesteal;
+      if (g.firePoisonBonus) firePoison += g.firePoisonBonus;
+      if (g.cooldownMod) cdMod += g.cooldownMod;
+    }
+
+    const prevMaxHp = this.maxHp || 180;
+    const hpRatio = prevMaxHp > 0 ? this.hp / prevMaxHp : 1;
+
+    this.maxHp = Math.max(100, Math.round(this.baseMaxHp + hpBonus));
+    this.maxMp = Math.max(60, Math.round(this.baseMaxMp + mpBonus));
+    this.mpRegen = Number((this.baseMpRegen + regenBonus).toFixed(2));
+    this.totalLifesteal = Number(Math.min(0.45, lifesteal).toFixed(2));
+    this.firePoisonBonus = Number(firePoison.toFixed(2));
+    this.allDmgBonus = pb.allDmg ?? 0;
+    this.cooldownMult = Math.max(0.55, Number((1 + cdMod).toFixed(2)));
+
+    if (refillVitals) {
+      this.hp = this.maxHp;
+      this.mp = this.maxMp;
+    } else {
+      this.hp = Math.min(this.maxHp, Math.max(1, Math.round(this.maxHp * hpRatio)));
+      this.mp = Math.min(this.maxMp, this.mp);
+    }
   }
 
   restoreFromSnapshot(snap, unlockedRecipes = [], charData = null) {
     if (charData) this.applyCharacterSetup(charData);
     if (!snap) return;
-    if (snap.sectId && SECTS[snap.sectId]) {
-      this.sectId = snap.sectId;
-      const st = SECTS[snap.sectId].stats;
-      this.mpRegen = st.mpRegen;
-      this.sectSpeedBonus = st.speedBonus ?? 0;
-      this.sectLifesteal = st.lifesteal ?? 0;
-      this.sectFirePoisonBonus = st.firePoisonBonus ?? 0;
+    if (snap.appearance) {
+      this.setAppearance(snap.appearance);
     }
-    if (snap.robeStyle && ROBE_STYLES[snap.robeStyle]) {
-      this.robeStyle = snap.robeStyle;
-    }
-    this.maxHp = snap.maxHp ?? this.maxHp;
-    this.hp = Math.max(1, Math.min(this.maxHp, snap.hp ?? this.maxHp));
-    this.maxMp = snap.maxMp ?? this.maxMp;
-    this.mp = Math.max(0, Math.min(this.maxMp, snap.mp ?? this.maxMp));
-    this.corruption = Math.max(0, Math.min(99, snap.corruption ?? 0));
-    this.kills = snap.kills ?? 0;
-
     if (Array.isArray(snap.bag) && snap.bag.length > 0) {
       this.bag = snap.bag.map((g) => ({ ...g }));
     }
@@ -117,6 +180,11 @@ export class PlayerController {
     if (Array.isArray(unlockedRecipes)) {
       this.unlockedRecipes = new Set(unlockedRecipes);
     }
+    this.recalculatePathStats(false);
+    this.hp = Math.max(1, Math.min(this.maxHp, snap.hp ?? this.maxHp));
+    this.mp = Math.max(0, Math.min(this.maxMp, snap.mp ?? this.maxMp));
+    this.corruption = Math.max(0, Math.min(99, snap.corruption ?? 0));
+    this.kills = snap.kills ?? 0;
   }
 
   getGu(uid) {
@@ -133,6 +201,16 @@ export class PlayerController {
       .filter(Boolean);
   }
 
+  getEquippedSummary() {
+    return this.getAllEquipped().map((g) => ({
+      name: g.name,
+      shortLabel: g.shortLabel,
+      tier: g.tier ?? 1,
+      element: g.element,
+      color: g.color,
+    }));
+  }
+
   getEquippedSlotOf(uid) {
     for (const [slot, eqUid] of Object.entries(this.equipped)) {
       if (eqUid === uid) return slot;
@@ -143,11 +221,11 @@ export class PlayerController {
   equipGu(slotId, uid) {
     const prevSlot = this.getEquippedSlotOf(uid);
     if (prevSlot && prevSlot !== slotId) {
-      // Hoán đổi nếu cùng nhóm
       const oldUid = this.equipped[slotId];
       this.equipped[prevSlot] = oldUid;
     }
     this.equipped[slotId] = uid;
+    this.recalculatePathStats(false);
   }
 
   addGu(gu) {
@@ -162,32 +240,32 @@ export class PlayerController {
       }
     }
     this.bag = this.bag.filter((g) => g.uid !== uid);
+    this.recalculatePathStats(false);
   }
 
   getMoveSpeed() {
-    let mult = 1 + (this.sectSpeedBonus ?? 0);
+    let mult = 1 + (this.pathInfo.bonuses?.speed ?? 0);
     for (const g of this.getAllEquipped()) {
       if (g.speedMod) mult += g.speedMod;
     }
-    return this.baseSpeed * Math.max(0.55, mult);
+    return this.baseSpeed * Math.max(0.58, mult);
   }
 
   getArmorRatio() {
-    let armor = 0;
+    let armor = this.pathInfo.bonuses?.armor ?? 0;
     for (const g of this.getAllEquipped()) {
       if (g.armorBonus) armor += g.armorBonus;
     }
-    return Math.min(0.65, armor);
+    return Math.min(0.68, armor);
   }
 
   getDamageMultiplier(gu = null) {
-    let mult = this.corruption >= 50 || this.tauHoaTimer > 0 ? 1.25 : 1.0;
-    if (
-      gu &&
-      (this.sectFirePoisonBonus ?? 0) > 0 &&
-      (gu.element === "Viêm" || gu.element === "Độc" || gu.element === "Viêm/Độc")
-    ) {
-      mult += this.sectFirePoisonBonus;
+    let mult = (this.corruption >= 50 || this.tauHoaTimer > 0 ? 1.25 : 1.0) + (this.allDmgBonus ?? 0);
+    if (gu && (this.firePoisonBonus ?? 0) > 0) {
+      const el = String(gu.element ?? "");
+      if (el.includes("Viêm") || el.includes("Độc")) {
+        mult += this.firePoisonBonus;
+      }
     }
     return mult;
   }
@@ -210,9 +288,6 @@ export class PlayerController {
     }
   }
 
-  /**
-   * Trừ MP khi thi triển chiêu; nếu cạn MP tự động trừ thẳng vào HP (Huyết Tế).
-   */
   paySkillCost(gu, events) {
     const mpNeed = gu.mpCost ?? 0;
     if (this.mp >= mpNeed) {
@@ -265,7 +340,7 @@ export class PlayerController {
     return dmg;
   }
 
-  update(dt, { moveVec, inCorruptionZone = false, zoneMult = 1 }, events) {
+  update(dt, { moveVec, inCorruptionZone = false, zoneMult = 1, safeZone = false }, events) {
     this.animTime += dt;
 
     if (this.isDead) {
@@ -277,60 +352,62 @@ export class PlayerController {
     if (this.invulnTimer > 0) this.invulnTimer = Math.max(0, this.invulnTimer - dt);
     if (this.hurtTimer > 0) this.hurtTimer = Math.max(0, this.hurtTimer - dt);
 
-    // Hồi Chân Nguyên chậm
-    this.mp = Math.min(this.maxMp, this.mp + this.mpRegen * dt);
+    if (safeZone) {
+      // Ở Vạn Cổ Thành (khu an toàn online): tự hồi đầy HP/MP, thanh tẩy Phản Phệ
+      this.hp = Math.min(this.maxHp, this.hp + this.maxHp * 0.25 * dt);
+      this.mp = Math.min(this.maxMp, this.mp + this.maxMp * 0.35 * dt);
+      this.corruption = Math.max(0, this.corruption - 15 * dt);
+      this.tauHoaTimer = 0;
+    } else {
+      this.mp = Math.min(this.maxMp, this.mp + this.mpRegen * dt);
 
-    // Độ phản phệ từ trang bị cấp cao / Dị Cổ / vùng tà trận Boss
-    let passiveCorRate = 0;
-    for (const g of this.getAllEquipped()) {
-      if (g.tier >= 2) passiveCorRate += 0.35;
-      if (g.passiveCorruptionRate) passiveCorRate += g.passiveCorruptionRate;
-    }
-    if (inCorruptionZone) {
-      passiveCorRate = Math.max(2.5, passiveCorRate * zoneMult + 2.5);
-    }
-    if (passiveCorRate > 0 && this.tauHoaTimer <= 0) {
-      this.addCorruption(passiveCorRate * dt, events);
-    } else if (!inCorruptionZone && this.tauHoaTimer <= 0 && this.corruption > 0) {
-      // Giảm nhẹ tự nhiên khi đứng ngoài vùng ô nhiễm và chỉ mang Nhất Chuyển
-      const hasHighTier = this.getAllEquipped().some((g) => g.tier >= 2 || g.isMutated);
-      if (!hasHighTier) {
-        this.corruption = Math.max(0, this.corruption - 0.6 * dt);
+      let passiveCorRate = 0;
+      for (const g of this.getAllEquipped()) {
+        if (g.tier >= 2) passiveCorRate += 0.35;
+        if (g.passiveCorruptionRate) passiveCorRate += g.passiveCorruptionRate;
       }
-    }
+      if (inCorruptionZone) {
+        passiveCorRate = Math.max(2.5, passiveCorRate * zoneMult + 2.5);
+      }
+      if (passiveCorRate > 0 && this.tauHoaTimer <= 0) {
+        this.addCorruption(passiveCorRate * dt, events);
+      } else if (!inCorruptionZone && this.tauHoaTimer <= 0 && this.corruption > 0) {
+        const hasHighTier = this.getAllEquipped().some((g) => g.tier >= 2 || g.isMutated);
+        if (!hasHighTier) {
+          this.corruption = Math.max(0, this.corruption - 0.6 * dt);
+        }
+      }
 
-    // Mốc 100%: Tẩu Hỏa Nhập Ma trong 5 giây -> mất máu liên tục -> reset 0%
-    if (this.tauHoaTimer > 0) {
-      this.tauHoaTimer -= dt;
-      this.tauHoaTickTimer -= dt;
-      if (this.tauHoaTickTimer <= 0) {
-        this.tauHoaTickTimer = 0.5;
-        const burn = Math.max(2, Math.round(this.maxHp * 0.025));
-        this.hp = Math.max(1, this.hp - burn);
-        events?.onFloatingText?.(this.x, this.y - 24, `Tẩu Hỏa -${burn}`, "#d45eff");
+      if (this.tauHoaTimer > 0) {
+        this.tauHoaTimer -= dt;
+        this.tauHoaTickTimer -= dt;
+        if (this.tauHoaTickTimer <= 0) {
+          this.tauHoaTickTimer = 0.5;
+          const burn = Math.max(2, Math.round(this.maxHp * 0.025));
+          this.hp = Math.max(1, this.hp - burn);
+          events?.onFloatingText?.(this.x, this.y - 24, `Tẩu Hỏa -${burn}`, "#d45eff");
+        }
+        if (this.tauHoaTimer <= 0) {
+          this.tauHoaTimer = 0;
+          this.corruption = 0;
+          events?.onFloatingText?.(this.x, this.y - 26, "Phản Phệ Quy Linh", "#4de6b0");
+        }
       }
-      if (this.tauHoaTimer <= 0) {
-        this.tauHoaTimer = 0;
-        this.corruption = 0;
-        events?.onFloatingText?.(this.x, this.y - 26, "Phản Phệ Quy Linh", "#4de6b0");
-      }
-    }
 
-    // Đánh đổi Huyết Nguyệt Cổ: đốt 1% Max HP/giây khi mang
-    const hasBloodMoon = this.getAllEquipped().some((g) => (g.passiveHpDrainPct ?? 0) > 0);
-    if (hasBloodMoon) {
-      this.passiveDrainTick += dt;
-      if (this.passiveDrainTick >= 1.0) {
-        this.passiveDrainTick -= 1.0;
-        const minFloor = Math.max(1, Math.round(this.maxHp * 0.05));
-        if (this.hp > minFloor) {
-          const drain = Math.max(1, Math.round(this.maxHp * 0.01));
-          this.hp = Math.max(minFloor, this.hp - drain);
+      const hasBloodMoon = this.getAllEquipped().some((g) => (g.passiveHpDrainPct ?? 0) > 0);
+      if (hasBloodMoon) {
+        this.passiveDrainTick += dt;
+        if (this.passiveDrainTick >= 1.0) {
+          this.passiveDrainTick -= 1.0;
+          const minFloor = Math.max(1, Math.round(this.maxHp * 0.05));
+          if (this.hp > minFloor) {
+            const drain = Math.max(1, Math.round(this.maxHp * 0.01));
+            this.hp = Math.max(minFloor, this.hp - drain);
+          }
         }
       }
     }
 
-    // Di chuyển / Dash
     if (this.dashTimer > 0) {
       this.dashTimer = Math.max(0, this.dashTimer - dt);
       this.x += this.dashVx * dt;
@@ -346,7 +423,6 @@ export class PlayerController {
       }
     }
 
-    // Chọn sprite state
     if (this.tauHoaTimer > 0) this.animState = "tau-hoa";
     else if (this.dashTimer > 0) this.animState = "dash";
     else if (this.hurtTimer > 0) this.animState = "hurt";

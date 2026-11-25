@@ -1,7 +1,15 @@
+import {
+  createDefaultAppearance,
+  normalizeAppearance,
+} from "../character/CharacterSpriteBuilder.js";
+import {
+  createGuInstance,
+  STARTER_GU_IDS,
+} from "../combat/GuDatabase.js";
 import { SUPABASE_KEY, SUPABASE_URL } from "../config/supabaseConfig.js";
 
-const STORAGE_KEY = "luyen_co_su_save_v2";
-const LEGACY_STORAGE_KEY = "luyen_co_su_save_v1";
+const STORAGE_KEY = "luyen_co_su_save_v3";
+const LEGACY_KEYS = ["luyen_co_su_save_v2", "luyen_co_su_save_v1"];
 
 export const REALM_TIERS = [
   { level: 1, minExp: 0, title: "Nhất Chuyển Sơ Kỳ" },
@@ -13,110 +21,7 @@ export const REALM_TIERS = [
   { level: 7, minExp: 3500, title: "Cửu Chuyển Cổ Tôn" },
 ];
 
-export const SECTS = {
-  thanh_nguyet: {
-    id: "thanh_nguyet",
-    name: "Thanh Nguyệt Tông",
-    badge: "🌙",
-    color: "#5ef2d6",
-    robeDefault: "jade",
-    title: "Ngự Quang Thanh Phong",
-    bonusText: "+12% Tốc chạy · Hồi Chân Nguyên nhanh (9.0/s)",
-    starterPassive: "thiet_cot",
-    starterSkill1: "nguyet_quang",
-    starterSkill2: "thanh_doc",
-    starterMove: "anh_bo",
-    starterUlt: "hoa_than",
-    starterSpare: "huyet_nha",
-    stats: {
-      maxHp: 180,
-      maxMp: 110,
-      mpRegen: 9.0,
-      speedBonus: 0.12,
-      lifesteal: 0,
-      firePoisonBonus: 0,
-    },
-  },
-  huyet_ma: {
-    id: "huyet_ma",
-    name: "Huyết Ma Giáo",
-    badge: "🩸",
-    color: "#ff4769",
-    robeDefault: "obsidian",
-    title: "Luyện Huyết Tà Tôn",
-    bonusText: "Huyết Khí 220 · +8% Hút máu mọi đòn đánh",
-    starterPassive: "thiet_cot",
-    starterSkill1: "huyet_nha",
-    starterSkill2: "nguyet_quang",
-    starterMove: "anh_bo",
-    starterUlt: "hoa_than",
-    starterSpare: "thanh_doc",
-    stats: {
-      maxHp: 220,
-      maxMp: 95,
-      mpRegen: 6.5,
-      speedBonus: 0,
-      lifesteal: 0.08,
-      firePoisonBonus: 0,
-    },
-  },
-  xich_viem: {
-    id: "xich_viem",
-    name: "Xích Viêm Cốc",
-    badge: "🔥",
-    color: "#ff7b39",
-    robeDefault: "gold",
-    title: "Luyện Đỉnh Viêm Sư",
-    bonusText: "Chân Nguyên 130 · +15% Sát thương hệ Viêm & Độc",
-    starterPassive: "thiet_cot",
-    starterSkill1: "hoa_than",
-    starterSkill2: "thanh_doc",
-    starterMove: "anh_bo",
-    starterUlt: "nguyet_quang",
-    starterSpare: "huyet_nha",
-    stats: {
-      maxHp: 175,
-      maxMp: 130,
-      mpRegen: 7.5,
-      speedBonus: 0,
-      lifesteal: 0,
-      firePoisonBonus: 0.15,
-    },
-  },
-};
-
-export const ROBE_STYLES = {
-  jade: {
-    id: "jade",
-    name: "Thanh Y Mặc Khách",
-    auraColor: "#4de6b0",
-    trimColor: "#9ef7d8",
-    accentColor: "#1d5446",
-  },
-  obsidian: {
-    id: "obsidian",
-    name: "Huyền Hắc Đạo Bào",
-    auraColor: "#ff4769",
-    trimColor: "#c86bff",
-    accentColor: "#261c33",
-  },
-  gold: {
-    id: "gold",
-    name: "Kim Tử Cẩm Y",
-    auraColor: "#ffd86e",
-    trimColor: "#ff8c42",
-    accentColor: "#573918",
-  },
-};
-
-export const DEFAULT_DISCOVERED_GU = [
-  "nguyet_quang",
-  "huyet_nha",
-  "thanh_doc",
-  "thiet_cot",
-  "anh_bo",
-  "hoa_than",
-];
+export const DEFAULT_DISCOVERED_GU = [...STARTER_GU_IDS];
 
 export function getRealmInfo(exp = 0) {
   let current = REALM_TIERS[0];
@@ -130,18 +35,42 @@ export function getRealmInfo(exp = 0) {
   return { ...current, next };
 }
 
-export function createCharacterRecord({ slotIndex, name, sectId = "thanh_nguyet", robeStyle = "jade" }) {
-  const sect = SECTS[sectId] ?? SECTS.thanh_nguyet;
-  const robe = ROBE_STYLES[robeStyle] ? robeStyle : sect.robeDefault;
+function migrateLegacyAppearance(item) {
+  if (item?.appearance && typeof item.appearance === "object") {
+    return normalizeAppearance(item.appearance);
+  }
+  const def = createDefaultAppearance();
+  if (item?.sectId === "huyet_ma") {
+    def.outfitColor = "huyet_sat";
+    def.trimColor = "do_tham";
+    def.eyeColor = "huyet_dong";
+    def.outfitStyle = "ta_tu";
+  } else if (item?.sectId === "xich_viem") {
+    def.outfitColor = "xich_viem";
+    def.trimColor = "cam_lua";
+    def.eyeColor = "ho_phach";
+    def.outfitStyle = "chien_giap";
+  }
+  return normalizeAppearance(def);
+}
+
+export function createCharacterRecord({
+  slotIndex,
+  name,
+  appearance = null,
+  starterGuId = "nguyet_quang",
+}) {
   return {
     id: `char_${Date.now()}_${slotIndex}`,
     slotIndex,
     name: String(name ?? "").trim().slice(0, 18) || "Vô Danh Cổ Sư",
-    sectId: sect.id,
-    robeStyle: robe,
+    appearance: normalizeAppearance(appearance),
+    starterGuId: STARTER_GU_IDS.includes(starterGuId) ? starterGuId : "nguyet_quang",
+    path_name: "Khởi Nguyên Cổ Đạo",
+    path_color: "#4de6b0",
     realm_level: 1,
     cultivation_exp: 0,
-    nguyen_thach: 0,
+    nguyen_thach: 36, // Tặng 36 Nguyên Thạch khởi đầu để thử Tụ Bảo Cổ Các & Hợp Cổ ngay!
     highest_floor_unlocked: 1,
     floors_cleared: 0,
     total_kills: 0,
@@ -154,6 +83,8 @@ export function createCharacterRecord({ slotIndex, name, sectId = "thanh_nguyet"
     unlocked_recipes: [],
     discovered_gu: [...DEFAULT_DISCOVERED_GU],
     fusion_history: [],
+    saved_bag: null,
+    saved_equipped: null,
     active_run: null,
     created_at: new Date().toISOString(),
   };
@@ -164,22 +95,24 @@ function normalizeCharactersArray(raw) {
   while (arr.length < 3) arr.push(null);
   return arr.map((item, idx) => {
     if (!item || typeof item !== "object") return null;
-    const sect = SECTS[item.sectId] ?? SECTS.thanh_nguyet;
-    const robe = ROBE_STYLES[item.robeStyle] ? item.robeStyle : sect.robeDefault;
+    const appearance = migrateLegacyAppearance(item);
     return {
       ...createCharacterRecord({
         slotIndex: idx,
         name: item.name ?? item.dao_hieu ?? `Cổ Sư ${idx + 1}`,
-        sectId: sect.id,
-        robeStyle: robe,
+        appearance,
+        starterGuId: item.starterGuId ?? "nguyet_quang",
       }),
       ...item,
       slotIndex: idx,
-      sectId: sect.id,
-      robeStyle: robe,
+      appearance,
+      path_name: item.path_name || "Khởi Nguyên Cổ Đạo",
+      path_color: item.path_color || "#4de6b0",
       unlocked_recipes: Array.isArray(item.unlocked_recipes) ? item.unlocked_recipes : [],
       discovered_gu: Array.isArray(item.discovered_gu) ? item.discovered_gu : [...DEFAULT_DISCOVERED_GU],
       fusion_history: Array.isArray(item.fusion_history) ? item.fusion_history : [],
+      saved_bag: Array.isArray(item.saved_bag) ? item.saved_bag : null,
+      saved_equipped: item.saved_equipped ?? null,
     };
   });
 }
@@ -191,7 +124,7 @@ function createDefaultProfile() {
     dao_hieu: "Vô Danh Cổ Sư",
     realm_level: 1,
     cultivation_exp: 0,
-    nguyen_thach: 0,
+    nguyen_thach: 36,
     highest_floor_unlocked: 1,
     floors_cleared: 0,
     total_kills: 0,
@@ -208,20 +141,17 @@ function createDefaultProfile() {
     characters: [null, null, null],
     last_slot: 0,
     settings: { muted: false },
-    save_version: 2,
+    save_version: 3,
     updated_at: null,
   };
 }
 
-function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+export function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 
-/**
- * Quản lý Tài khoản, 3 Ô Nhân Vật kiểu Ninja School, Offline Save & Supabase Cloud Save.
- */
 export class AccountManager {
   constructor() {
     this.session = null;
@@ -229,7 +159,7 @@ export class AccountManager {
     this.profile = createDefaultProfile();
     this.characters = [null, null, null];
     this.activeSlotIndex = null;
-    this.syncStatus = "offline"; // "offline" | "syncing" | "synced" | "error"
+    this.syncStatus = "offline";
     this.lastSyncAt = null;
     this.lastError = "";
     this.listeners = new Set();
@@ -290,8 +220,7 @@ export class AccountManager {
   }
 
   _maybeMigrateLegacyToSlotZero() {
-    const hasAnyChar = this.characters.some(Boolean);
-    if (hasAnyChar) return;
+    if (this.characters.some(Boolean)) return;
     const hasLegacyProgress =
       (this.profile.dao_hieu && this.profile.dao_hieu !== "Vô Danh Cổ Sư") ||
       (this.profile.total_kills ?? 0) > 0 ||
@@ -303,12 +232,11 @@ export class AccountManager {
         ...createCharacterRecord({
           slotIndex: 0,
           name: this.profile.dao_hieu || "Vô Danh Cổ Sư",
-          sectId: "thanh_nguyet",
-          robeStyle: "jade",
+          appearance: createDefaultAppearance(),
         }),
         realm_level: this.profile.realm_level ?? 1,
         cultivation_exp: this.profile.cultivation_exp ?? 0,
-        nguyen_thach: this.profile.nguyen_thach ?? 0,
+        nguyen_thach: Math.max(36, this.profile.nguyen_thach ?? 0),
         highest_floor_unlocked: this.profile.highest_floor_unlocked ?? 1,
         floors_cleared: this.profile.floors_cleared ?? 0,
         total_kills: this.profile.total_kills ?? 0,
@@ -329,7 +257,13 @@ export class AccountManager {
 
   loadLocal() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        for (const k of LEGACY_KEYS) {
+          raw = localStorage.getItem(k);
+          if (raw) break;
+        }
+      }
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (parsed.session) this.session = parsed.session;
@@ -347,7 +281,7 @@ export class AccountManager {
         this.syncStatus = "synced";
       }
     } catch {
-      // Bỏ qua lỗi dữ liệu cục bộ
+      // Ignore corrupt local state
     }
   }
 
@@ -364,7 +298,7 @@ export class AccountManager {
         })
       );
     } catch {
-      // Bỏ qua nếu bộ nhớ đầy
+      // Ignore storage quota
     }
   }
 
@@ -393,7 +327,7 @@ export class AccountManager {
       characters: this.characters,
       last_slot: Math.min(2, Math.max(0, Number(this.profile.last_slot ?? 0))),
       settings: this.profile.settings,
-      save_version: 2,
+      save_version: 3,
     };
   }
 
@@ -426,7 +360,7 @@ export class AccountManager {
     this._emit();
   }
 
-  createCharacter(slotIndex, { name, sectId, robeStyle }) {
+  createCharacter(slotIndex, { name, appearance, starterGuId = "nguyet_quang" }) {
     const idx = Math.min(2, Math.max(0, Number(slotIndex) || 0));
     const cleanName = String(name ?? "").trim().slice(0, 18);
     if (cleanName.length < 2) {
@@ -435,8 +369,8 @@ export class AccountManager {
     const charData = createCharacterRecord({
       slotIndex: idx,
       name: cleanName,
-      sectId,
-      robeStyle,
+      appearance,
+      starterGuId,
     });
     this.characters[idx] = charData;
     this.activeSlotIndex = idx;
@@ -445,6 +379,58 @@ export class AccountManager {
     this.syncCloud();
     this._emit();
     return charData;
+  }
+
+  updateCharacterAppearance(newAppearance, newName = null) {
+    const ch = this.getActiveCharacter();
+    if (!ch) return null;
+    ch.appearance = normalizeAppearance(newAppearance);
+    if (newName && String(newName).trim().length >= 2) {
+      ch.name = String(newName).trim().slice(0, 18);
+    }
+    this._mirrorActiveCharacterToProfile();
+    this.scheduleSync(400);
+    this._emit();
+    return ch;
+  }
+
+  persistCharacterLoadout(player) {
+    const ch = this.getActiveCharacter();
+    if (!ch || !player) return;
+    ch.saved_bag = player.bag.map((g) => ({ ...g }));
+    ch.saved_equipped = { ...player.equipped };
+    if (player.pathInfo) {
+      ch.path_name = player.pathInfo.name;
+      ch.path_color = player.pathInfo.color;
+    }
+    this.recordUnlockedRecipes(player.unlockedRecipes);
+    for (const g of player.bag) {
+      this.recordDiscoveredGu(g.baseId);
+    }
+    this._mirrorActiveCharacterToProfile();
+    this.scheduleSync(600);
+  }
+
+  drawTreasureGu(player, cost = 18) {
+    const ch = this.getActiveCharacter();
+    const effectiveCost = player && player.bag.length < 3 ? 0 : cost;
+    const curStone = ch ? ch.nguyen_thach : this.profile.nguyen_thach;
+    if (curStone < effectiveCost) {
+      throw new Error(`Cần ${effectiveCost} 💎 Nguyên Thạch để chiêu mộ Cổ Trùng mới.`);
+    }
+    if (ch) ch.nguyen_thach -= effectiveCost;
+    else this.profile.nguyen_thach -= effectiveCost;
+
+    const pickedId = STARTER_GU_IDS[Math.floor(Math.random() * STARTER_GU_IDS.length)];
+    const gu = createGuInstance(pickedId);
+    if (player) {
+      player.addGu(gu);
+      this.persistCharacterLoadout(player);
+    } else {
+      this.scheduleSync(500);
+    }
+    this._emit();
+    return { gu, spent: effectiveCost };
   }
 
   deleteCharacter(slotIndex) {
@@ -696,8 +682,6 @@ export class AccountManager {
     }, delayMs);
   }
 
-  // === GHI NHẬN TIẾN TRÌNH THEO NHÂN VẬT ĐANG CHỌN ===
-
   setDaoHieu(newName) {
     const trimmed = String(newName ?? "").trim().slice(0, 18);
     if (trimmed.length < 2) return;
@@ -736,7 +720,7 @@ export class AccountManager {
     if (ch) {
       ch.total_kills += 1;
       ch.cultivation_exp += 8;
-      ch.nguyen_thach += 2;
+      ch.nguyen_thach += 3;
       ch.realm_level = getRealmInfo(ch.cultivation_exp).level;
     }
     this._mirrorActiveCharacterToProfile();
@@ -747,8 +731,8 @@ export class AccountManager {
     const ch = this.getActiveCharacter();
     if (ch) {
       ch.bosses_slain += 1;
-      ch.cultivation_exp += 80;
-      ch.nguyen_thach += 35;
+      ch.cultivation_exp += 90;
+      ch.nguyen_thach += 45;
       ch.highest_floor_unlocked = Math.max(
         ch.highest_floor_unlocked,
         Math.min(3, floorNum + 1)
@@ -784,7 +768,7 @@ export class AccountManager {
 
   recordFusion({ mainName, subName, resultGu, outcome }) {
     const ch = this.getActiveCharacter();
-    const expGain = outcome === "mutation" ? 35 : outcome === "success" ? 25 : 8;
+    const expGain = outcome === "mutation" ? 40 : outcome === "success" ? 28 : 10;
 
     if (ch) {
       if (outcome === "mutation") ch.fusions_mutated += 1;
@@ -814,16 +798,22 @@ export class AccountManager {
 
   saveActiveRunSnapshot(player, world) {
     const ch = this.getActiveCharacter();
-    if (!player || !world || player.isDead || world.phase === "victory" || world.phase === "gameover") {
+    if (player) {
+      this.persistCharacterLoadout(player);
+    }
+    // Ở Vạn Cổ Thành (floor 0) hoặc đã kết thúc trận thì không cần đánh dấu dở Bí Cảnh
+    if (
+      !player ||
+      !world ||
+      world.floorNumber === 0 ||
+      player.isDead ||
+      world.phase === "victory" ||
+      world.phase === "gameover"
+    ) {
       if (ch) ch.active_run = null;
       this.profile.active_run = null;
       this.saveLocal();
       return;
-    }
-
-    this.recordUnlockedRecipes(player.unlockedRecipes);
-    for (const g of player.bag) {
-      this.recordDiscoveredGu(g.baseId);
     }
 
     const snap = {
@@ -836,8 +826,7 @@ export class AccountManager {
       maxMp: player.maxMp,
       corruption: Math.round(player.corruption),
       kills: player.kills,
-      sectId: player.sectId,
-      robeStyle: player.robeStyle,
+      appearance: player.appearance,
       bag: player.bag.map((g) => ({ ...g })),
       equipped: { ...player.equipped },
       savedAt: new Date().toISOString(),

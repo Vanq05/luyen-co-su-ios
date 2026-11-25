@@ -6,6 +6,21 @@ export const WORLD_WIDTH = 576;
 export const WORLD_HEIGHT = 352;
 
 export const FLOOR_DEFS = {
+  0: {
+    floor: 0,
+    name: "Vạn Cổ Thành · Quảng Trường Online",
+    tilesetKey: "tilesets/tang2-bach-cot-mo-dia",
+    ambientColor: "#14121f",
+    isSafeTown: true,
+    waves: [],
+    hazards: [],
+    obstacles: [
+      { x: 112, y: 86, r: 12, frame: 5 },
+      { x: 464, y: 86, r: 12, frame: 5 },
+      { x: 112, y: 266, r: 12, frame: 5 },
+      { x: 464, y: 266, r: 12, frame: 5 },
+    ],
+  },
   1: {
     floor: 1,
     name: "Tầng 1 · Rừng Chướng Khí",

@@ -1,24 +1,36 @@
 import {
   FUSION_RECIPES,
   GU_CATALOG,
+  STARTER_GU_IDS,
   canEquipInSlot,
   createGuInstance,
+  fuseUniversalHybrid,
   matchRecipe,
 } from "../combat/GuDatabase.js";
 
 /**
- * Giao diện Trạm Luyện Cổ & Quản lý Không Khiếu:
- * - Tab 1: Hợp Cổ (chọn Cổ Chính + Cổ Phụ + tùy chọn nhỏ 15% Max HP xúc tác + Mini-game 5 giây cân bằng nhiệt).
- * - Tab 2: Không Khiếu (trang bị 5 ô: Bản Mệnh, Chủ Động 1, Chủ Động 2, Di Chuyển, Sát Chiêu).
- * - Tab 3: Sổ Cổ Phương (theo dõi các công thức Nhị Chuyển đã mở khóa).
+ * Giao diện Trạm Luyện Cổ, Không Khiếu, Cổ Phương & Tụ Bảo Cổ Các:
+ * - Tự động hiển thị Con Đường Đạo Lộ định hình từ 5 Cổ Trùng trang bị.
+ * - Hỗ trợ 9 Cổ Phương định danh + Truyền Đạo Tính Vạn Năng lên tới Tam Chuyển.
+ * - Tụ Bảo Cổ Các: dùng Nguyên Thạch chiêu mộ ngẫu nhiên (18💎) hoặc chọn đích danh (30💎) Cổ Nhất Chuyển.
  */
 export class GuFusionModal {
-  constructor({ rootEl, player, world, sfx, account, onClose, onEquipmentChanged }) {
+  constructor({
+    rootEl,
+    player,
+    world,
+    sfx,
+    account,
+    onlineHub,
+    onClose,
+    onEquipmentChanged,
+  }) {
     this.rootEl = rootEl;
     this.player = player;
     this.world = world;
     this.sfx = sfx;
     this.account = account;
+    this.onlineHub = onlineHub;
     this.onClose = onClose;
     this.onEquipmentChanged = onEquipmentChanged;
 
@@ -28,8 +40,8 @@ export class GuFusionModal {
     this.useBloodCatalyst = false;
     this.selectedBagUid = null;
     this.lastResult = null;
+    this.shopNotice = "";
 
-    // Trạng thái mini-game 5 giây cân bằng nhiệt
     this.minigame = {
       running: false,
       timer: 5.0,
@@ -46,6 +58,7 @@ export class GuFusionModal {
   open(defaultTab = "fusion") {
     this.activeTab = defaultTab;
     this.lastResult = null;
+    this.shopNotice = "";
     this.rootEl.classList.add("is-open");
     this.render();
   }
@@ -100,10 +113,8 @@ export class GuFusionModal {
       this.minigame.lastTs = now;
 
       this.minigame.timer = Math.max(0, this.minigame.timer - dt);
-      // Vùng xanh dao động nhẹ
       this.minigame.zoneCenter = 54 + Math.sin((5 - this.minigame.timer) * 2.1) * 14;
 
-      // Giữ thổi lửa -> nhiệt tăng; buông -> nhiệt hạ
       if (this.minigame.holdingFlame) {
         this.minigame.heat = Math.min(100, this.minigame.heat + 54 * dt);
       } else {
@@ -157,56 +168,35 @@ export class GuFusionModal {
       return;
     }
 
-    const stability = this.minigame.greenTime / 5.0; // 0..1
-    let successRate = 0.25 + stability * 0.55;
+    const stability = this.minigame.greenTime / 5.0;
+    let successRate = 0.28 + stability * 0.56;
     if (this.useBloodCatalyst) successRate += 0.22;
-    if (subGu.isRemnant) successRate -= 0.1;
+    if (subGu.isRemnant) successRate -= 0.08;
 
-    const mutationChance = Math.min(0.45, 0.12 + (subGu.isRemnant ? 0.22 : 0) + (stability > 0.65 ? 0.12 : 0));
+    const mutationChance = Math.min(
+      0.46,
+      0.12 + (subGu.isRemnant ? 0.24 : 0) + (stability > 0.65 ? 0.12 : 0)
+    );
     const roll = Math.random();
-
     const mainWasSlot = this.player.getEquippedSlotOf(mainGu.uid);
 
     if (roll < successRate) {
-      // ĐẠI THÀNH hoặc BIẾN DỊ
       const isMutation = Math.random() < mutationChance;
-      const recipe = matchRecipe(mainGu.baseId, subGu.baseId);
       this.player.removeGu(mainGu.uid);
       this.player.removeGu(subGu.uid);
 
-      let created = null;
-      if (recipe) {
-        this.player.unlockedRecipes.add(recipe.id);
-        created = createGuInstance(recipe.result, isMutation ? {
-          isMutated: true,
-          name: `Dị · ${GU_CATALOG[recipe.result].name}`,
-          shortLabel: `Dị ${GU_CATALOG[recipe.result].shortLabel}`,
-          damageMult: 1.45,
-          cooldownMult: 0.85,
-          corruptionMult: 1.8,
-          passiveCorruptionRate: 1.2,
-          description: `BIẾN DỊ: +45% Sát thương, -15% CD, rỉ +1.2% Phản Phệ/s!`,
-        } : {});
-      } else {
-        created = createGuInstance(mainGu.baseId, {
-          isMutated: isMutation,
-          tier: Math.min(3, mainGu.tier + 1),
-          name: isMutation ? `Dị · ${mainGu.name}` : `Nhị Chuyển · ${mainGu.name}`,
-          shortLabel: isMutation ? `Dị ${mainGu.shortLabel}` : `${mainGu.shortLabel}+`,
-          damageMult: isMutation ? 1.5 : 1.32,
-          cooldownMult: isMutation ? 0.85 : 0.92,
-          corruptionMult: isMutation ? 1.8 : 1.2,
-          passiveCorruptionRate: isMutation ? 1.2 : 0,
-          description: isMutation
-            ? `DỊ CỔ (${mainGu.element}+${subGu.element}): Sát thương bùng nổ, Phản Phệ nặng!`
-            : `Cường hóa từ ${subGu.name}: +32% Sát thương, -8% Hồi chiêu.`,
-        });
+      const { created, unlockedRecipeId } = fuseUniversalHybrid(mainGu, subGu, isMutation);
+      if (unlockedRecipeId) {
+        this.player.unlockedRecipes.add(unlockedRecipeId);
       }
 
       this.player.addGu(created);
       if (mainWasSlot && canEquipInSlot(created, mainWasSlot)) {
         this.player.equipGu(mainWasSlot, created.uid);
+      } else {
+        this.player.recalculatePathStats(false);
       }
+
       this.sfx?.play("fusionSuccess");
       this.lastResult = {
         kind: isMutation ? "mutation" : "success",
@@ -221,14 +211,21 @@ export class GuFusionModal {
         resultGu: created,
         outcome: isMutation ? "mutation" : "success",
       });
+
+      if ((created.tier ?? 1) >= 2 || isMutation) {
+        this.onlineHub?.broadcastFusion(
+          this.player.characterName,
+          this.player.pathInfo,
+          created,
+          isMutation
+        );
+      }
     } else {
-      // THẤT BẠI / NỔ VẠC: mất 2 cổ, nhận sát thương nổ và 1 Tàn Cổ
       this.player.removeGu(mainGu.uid);
       this.player.removeGu(subGu.uid);
       const remnant = createGuInstance("tan_co");
       this.player.addGu(remnant);
 
-      // Bảo toàn không để người chơi kẹt tay trắng không có skill tấn công nào
       const hasAnyActive = this.player.bag.some((g) => g.slotCategory === "active" && !g.isRemnant);
       if (!hasAnyActive) {
         const backup = createGuInstance("nguyet_quang");
@@ -239,17 +236,24 @@ export class GuFusionModal {
         if (firstActive) this.player.equipGu("skill1", firstActive.uid);
       }
 
-      const blastDmg = Math.round(this.player.maxHp * 0.14);
-      this.player.hp = Math.max(1, this.player.hp - blastDmg);
-      this.player.addCorruption(12);
-      this.world.spawnVfx("vfx/no-vac", this.world.cauldron.x, this.world.cauldron.y, { scale: 0.7 });
-      this.world.triggerShake(0.35, 5);
+      const blastDmg = this.world?.floorNumber === 0 ? 0 : Math.round(this.player.maxHp * 0.14);
+      if (blastDmg > 0) {
+        this.player.hp = Math.max(1, this.player.hp - blastDmg);
+        this.player.addCorruption(12);
+      }
+      if (this.world) {
+        this.world.spawnVfx("vfx/no-vac", this.world.cauldron.x, this.world.cauldron.y, { scale: 0.7 });
+        this.world.triggerShake(0.35, 5);
+      }
       this.sfx?.play("fusionFail");
 
       this.lastResult = {
         kind: "fail",
         title: "THẤT BẠI · NỔ VẠC!",
-        detail: `Mất 2 Cổ Trùng, chịu ${blastDmg} sát thương nổ & +12% Phản Phệ. Thu được 1 [Tàn Cổ].`,
+        detail:
+          blastDmg > 0
+            ? `Mất 2 Cổ Trùng, chịu ${blastDmg} sát thương nổ & +12% Phản Phệ. Thu được 1 [Tàn Cổ].`
+            : `Nổ lò luyện tại Vạn Cổ Thành (được đại trận hộ mệnh bảo vệ HP). Thu được 1 [Tàn Cổ]!`,
       };
       this.account?.saveActiveRunSnapshot(this.player, this.world);
       this.account?.recordFusion({
@@ -268,6 +272,10 @@ export class GuFusionModal {
 
   render() {
     const p = this.player;
+    const path = p.pathInfo;
+    const ch = this.account?.getActiveCharacter?.();
+    const stones = ch ? ch.nguyen_thach : this.account?.profile?.nguyen_thach ?? 0;
+
     const slotDefs = [
       { id: "passive", label: "Bản Mệnh Cổ" },
       { id: "skill1", label: "Chủ Động 1" },
@@ -276,20 +284,35 @@ export class GuFusionModal {
       { id: "ult", label: "Sát Chiêu Cổ" },
     ];
 
+    const pathBanner = `
+      <div class="dao-path-banner" style="--path-col:${path.color}">
+        <div>
+          <strong style="color:${path.color}">${path.badge} Con Đường: ${path.name}</strong>
+          <div class="dao-path-desc">${path.bonusDesc}</div>
+        </div>
+        <div class="dao-stone-pill">💎 ${stones} Nguyên Thạch</div>
+      </div>
+    `;
+
     let bodyHtml = "";
 
     if (this.activeTab === "fusion") {
       const mainGu = p.getGu(this.selectedMainUid);
       const subGu = p.getGu(this.selectedSubUid);
       const recipePreview =
-        mainGu && subGu ? matchRecipe(mainGu.baseId, subGu.baseId) : null;
-      const previewText = recipePreview
-        ? this.player.unlockedRecipes.has(recipePreview.id)
-          ? `Công thức: ${GU_CATALOG[recipePreview.result].name}`
-          : "Cảm ứng được Huyền Cơ Hợp Cổ! (Có Cổ Phương ẩn)"
-        : mainGu && subGu
-          ? `Dự kiến: Cường hóa ${mainGu.shortLabel} (+nguy cơ Biến Dị)`
-          : "Chọn 1 Cổ Chính (giữ dạng skill) và 1 Cổ Phụ";
+        mainGu && subGu && mainGu.tier === 1 && subGu.tier === 1
+          ? matchRecipe(mainGu.baseId, subGu.baseId)
+          : null;
+
+      let previewText = "Chọn 1 Cổ Chính (giữ dạng chiêu) + 1 Cổ Phụ (truyền Đạo Tính nguyên tố)";
+      if (recipePreview) {
+        previewText = p.unlockedRecipes.has(recipePreview.id)
+          ? `✨ Cổ Phương: ${GU_CATALOG[recipePreview.result].name} — ${GU_CATALOG[recipePreview.result].description}`
+          : "✨ Cảm ứng được Huyền Cơ Cổ Phương Nhị Chuyển ẩn!";
+      } else if (mainGu && subGu) {
+        const nextTier = Math.min(3, Math.max(mainGu.tier ?? 1, subGu.tier ?? 1) + 1);
+        previewText = `🔮 Dung hợp tự do lên Bậc ${nextTier}: Giữ chiêu [${mainGu.shortLabel}] + truyền Đạo Tính hệ [${subGu.element}]`;
+      }
 
       const bagCards = p.bag
         .map((g) => {
@@ -300,13 +323,14 @@ export class GuFusionModal {
           return `
             <button type="button" class="gu-card ${cls}" data-pick-fusion="${g.uid}" style="--gu-col:${g.color}">
               <span class="gu-name">${g.name}</span>
-              <span class="gu-meta">${g.element} · ${tag}</span>
+              <span class="gu-meta">${g.element} · ${tag} · ${g.slotCategory.toUpperCase()}</span>
             </button>
           `;
         })
         .join("");
 
       bodyHtml = `
+        ${pathBanner}
         <div class="fusion-grid">
           <div class="fusion-bag-col">
             <div class="section-title">Cổ Nang (${p.bag.length} cổ trùng)</div>
@@ -315,12 +339,12 @@ export class GuFusionModal {
           <div class="fusion-altar-col">
             <div class="fusion-slots-row">
               <div class="fusion-slot-box">
-                <div class="slot-cap">Cổ Chính</div>
+                <div class="slot-cap">Cổ Chính (Giữ Chiêu)</div>
                 <div class="slot-val">${mainGu ? mainGu.name : "Chưa chọn"}</div>
               </div>
               <div class="fusion-plus">+</div>
               <div class="fusion-slot-box">
-                <div class="slot-cap">Cổ Phụ</div>
+                <div class="slot-cap">Cổ Phụ (Truyền Đạo)</div>
                 <div class="slot-val">${subGu ? subGu.name : "Chưa chọn"}</div>
               </div>
             </div>
@@ -349,7 +373,7 @@ export class GuFusionModal {
                 : `
               <button id="btn-start-fusion" type="button" class="primary-action-btn" ${
                 mainGu && subGu ? "" : "disabled"
-              }>🔥 KHAI LÔ LUYỆN CỔ (5s)</button>
+              }>🔥 KHAI LÔ DUNG HỢP (5s)</button>
             `
             }
 
@@ -373,7 +397,7 @@ export class GuFusionModal {
           return `
             <button type="button" class="aperture-slot-btn ${compatible ? "is-compatible" : ""}" data-equip-slot="${s.id}">
               <div class="slot-cap">${s.label}</div>
-              <div class="slot-val" style="color:${eq ? eq.color : "#968fa3"}">${eq ? eq.name : "Trống"}</div>
+              <div class="slot-val" style="color:${eq ? eq.color : "#968fa3"}">${eq ? `${eq.name} (Bậc ${eq.tier})` : "Trống"}</div>
             </button>
           `;
         })
@@ -392,16 +416,41 @@ export class GuFusionModal {
         .join("");
 
       bodyHtml = `
+        ${pathBanner}
         <div class="aperture-layout">
           <div class="aperture-slots-col">
-            <div class="section-title">5 Ô Không Khiếu (chạm cổ rồi chạm ô)</div>
+            <div class="section-title">5 Ô Không Khiếu (chạm cổ rồi chạm ô để định Đạo)</div>
             ${slotHtml}
           </div>
           <div class="aperture-bag-col">
-            <div class="section-title">Cổ Nang</div>
+            <div class="section-title">Cổ Nang (${p.bag.length})</div>
             <div class="gu-card-list">${bagHtml}</div>
           </div>
         </div>
+      `;
+    } else if (this.activeTab === "shop") {
+      const randomCost = p.bag.length < 3 ? 0 : 18;
+      const directCards = STARTER_GU_IDS.map((id) => {
+        const g = GU_CATALOG[id];
+        return `
+          <button type="button" class="gu-card" data-buy-direct="${id}" style="--gu-col:${g.color}">
+            <span class="gu-name">${g.name} (${g.element}) — 30 💎</span>
+            <span class="gu-meta">${g.slotCategory.toUpperCase()} · ${g.description}</span>
+          </button>
+        `;
+      }).join("");
+
+      bodyHtml = `
+        ${pathBanner}
+        <div class="acc-banner">
+          Dùng <b>Nguyên Thạch</b> kiếm từ trảm quái & diệt Boss để chiêu mộ Cổ Trùng Nhất Chuyển làm nguyên liệu tự do dung hợp Nhị Chuyển / Tam Chuyển theo con đường riêng!
+        </div>
+        <button type="button" id="btn-draw-random-gu" class="primary-action-btn" style="margin-top:0;margin-bottom:8px">
+          🎲 Cảm Ứng Ngẫu Nhiên 1 Cổ Trùng (${randomCost === 0 ? "Miễn phí cứu trợ" : `${randomCost} 💎`})
+        </button>
+        ${this.shopNotice ? `<div class="fusion-result is-success" style="margin-bottom:8px">${this.shopNotice}</div>` : ""}
+        <div class="section-title">Chọn Đích Danh Cổ Trùng Nguyên Liệu (30 💎)</div>
+        <div class="gu-card-list" style="max-height:190px">${directCards}</div>
       `;
     } else {
       const recipesHtml = FUSION_RECIPES.map((r) => {
@@ -410,12 +459,15 @@ export class GuFusionModal {
         return `
           <div class="recipe-row ${unlocked ? "is-unlocked" : ""}">
             <div class="recipe-title">${unlocked ? r.title : `${GU_CATALOG[r.main].name} + ${GU_CATALOG[r.sub].name} = ???`}</div>
-            <div class="recipe-desc">${unlocked ? res.description : "Luyện thành công một lần để khai mở Cổ Phương này."}</div>
+            <div class="recipe-desc">${unlocked ? res.description : "Dung hợp cặp Cổ Trùng này để khai mở Cổ Phương định danh."}</div>
           </div>
         `;
       }).join("");
 
-      bodyHtml = `<div class="recipes-list">${recipesHtml}</div>`;
+      bodyHtml = `
+        ${pathBanner}
+        <div class="recipes-list">${recipesHtml}</div>
+      `;
     }
 
     this.rootEl.innerHTML = `
@@ -424,7 +476,8 @@ export class GuFusionModal {
           <div class="modal-tabs">
             <button type="button" class="tab-btn ${this.activeTab === "fusion" ? "is-active" : ""}" data-tab="fusion">🔥 Hợp Cổ</button>
             <button type="button" class="tab-btn ${this.activeTab === "aperture" ? "is-active" : ""}" data-tab="aperture">🎒 Không Khiếu</button>
-            <button type="button" class="tab-btn ${this.activeTab === "recipes" ? "is-active" : ""}" data-tab="recipes">📜 Cổ Phương</button>
+            <button type="button" class="tab-btn ${this.activeTab === "shop" ? "is-active" : ""}" data-tab="shop">💎 Tụ Bảo Các</button>
+            <button type="button" class="tab-btn ${this.activeTab === "recipes" ? "is-active" : ""}" data-tab="recipes">📜 Cổ Phương (${p.unlockedRecipes.size}/${FUSION_RECIPES.length})</button>
           </div>
           <button type="button" id="btn-close-modal" class="close-btn">✕ Đóng</button>
         </div>
@@ -442,6 +495,7 @@ export class GuFusionModal {
       btn.addEventListener("click", () => {
         if (this.minigame.running) return;
         this.activeTab = btn.dataset.tab;
+        this.shopNotice = "";
         this.render();
       });
     });
@@ -504,7 +558,42 @@ export class GuFusionModal {
         this.player.equipGu(slotId, gu.uid);
         this.sfx?.play("pickup");
         this.account?.saveActiveRunSnapshot(this.player, this.world);
-        this.account?.scheduleSync(600);
+        this.account?.scheduleSync(500);
+        this.onEquipmentChanged?.();
+        this.render();
+      });
+    });
+
+    this.rootEl.querySelector("#btn-draw-random-gu")?.addEventListener("click", () => {
+      try {
+        const { gu, spent } = this.account.drawTreasureGu(this.player, 18);
+        this.sfx?.play("pickup");
+        this.shopNotice = `Đã chiêu mộ [${gu.name}] (${spent === 0 ? "Miễn phí" : `-${spent} 💎`})!`;
+        this.onEquipmentChanged?.();
+        this.render();
+      } catch (err) {
+        this.shopNotice = `⚠️ ${err.message}`;
+        this.render();
+      }
+    });
+
+    this.rootEl.querySelectorAll("[data-buy-direct]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const baseId = btn.dataset.buyDirect;
+        const ch = this.account?.getActiveCharacter?.();
+        const stones = ch ? ch.nguyen_thach : this.account?.profile?.nguyen_thach ?? 0;
+        if (stones < 30) {
+          this.shopNotice = "⚠️ Cần 30 💎 Nguyên Thạch để chọn đích danh Cổ Trùng.";
+          this.render();
+          return;
+        }
+        if (ch) ch.nguyen_thach -= 30;
+        else this.account.profile.nguyen_thach -= 30;
+        const gu = createGuInstance(baseId);
+        this.player.addGu(gu);
+        this.account?.persistCharacterLoadout(this.player);
+        this.sfx?.play("pickup");
+        this.shopNotice = `✨ Đã thỉnh [${gu.name}] vào Cổ Nang (-30 💎)!`;
         this.onEquipmentChanged?.();
         this.render();
       });
