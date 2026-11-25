@@ -3115,7 +3115,6 @@
       this.vfxEffects = [];
       this.floatingTexts = [];
       this.telegraphs = [];
-      this.loadFloor(0);
     }
     getFloorDef() {
       return FLOOR_DEFS[this.floorNumber] ?? FLOOR_DEFS[0];
@@ -3150,7 +3149,7 @@
         this.portal.active = false;
         this._spawnWave(0);
       }
-      this.onStateChange?.();
+      this.onStateChange?.(this);
     }
     restoreFromSnapshot(snap) {
       if (!snap) return;
@@ -3180,7 +3179,7 @@
         this._spawnWave(this.waveIndex);
       }
       this.addFloatingText(this.player.x, this.player.y - 28, "Kh\xF4i Ph\u1EE5c H\xE0nh Tr\xECnh!", "#4de6b0");
-      this.onStateChange?.();
+      this.onStateChange?.(this);
     }
     _spawnWave(idx) {
       const def = this.getFloorDef();
@@ -3336,7 +3335,7 @@
       }
       this.addFloatingText(this.boss.x, this.boss.y - 30, this.boss.name, "#ff5c7a");
       this.sfx?.play("ult");
-      this.onStateChange?.();
+      this.onStateChange?.(this);
     }
     goToNextFloor() {
       if (this.phase !== "floor_clear") return;
@@ -3703,7 +3702,7 @@
         this.account?.saveActiveRunSnapshot(this.player, this);
         this.account?.syncCloud();
       }
-      this.onStateChange?.();
+      this.onStateChange?.(this);
     }
     triggerHitStop(sec) {
       this.hitStopTimer = Math.max(this.hitStopTimer, sec);
@@ -7078,28 +7077,30 @@
       sfx,
       account,
       onlineHub,
-      onStateChange: () => {
-        if (world.phase === "victory") {
+      onStateChange: (activeWorld) => {
+        const w = activeWorld ?? world;
+        if (!w) return;
+        if (w.phase === "victory") {
           account.persistCharacterLoadout(player);
           account.clearActiveRunSnapshot(true);
           inGameplay = false;
           isPaused = true;
           gateScreens?.openResult("victory", {
             kills: player.kills,
-            floorName: world.getFloorDef().name
+            floorName: w.getFloorDef().name
           });
-        } else if (world.phase === "gameover") {
+        } else if (w.phase === "gameover") {
           account.persistCharacterLoadout(player);
           account.clearActiveRunSnapshot(true);
           inGameplay = false;
           isPaused = true;
           gateScreens?.openResult("gameover", {
             kills: player.kills,
-            floorName: world.getFloorDef().name
+            floorName: w.getFloorDef().name
           });
         }
-        hud?.syncAccountBadge(account, world);
-        hud?.syncState(player, world, onlineHub);
+        hud?.syncAccountBadge(account, w);
+        hud?.syncState(player, w, onlineHub);
       }
     });
     if (restoreSnapshot) {

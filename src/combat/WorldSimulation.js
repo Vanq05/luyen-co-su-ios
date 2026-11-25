@@ -49,8 +49,6 @@ export class WorldSimulation {
     this.vfxEffects = [];
     this.floatingTexts = [];
     this.telegraphs = [];
-
-    this.loadFloor(0);
   }
 
   getFloorDef() {
@@ -90,7 +88,7 @@ export class WorldSimulation {
       this.portal.active = false;
       this._spawnWave(0);
     }
-    this.onStateChange?.();
+    this.onStateChange?.(this);
   }
 
   restoreFromSnapshot(snap) {
@@ -125,7 +123,7 @@ export class WorldSimulation {
       this._spawnWave(this.waveIndex);
     }
     this.addFloatingText(this.player.x, this.player.y - 28, "Khôi Phục Hành Trình!", "#4de6b0");
-    this.onStateChange?.();
+    this.onStateChange?.(this);
   }
 
   _spawnWave(idx) {
@@ -288,7 +286,7 @@ export class WorldSimulation {
 
     this.addFloatingText(this.boss.x, this.boss.y - 30, this.boss.name, "#ff5c7a");
     this.sfx?.play("ult");
-    this.onStateChange?.();
+    this.onStateChange?.(this);
   }
 
   goToNextFloor() {
@@ -705,7 +703,7 @@ export class WorldSimulation {
       this.account?.saveActiveRunSnapshot(this.player, this);
       this.account?.syncCloud();
     }
-    this.onStateChange?.();
+    this.onStateChange?.(this);
   }
 
   triggerHitStop(sec) {

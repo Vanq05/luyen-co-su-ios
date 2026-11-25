@@ -48,28 +48,30 @@ function mountWorldForCharacter(floorNum, restoreSnapshot = null) {
     sfx,
     account,
     onlineHub,
-    onStateChange: () => {
-      if (world.phase === "victory") {
+    onStateChange: (activeWorld) => {
+      const w = activeWorld ?? world;
+      if (!w) return;
+      if (w.phase === "victory") {
         account.persistCharacterLoadout(player);
         account.clearActiveRunSnapshot(true);
         inGameplay = false;
         isPaused = true;
         gateScreens?.openResult("victory", {
           kills: player.kills,
-          floorName: world.getFloorDef().name,
+          floorName: w.getFloorDef().name,
         });
-      } else if (world.phase === "gameover") {
+      } else if (w.phase === "gameover") {
         account.persistCharacterLoadout(player);
         account.clearActiveRunSnapshot(true);
         inGameplay = false;
         isPaused = true;
         gateScreens?.openResult("gameover", {
           kills: player.kills,
-          floorName: world.getFloorDef().name,
+          floorName: w.getFloorDef().name,
         });
       }
-      hud?.syncAccountBadge(account, world);
-      hud?.syncState(player, world, onlineHub);
+      hud?.syncAccountBadge(account, w);
+      hud?.syncState(player, w, onlineHub);
     },
   });
 
