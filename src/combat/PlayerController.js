@@ -61,6 +61,26 @@ export class PlayerController {
     this.kills = 0;
   }
 
+  restoreFromSnapshot(snap, unlockedRecipes = []) {
+    if (!snap) return;
+    this.maxHp = snap.maxHp ?? 180;
+    this.hp = Math.max(1, Math.min(this.maxHp, snap.hp ?? this.maxHp));
+    this.maxMp = snap.maxMp ?? 100;
+    this.mp = Math.max(0, Math.min(this.maxMp, snap.mp ?? this.maxMp));
+    this.corruption = Math.max(0, Math.min(99, snap.corruption ?? 0));
+    this.kills = snap.kills ?? 0;
+
+    if (Array.isArray(snap.bag) && snap.bag.length > 0) {
+      this.bag = snap.bag.map((g) => ({ ...g }));
+    }
+    if (snap.equipped) {
+      this.equipped = { ...this.equipped, ...snap.equipped };
+    }
+    if (Array.isArray(unlockedRecipes)) {
+      this.unlockedRecipes = new Set(unlockedRecipes);
+    }
+  }
+
   getGu(uid) {
     return this.bag.find((g) => g.uid === uid) ?? null;
   }

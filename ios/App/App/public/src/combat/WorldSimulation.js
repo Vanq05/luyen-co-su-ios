@@ -12,10 +12,11 @@ const STARTER_POOL = ["nguyet_quang", "huyet_nha", "thanh_doc", "thiet_cot", "an
  * - Hệ thống đạn, AoE, gai xương, phân thân, hiệu ứng VFX pixelfx.
  */
 export class WorldSimulation {
-  constructor({ player, assets, sfx, onStateChange }) {
+  constructor({ player, assets, sfx, account, onStateChange }) {
     this.player = player;
     this.assets = assets;
     this.sfx = sfx;
+    this.account = account;
     this.onStateChange = onStateChange;
 
     this.floorNumber = 1;
@@ -79,6 +80,41 @@ export class WorldSimulation {
     this.portal.active = false;
 
     this._spawnWave(0);
+    this.onStateChange?.();
+  }
+
+  restoreFromSnapshot(snap) {
+    if (!snap) return;
+    const floorNum = Math.min(3, Math.max(1, Number(snap.floorNumber ?? 1)));
+    this.floorNumber = floorNum;
+    const def = FLOOR_DEFS[floorNum];
+    this.phase = snap.phase || "waves";
+    this.waveIndex = Math.max(0, Math.min(def.waves.length - 1, Number(snap.waveIndex ?? 0)));
+
+    this.player.x = WORLD_WIDTH * 0.5;
+    this.player.y = WORLD_HEIGHT - 56;
+    this.player.dashTimer = 0;
+
+    this.hazards = def.hazards.map((h) => ({ ...h, cooldown: 0, activeTimer: 0, warnTimer: 0 }));
+    this.obstacles = def.obstacles.map((o) => ({ ...o }));
+    this.enemies = [];
+    this.boss = null;
+    this.playerProjectiles = [];
+    this.enemyProjectiles = [];
+    this.zones = [];
+    this.decoys = [];
+    this.pickups = [];
+    this.energyCores = [];
+    this.vfxEffects = [];
+    this.telegraphs = [];
+
+    this.cauldron.active = this.phase === "cauldron";
+    this.portal.active = this.phase === "floor_clear";
+
+    if (this.phase === "waves") {
+      this._spawnWave(this.waveIndex);
+    }
+    this.addFloatingText(this.player.x, this.player.y - 28, "Khôi Phục Hành Trình!", "#4de6b0");
     this.onStateChange?.();
   }
 
@@ -603,13 +639,19 @@ export class WorldSimulation {
 
     // Thưởng Phôi Cổ & Huyết Tinh
     const rewardId = STARTER_POOL[(this.floorNumber + 1) % STARTER_POOL.length];
-    this.player.addGu(createGuInstance(rewardId));
+    const rewardGu = createGuInstance(rewardId);
+    this.player.addGu(rewardGu);
+    this.account?.recordDiscoveredGu(rewardGu.baseId);
+    this.account?.recordBossKill(this.floorNumber);
 
     if (this.floorNumber >= 3) {
       this.phase = "victory";
+      this.account?.clearActiveRunSnapshot(true);
     } else {
       this.phase = "floor_clear";
       this.portal.active = true;
+      this.account?.saveActiveRunSnapshot(this.player, this);
+      this.account?.syncCloud();
     }
     this.onStateChange?.();
   }
@@ -659,6 +701,7 @@ export class WorldSimulation {
       onDeath: () => {
         this.phase = "gameover";
         this.sfx?.play("fusionFail");
+        this.account?.clearActiveRunSnapshot(true);
         this.onStateChange?.();
       },
     };
@@ -765,11 +808,15 @@ export class WorldSimulation {
       if (this.waveIndex + 1 < this.getFloorDef().waves.length) {
         this.waveIndex += 1;
         this._spawnWave(this.waveIndex);
+        this.account?.saveActiveRunSnapshot(this.player, this);
+        this.account?.scheduleSync(1000);
       } else {
         this.phase = "cauldron";
         this.cauldron.active = true;
         this.addFloatingText(this.cauldron.x, this.cauldron.y - 34, "Trạm Luyện Cổ Khai Mở!", "#4de6b0");
         this.sfx?.play("pickup");
+        this.account?.saveActiveRunSnapshot(this.player, this);
+        this.account?.syncCloud();
         this.onStateChange?.();
       }
     }
@@ -1021,6 +1068,7 @@ export class WorldSimulation {
 
   _onEnemyKilled(e) {
     this.player.kills += 1;
+    this.account?.recordEnemyKill();
     this.spawnVfx("vfx/hit-spark", e.x, e.y - 6, { scale: 0.65 });
 
     // Dị Cổ chết gần Vạn Cổ Tà Lô rơi Lõi Năng Lượng

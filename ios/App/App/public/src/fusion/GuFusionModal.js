@@ -13,11 +13,12 @@ import {
  * - Tab 3: Sổ Cổ Phương (theo dõi các công thức Nhị Chuyển đã mở khóa).
  */
 export class GuFusionModal {
-  constructor({ rootEl, player, world, sfx, onClose, onEquipmentChanged }) {
+  constructor({ rootEl, player, world, sfx, account, onClose, onEquipmentChanged }) {
     this.rootEl = rootEl;
     this.player = player;
     this.world = world;
     this.sfx = sfx;
+    this.account = account;
     this.onClose = onClose;
     this.onEquipmentChanged = onEquipmentChanged;
 
@@ -212,6 +213,14 @@ export class GuFusionModal {
         title: isMutation ? "BIẾN DỊ DỊ CỔ!" : "LUYỆN CỔ ĐẠI THÀNH!",
         detail: `Thu được [${created.name}] — ${created.description}`,
       };
+      this.account?.recordUnlockedRecipes(this.player.unlockedRecipes);
+      this.account?.saveActiveRunSnapshot(this.player, this.world);
+      this.account?.recordFusion({
+        mainName: mainGu.name,
+        subName: subGu.name,
+        resultGu: created,
+        outcome: isMutation ? "mutation" : "success",
+      });
     } else {
       // THẤT BẠI / NỔ VẠC: mất 2 cổ, nhận sát thương nổ và 1 Tàn Cổ
       this.player.removeGu(mainGu.uid);
@@ -242,6 +251,13 @@ export class GuFusionModal {
         title: "THẤT BẠI · NỔ VẠC!",
         detail: `Mất 2 Cổ Trùng, chịu ${blastDmg} sát thương nổ & +12% Phản Phệ. Thu được 1 [Tàn Cổ].`,
       };
+      this.account?.saveActiveRunSnapshot(this.player, this.world);
+      this.account?.recordFusion({
+        mainName: mainGu.name,
+        subName: subGu.name,
+        resultGu: remnant,
+        outcome: "fail",
+      });
     }
 
     this.selectedMainUid = null;
@@ -487,6 +503,8 @@ export class GuFusionModal {
         if (!gu || !canEquipInSlot(gu, slotId)) return;
         this.player.equipGu(slotId, gu.uid);
         this.sfx?.play("pickup");
+        this.account?.saveActiveRunSnapshot(this.player, this.world);
+        this.account?.scheduleSync(600);
         this.onEquipmentChanged?.();
         this.render();
       });

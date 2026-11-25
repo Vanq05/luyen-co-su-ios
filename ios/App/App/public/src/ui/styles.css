@@ -18,6 +18,13 @@
   -webkit-user-select: none;
 }
 
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
 html,
 body {
   margin: 0;
@@ -835,4 +842,133 @@ body {
   color: var(--text-primary);
   font-size: 12px;
   pointer-events: auto;
+}
+
+/* === ACCOUNT MODAL & CLOUD SAVE HUD === */
+.right-top-hud {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#account-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  background: rgba(8, 7, 12, 0.86);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  pointer-events: auto;
+}
+
+#account-modal-root.is-open {
+  display: flex;
+}
+
+.modal-card--account {
+  width: min(560px, 95vw);
+}
+
+.acc-banner {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(77, 230, 176, 0.08);
+  border: 1px solid rgba(77, 230, 176, 0.3);
+  font-size: 10.5px;
+  color: #cfffea;
+  margin-bottom: 10px;
+}
+
+.acc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10.5px;
+  color: var(--bronze-bright);
+}
+
+.acc-field input,
+.acc-rename-row input {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(156, 122, 68, 0.5);
+  background: #0d0c14;
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+.acc-field input:focus,
+.acc-rename-row input:focus {
+  border-color: var(--jade-glow);
+}
+
+.acc-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.acc-stat-box,
+.acc-subblock {
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: #100e17;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.acc-subblock {
+  margin-top: 8px;
+}
+
+.acc-rename-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.acc-rename-row input {
+  flex: 1;
+}
+
+.acc-hist-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  padding: 2px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.acc-actions-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.overlay-account-pill {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(16, 14, 23, 0.9);
+  border: 1px solid rgba(156, 122, 68, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.overlay-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

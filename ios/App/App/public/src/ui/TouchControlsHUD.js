@@ -19,6 +19,7 @@ export class TouchControlsHUD {
     onContextAction,
     onSecondaryAction,
     onToggleMute,
+    onOpenAccount,
   }) {
     this.hudRoot = hudRoot;
     this.slots = slots;
@@ -48,11 +49,13 @@ export class TouchControlsHUD {
     this.ctxBtn = this.hudRoot.querySelector("#ctx-action-btn");
     this.secBtn = this.hudRoot.querySelector("#sec-action-btn");
     this.muteBtn = this.hudRoot.querySelector("#btn-mute-sfx");
+    this.accountBtn = this.hudRoot.querySelector("#btn-open-account");
 
     this.hudRoot.querySelector("#btn-open-bag")?.addEventListener("click", () => onOpenBag?.());
     this.ctxBtn?.addEventListener("click", () => onContextAction?.());
     this.secBtn?.addEventListener("click", () => onSecondaryAction?.());
     this.muteBtn?.addEventListener("click", () => onToggleMute?.(this.muteBtn));
+    this.accountBtn?.addEventListener("click", () => onOpenAccount?.());
 
     this.joystick = new VirtualJoystick(joystickZone, joystickBase, joystickKnob, {
       maxRadius: 42,
@@ -142,6 +145,7 @@ export class TouchControlsHUD {
         </div>
 
         <div class="right-top-hud">
+          <button id="btn-open-account" type="button" class="mini-hud-btn">👤 Đạo Tịch</button>
           <button id="btn-mute-sfx" type="button" class="mini-hud-btn">🔊 Âm</button>
         </div>
       </div>
@@ -180,6 +184,21 @@ export class TouchControlsHUD {
     if (this.passiveSub) {
       this.passiveSub.textContent = newSlots.passive ? newSlots.passive.description : "Chưa lắp Bản Mệnh Cổ";
     }
+  }
+
+  syncAccountBadge(account) {
+    if (!this.accountBtn) return;
+    if (!account?.isLoggedIn()) {
+      this.accountBtn.textContent = "👤 Đăng Nhập";
+      return;
+    }
+    const dot =
+      account.syncStatus === "syncing"
+        ? "⏳"
+        : account.syncStatus === "error"
+          ? "⚠️"
+          : "☁️";
+    this.accountBtn.textContent = `${dot} ${account.profile.dao_hieu}`;
   }
 
   syncState(player, world) {

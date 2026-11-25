@@ -7,7 +7,7 @@
 	"ios": {
 		"contentInset": "never",
 		"preferredContentMode": "mobile",
-		"limitsNavigationsToAppBoundDomains": true
+		"limitsNavigationsToAppBoundDomains": false
 	},
 	"packageClassList": []
 }
