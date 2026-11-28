@@ -1,5 +1,5 @@
-import { GU_CATALOG } from "../combat/GuDatabase.js";
-import { getRealmInfo } from "../account/AccountManager.js";
+import { GU_CATALOG } from "../data/GuCatalog.js";
+import { getStageInfo } from "../data/CultivationData.js";
 
 /**
  * Giao diện Tài Khoản & Sao Lưu Đám Mây (Đăng nhập / Đăng ký / Hồ Sơ Đạo Tịch).
@@ -39,7 +39,7 @@ export class AccountModal {
   render() {
     const acc = this.account;
     const p = acc.profile;
-    const realm = getRealmInfo(p.cultivation_exp);
+    const realm = getStageInfo(p.realm_level);
 
     if (!acc.isLoggedIn()) {
       this.rootEl.innerHTML = `
@@ -133,7 +133,7 @@ export class AccountModal {
               <div class="acc-stat-box">
                 <div class="slot-cap">Cảnh Giới</div>
                 <div class="slot-val" style="color:#4de6b0">${realm.title}</div>
-                <div class="gu-meta">${p.cultivation_exp} Tu Vi${realm.next ? ` / ${realm.next.minExp}` : " (Đỉnh)"}</div>
+                <div class="gu-meta">${p.cultivation_exp} Tu Vi${realm.next ? ` / ${realm.nextStageGain}` : " (Đỉnh)"}</div>
               </div>
               <div class="acc-stat-box">
                 <div class="slot-cap">Tài Sản & Tiến Độ</div>

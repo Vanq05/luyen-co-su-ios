@@ -1,4 +1,3 @@
-import { getRealmInfo } from "../account/AccountManager.js";
 import {
   BACK_ITEMS,
   EYE_COLORS,
@@ -14,17 +13,19 @@ import {
   normalizeAppearance,
   randomizeAppearance,
 } from "../character/CharacterSpriteBuilder.js";
-import { GU_CATALOG } from "../combat/GuDatabase.js";
+import { GAME_HEIGHT, GAME_WIDTH } from "../config/constants.js";
+import { CULTIVATION_PATHS, getStageInfo } from "../data/CultivationData.js";
+import { GU_CATALOG } from "../data/GuCatalog.js";
+import { plotRect } from "../engine/PixelSpriteBaker.js";
+import { getUiIconSvg } from "./XianxiaIcons.js";
 
-const STARTER_FAVORITES = ["nguyet_quang", "huyet_nha", "thanh_doc", "hoa_than"];
+const STARTER_GU_CHOICES = ["nguyet_quang", "bach_thi", "huyet_nha", "dan_khieu_hoa_than"];
 
 /**
- * Hệ thống Cổng Online & Tùy Chỉnh Nhân Vật:
- * - `login`: Đăng nhập / Đăng ký tài khoản Online (+ chế độ Khách).
- * - `char_select`: 3 Bệ Đá nhân vật tùy chỉnh, hiển thị Đạo Lộ do Hợp Cổ định hình, vào thẳng Vạn Cổ Thành Online.
- * - `char_create` / `appearance_mirror`: Xưởng Tạo Ngoại Hình Pixel Art 7 lớp + xem trước chuyển động trực tiếp.
- * - `dungeon_select`: Cổng Bí Cảnh chọn Tầng 1 / 2 / 3 từ Vạn Cổ Thành.
- * - `leaderboard`: Bia Thiên Kiêu Online hiển thị Top Cổ Sư toàn máy chủ & Không Khiếu của họ.
+ * Màn hình cổng vào chuẩn Cổ Tiên Lộ (/choi):
+ * - Nền canvas Rừng Trúc Sương Đêm & Đom Đóm Linh Khí động.
+ * - Cuộn trục ngọc/đồng dọc (Đăng nhập, Đăng ký, Chơi ngay khách không CAPTCHA).
+ * - Sảnh 3 Nhân Vật & Xưởng Tạo Ngoại Hình Chibi đa lớp.
  */
 export class GateScreens {
   constructor({
@@ -32,9 +33,7 @@ export class GateScreens {
     account,
     onlineHub,
     sfx,
-    onEnterTown,
-    onEnterDungeon,
-    onResumeRun,
+    onEnterWorld,
     onAppearanceUpdated,
     onCloseToWorld,
     onOpenAccountModal,
@@ -43,9 +42,7 @@ export class GateScreens {
     this.account = account;
     this.onlineHub = onlineHub;
     this.sfx = sfx;
-    this.onEnterTown = onEnterTown;
-    this.onEnterDungeon = onEnterDungeon;
-    this.onResumeRun = onResumeRun;
+    this.onEnterWorld = onEnterWorld;
     this.onAppearanceUpdated = onAppearanceUpdated;
     this.onCloseToWorld = onCloseToWorld;
     this.onOpenAccountModal = onOpenAccountModal;
@@ -61,24 +58,20 @@ export class GateScreens {
     this.draftAppearance = createDefaultAppearance();
     this.draftStarterGu = "nguyet_quang";
     this.previewPose = "idle";
-    this.customizerCat = "hair"; // "hair" | "outfit" | "detail"
+    this.customizerCat = "hair";
     this.createError = "";
-
     this.confirmDeleteSlot = null;
-    this.endStats = null;
-
     this._previewRaf = 0;
+    this._bgRaf = 0;
   }
 
-  _stopPreviewLoop() {
-    if (this._previewRaf) {
-      cancelAnimationFrame(this._previewRaf);
-      this._previewRaf = 0;
-    }
+  _stopLoops() {
+    if (this._previewRaf) { cancelAnimationFrame(this._previewRaf); this._previewRaf = 0; }
+    if (this._bgRaf) { cancelAnimationFrame(this._bgRaf); this._bgRaf = 0; }
   }
 
   close() {
-    this._stopPreviewLoop();
+    this._stopLoops();
     this.root.classList.remove("is-open");
   }
 
@@ -109,51 +102,109 @@ export class GateScreens {
     this.render();
   }
 
-  openDungeonSelect() {
-    this.screen = "dungeon_select";
-    this.render();
-  }
+  _startBambooBackdrop() {
+    const bg = this.root.querySelector("#gate-bg-canvas");
+    if (!bg) return;
+    bg.width = GAME_WIDTH;
+    bg.height = GAME_HEIGHT;
+    const ctx = bg.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    const fireflies = Array.from({ length: 34 }, (_, i) => ({
+      x: (i * 113) % GAME_WIDTH,
+      y: (i * 67) % GAME_HEIGHT,
+      spd: 0.45 + (i % 5) * 0.22,
+    }));
 
-  openLeaderboard() {
-    this.onlineHub?.pollAll();
-    this.screen = "leaderboard";
-    this.render();
-  }
+    const drawBg = (now) => {
+      const t = now * 0.001;
+      // Nền bầu trời hoàng hôn u tịch phân dải pixel (100% crisp pixel bands)
+      const skyBands = [
+        [0, 120, "#05070d"],
+        [120, 110, "#090e18"],
+        [230, 120, "#0e1722"],
+        [350, 110, "#091119"],
+        [460, 80, "#04060a"],
+      ];
+      for (const [sy, sh, col] of skyBands) {
+        plotRect(ctx, 0, sy, GAME_WIDTH, sh, col);
+      }
 
-  openResult(kind, stats) {
-    this.screen = kind;
-    this.endStats = stats;
-    this.render();
+      // Vầng tàn nguyệt pixel 3 lớp (không dùng arc)
+      const mx = 768;
+      const my = 92;
+      plotRect(ctx, mx - 44, my - 30, 88, 60, "#101b2a");
+      plotRect(ctx, mx - 30, my - 42, 60, 84, "#101b2a");
+      plotRect(ctx, mx - 24, my - 24, 48, 48, "#25394f");
+      plotRect(ctx, mx - 18, my - 18, 36, 36, "#96b8d1");
+      plotRect(ctx, mx - 10, my - 18, 28, 32, "#0b1320");
+
+      // Rặng núi xa pixel bậc thang
+      for (let rx = 0; rx < GAME_WIDTH; rx += 16) {
+        const mh = 56 + Math.round((Math.sin(rx * 0.015) * 28 + Math.cos(rx * 0.032) * 18) / 4) * 4;
+        plotRect(ctx, rx, GAME_HEIGHT - 120 - mh, 16, mh + 120, "#070c13");
+      }
+
+      // Thân trúc cổ phong phân đốt pixel đung đưa theo bước nhảy pixel
+      for (let i = 0; i < 20; i++) {
+        const bx = i * 50 + (i % 3) * 9;
+        const sway = Math.round(Math.sin(t * 0.75 + i) * 3);
+        const col = i % 2 === 0 ? "#0c1920" : "#071016";
+        const hi = i % 2 === 0 ? "#18333a" : "#102229";
+        const w = i % 3 === 0 ? 6 : 4;
+        for (let seg = 0; seg < 12; seg++) {
+          const sy = GAME_HEIGHT - seg * 46;
+          const sx = bx + Math.round((sway * seg) / 11);
+          plotRect(ctx, sx, sy - 46, w, 45, col);
+          plotRect(ctx, sx, sy - 46, 1, 45, hi);
+          plotRect(ctx, sx - 1, sy - 46, w + 2, 2, "#1c3d42");
+          if ((seg + i) % 3 === 0) {
+            plotRect(ctx, sx + w, sy - 30, 8, 2, hi);
+            plotRect(ctx, sx + w + 4, sy - 28, 6, 2, col);
+          }
+        }
+      }
+
+      // Đom đóm u linh ngọc bích & tử tinh
+      for (let i = 0; i < fireflies.length; i++) {
+        const f = fireflies[i];
+        const fx = Math.round((f.x + Math.sin(t * f.spd + i) * 26 + GAME_WIDTH) % GAME_WIDTH);
+        const fy = Math.round((f.y - t * 11 * f.spd + GAME_HEIGHT * 10) % GAME_HEIGHT);
+        plotRect(ctx, fx - 1, fy - 1, 4, 4, i % 3 === 0 ? "rgba(139, 92, 246, 0.35)" : "rgba(77, 224, 201, 0.35)");
+        plotRect(ctx, fx, fy, 2, 2, i % 3 === 0 ? "#b88cff" : "#7fffdf");
+      }
+
+      this._bgRaf = requestAnimationFrame(drawBg);
+    };
+    this._bgRaf = requestAnimationFrame(drawBg);
   }
 
   render() {
-    this._stopPreviewLoop();
+    this._stopLoops();
     this.root.classList.add("is-open");
 
-    if (this.screen === "login") return this._renderLoginScreen();
-    if (this.screen === "char_select") return this._renderCharSelectScreen();
-    if (this.screen === "char_create" || this.screen === "appearance_mirror") {
-      return this._renderCustomizerScreen(this.screen === "appearance_mirror");
+    if (this.screen === "login") this._renderLoginScreen();
+    else if (this.screen === "char_select") this._renderCharSelectScreen();
+    else if (this.screen === "char_create" || this.screen === "appearance_mirror") {
+      this._renderCustomizerScreen(this.screen === "appearance_mirror");
     }
-    if (this.screen === "dungeon_select") return this._renderDungeonSelect();
-    if (this.screen === "leaderboard") return this._renderLeaderboard();
-    if (this.screen === "victory" || this.screen === "gameover") return this._renderResultScreen();
+    this._startBambooBackdrop();
   }
 
   _renderLoginScreen() {
     const isReg = this.authTab === "register";
     this.root.innerHTML = `
-      <div class="gate-shell gate-shell--login">
-        <div class="gate-header-crest">
-          <div class="overlay-badge">ONLINE PIXEL ACTION RPG</div>
-          <h1 class="overlay-title">LUYỆN CỔ SƯ</h1>
-          <p class="gate-sub">Tự tạo ngoại hình Cổ Sư · Dung hợp vạn Cổ tự định Con Đường · Hội tụ Vạn Cổ Thành Online</p>
-        </div>
+      <canvas id="gate-bg-canvas" class="gate-bg-canvas"></canvas>
+      <a class="ctl-novel-corner-link" href="https://metruyenchu.com.vn/co-chan-nhan" target="_blank" rel="noopener noreferrer">${getUiIconSvg("bamboo_slip")}<span>Ngọc Giản Nguyên Tác · Cổ Chân Nhân ↗</span></a>
+      <div class="ctl-scroll-modal">
+        <div class="ctl-scroll-cap ctl-scroll-cap--top"></div>
+        <div class="ctl-scroll-body">
+          <div class="ctl-logo-badge">CỔ CHÂN NHÂN · ARPG TIÊN HIỆP HẮC ÁM</div>
+          <h1 class="ctl-logo-title">CỔ CHÂN NHÂN · CỔ TIÊN LỘ</h1>
+          <p class="ctl-logo-sub">Khai Khiếu Đom Đóm · Luyện Cổ · Thanh Mao Sơn → Ngũ Vực</p>
 
-        <div class="gate-panel gate-panel--auth">
           <div class="gate-tabs">
-            <button type="button" class="tab-btn ${!isReg ? "is-active" : ""}" data-gate-tab="login">🔑 Đăng Nhập Online</button>
-            <button type="button" class="tab-btn ${isReg ? "is-active" : ""}" data-gate-tab="register">📜 Đăng Ký Tài Khoản</button>
+            <button type="button" class="tab-btn ${!isReg ? "is-active" : ""}" data-gate-tab="login">Vào Giang Hồ</button>
+            <button type="button" class="tab-btn ${isReg ? "is-active" : ""}" data-gate-tab="register">Đăng Ký</button>
           </div>
 
           <form id="gate-auth-form" class="acc-form">
@@ -162,7 +213,7 @@ export class GateScreens {
                 ? `
               <label class="acc-field">
                 <span>Tên tài khoản (3–24 ký tự viết liền) *</span>
-                <input id="gate-username" type="text" autocomplete="username" placeholder="vd: cosu99" required />
+                <input id="gate-username" type="text" autocomplete="username" placeholder="vd: phuongnguyen" required />
               </label>
               <label class="acc-field">
                 <span>Email khôi phục (tùy chọn)</span>
@@ -171,13 +222,13 @@ export class GateScreens {
             `
                 : `
               <label class="acc-field">
-                <span>Tên tài khoản hoặc Email *</span>
+                <span>Tài khoản hoặc Email *</span>
                 <input id="gate-identifier" type="text" autocomplete="username" placeholder="Nhập tài khoản hoặc email" required />
               </label>
             `
             }
             <label class="acc-field">
-              <span>Mật khẩu (từ 6 ký tự) *</span>
+              <span>Mật khẩu *</span>
               <input id="gate-password" type="password" autocomplete="current-password" placeholder="••••••" required />
             </label>
 
@@ -188,21 +239,16 @@ export class GateScreens {
             }
 
             <div class="gate-auth-actions">
-              <button type="submit" class="overlay-btn gate-btn-primary" ${this.authBusy ? "disabled" : ""}>
-                ${
-                  this.authBusy
-                    ? "⏳ Đang kết nối Máy Chủ..."
-                    : isReg
-                      ? "✨ Tạo Tài Khoản & Vào Chọn Nhân Vật"
-                      : "☁️ Đăng Nhập Vào Máy Chủ"
-                }
+              <button type="submit" class="ctl-btn-jade" ${this.authBusy ? "disabled" : ""}>
+                ${this.authBusy ? "Đang kết nối..." : isReg ? "Đăng Ký & Bước Vào Nam Cương" : "Vào Giang Hồ"}
               </button>
-              <button type="button" id="gate-guest-btn" class="mini-hud-btn gate-btn-guest" ${this.authBusy ? "disabled" : ""}>
-                ⚡ Chơi Thử Offline (Lưu Trên Máy)
+              <button type="button" id="gate-guest-btn" class="ctl-btn-gold" ${this.authBusy ? "disabled" : ""}>
+                Chơi Ngay (Khách — Lưu Trên Máy)
               </button>
             </div>
           </form>
         </div>
+        <div class="ctl-scroll-cap ctl-scroll-cap--bot"></div>
       </div>
     `;
 
@@ -257,8 +303,8 @@ export class GateScreens {
   _renderCharSelectScreen() {
     const isOnline = this.account.isLoggedIn();
     const accLabel = isOnline
-      ? `🌐 Máy chủ Vạn Cổ · Tài khoản: <b>${this.account.profile.username ?? "Đạo Hữu"}</b>`
-      : `📴 Chế độ Khách (Đăng nhập để hiện diện Online cùng người chơi khác)`;
+      ? `Máy chủ Nam Cương · <b>${this.account.profile.username ?? "Đạo Hữu"}</b>`
+      : `Chế độ Khách (Lưu nội bộ trên trình duyệt)`;
 
     const slotsHtml = [0, 1, 2]
       .map((slotIdx) => {
@@ -266,51 +312,40 @@ export class GateScreens {
         if (!ch) {
           return `
             <div class="pedestal-card pedestal-card--empty">
-              <div class="pedestal-slot-badge">Linh Đài #${slotIdx + 1}</div>
+              <div class="pedestal-slot-badge">Ô Nhân Vật #${slotIdx + 1}</div>
               <div class="pedestal-altar-empty">
                 <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="80" height="80"></canvas>
-                <div class="pedestal-empty-hint">Chưa Khai Mở Nhân Vật</div>
+                <div class="pedestal-empty-hint">Chưa Tạo Cổ Sư</div>
               </div>
-              <button type="button" class="overlay-btn pedestal-create-btn" data-create-slot="${slotIdx}">
-                ✨ Tự Tạo Nhân Vật Mới
+              <button type="button" class="ctl-btn-jade pedestal-create-btn" data-create-slot="${slotIdx}">
+                + Tạo Cổ Sư Mới
               </button>
             </div>
           `;
         }
 
-        const realm = getRealmInfo(ch.cultivation_exp ?? 0);
-        const pathName = ch.path_name || "Khởi Nguyên Cổ Đạo";
-        const pathCol = ch.path_color || "#4de6b0";
-        const guCount = Array.isArray(ch.saved_bag) ? ch.saved_bag.length : 6;
-        const hasRun = Boolean(ch.active_run);
+        const st = ch.ctl_state;
+        const stage = getStageInfo(st?.stageLevel ?? 1);
+        const pathInfo = CULTIVATION_PATHS[st?.chosenPath ?? "nguyet_dao"] ?? CULTIVATION_PATHS.nguyet_dao;
+        const stones = st?.nguyenThach ?? ch.nguyen_thach ?? 180;
         const isConfirmDel = this.confirmDeleteSlot === slotIdx;
 
         return `
-          <div class="pedestal-card is-occupied" style="--sect-col:${pathCol}">
+          <div class="pedestal-card is-occupied" style="--sect-col:${pathInfo.color}">
             <div class="pedestal-top-row">
-              <span class="pedestal-slot-badge" style="color:${pathCol}">☯ ${pathName}</span>
+              <span class="pedestal-slot-badge" style="color:${pathInfo.color}">${pathInfo.name}</span>
               <button type="button" class="pedestal-del-btn ${isConfirmDel ? "is-armed" : ""}" data-delete-slot="${slotIdx}">
-                ${isConfirmDel ? "Xác Nhận?" : "🗑"}
+                ${isConfirmDel ? "Xác nhận xóa?" : "Xóa"}
               </button>
             </div>
-
             <div class="pedestal-hero-wrap">
               <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="80" height="80"></canvas>
             </div>
-
             <div class="pedestal-name">${ch.name}</div>
-            <div class="pedestal-realm">${realm.title} · 💎 ${ch.nguyen_thach ?? 0} · 🪲 ${guCount} Cổ</div>
-
+            <div class="pedestal-realm">${stage.title} · ${stones} Nguyên thạch</div>
             <div class="pedestal-actions">
-              ${
-                hasRun
-                  ? `<button type="button" class="overlay-btn pedestal-play-btn is-resume" data-resume-slot="${slotIdx}">
-                      ▶️ Tiếp Tục Tầng ${ch.active_run.floorNumber}
-                    </button>`
-                  : ""
-              }
-              <button type="button" class="overlay-btn pedestal-play-btn" data-town-slot="${slotIdx}">
-                🏯 Vào Vạn Cổ Thành Online
+              <button type="button" class="ctl-btn-jade pedestal-play-btn" data-play-slot="${slotIdx}">
+                Vào Giang Hồ
               </button>
             </div>
           </div>
@@ -319,31 +354,24 @@ export class GateScreens {
       .join("");
 
     this.root.innerHTML = `
+      <canvas id="gate-bg-canvas" class="gate-bg-canvas"></canvas>
+      <a class="ctl-novel-corner-link" href="https://metruyenchu.com.vn/co-chan-nhan" target="_blank" rel="noopener noreferrer">${getUiIconSvg("bamboo_slip")}<span>Ngọc Giản Nguyên Tác · Cổ Chân Nhân ↗</span></a>
       <div class="gate-shell gate-shell--select">
         <div class="gate-topbar">
           <div class="gate-topbar-left">
-            <span class="gate-brand">LUYỆN CỔ SƯ ONLINE</span>
+            <span class="gate-brand">CỔ TIÊN LỘ · CHỌN NHÂN VẬT (TỐI ĐA 3)</span>
             <span class="gate-acc-info">${accLabel}</span>
           </div>
           <div class="gate-topbar-right">
-            ${
-              isOnline
-                ? `<button type="button" id="gate-profile-btn" class="mini-hud-btn">📜 Đạo Tịch</button>`
-                : ""
-            }
             <button type="button" id="gate-switch-acc-btn" class="mini-hud-btn">
-              ${isOnline ? "🚪 Đổi Tài Khoản" : "🔑 Đăng Nhập Online"}
+              ${isOnline ? "Đổi Tài Khoản" : "Đăng Nhập"}
             </button>
           </div>
         </div>
-
-        <div class="gate-pedestals">
-          ${slotsHtml}
-        </div>
+        <div class="gate-pedestals">${slotsHtml}</div>
       </div>
     `;
 
-    // Vẽ hoạt ảnh thở/đứng liên tục cho 3 bệ nhân vật
     const startTs = performance.now();
     const animatePedestals = (now) => {
       const t = (now - startTs) / 1000;
@@ -352,17 +380,13 @@ export class GateScreens {
         const ch = this.account.characters[idx];
         drawCustomCharacterPreview(c, ch?.appearance ?? null, {
           timeSec: t + idx * 0.35,
-          pathColor: ch?.path_color ?? "#4de6b0",
+          pathColor: "#4de0c9",
           scale: 2,
         });
       });
       this._previewRaf = requestAnimationFrame(animatePedestals);
     };
     this._previewRaf = requestAnimationFrame(animatePedestals);
-
-    this.root.querySelector("#gate-profile-btn")?.addEventListener("click", () => {
-      this.onOpenAccountModal?.();
-    });
 
     this.root.querySelector("#gate-switch-acc-btn")?.addEventListener("click", () => {
       if (this.account.isLoggedIn()) this.account.logout();
@@ -375,7 +399,7 @@ export class GateScreens {
         this.sfx?.unlock();
         this.createSlotIndex = Number(btn.dataset.createSlot) || 0;
         this.draftName = "";
-        this.draftAppearance = randomizeAppearance();
+        this.draftAppearance = createDefaultAppearance();
         this.draftStarterGu = "nguyet_quang";
         this.previewPose = "idle";
         this.customizerCat = "hair";
@@ -399,21 +423,12 @@ export class GateScreens {
       });
     });
 
-    this.root.querySelectorAll("[data-resume-slot]").forEach((btn) => {
+    this.root.querySelectorAll("[data-play-slot]").forEach((btn) => {
       btn.addEventListener("click", () => {
         this.sfx?.unlock();
-        const idx = Number(btn.dataset.resumeSlot);
+        const idx = Number(btn.dataset.playSlot);
         this.close();
-        this.onResumeRun?.(idx);
-      });
-    });
-
-    this.root.querySelectorAll("[data-town-slot]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        this.sfx?.unlock();
-        const idx = Number(btn.dataset.townSlot);
-        this.close();
-        this.onEnterTown?.(idx);
+        this.onEnterWorld?.(idx);
       });
     });
   }
@@ -422,9 +437,7 @@ export class GateScreens {
     const chips = list
       .map((item) => {
         const active = item.id === currentId;
-        const swatch = colorProp
-          ? `<span class="cust-swatch" style="background:${item[colorProp]}"></span>`
-          : "";
+        const swatch = colorProp ? `<span class="cust-swatch" style="background:${item[colorProp]}"></span>` : "";
         return `
           <button type="button" class="cust-chip ${active ? "is-selected" : ""}" data-cust-key="${attrName}" data-cust-val="${item.id}">
             ${swatch}${item.name}
@@ -447,48 +460,33 @@ export class GateScreens {
     if (this.customizerCat === "hair") {
       rightControlsHtml =
         this._renderOptionRow("Màu Da", SKIN_TONES, ap.skin, "skin", "base") +
-        this._renderOptionRow("Kiểu Tóc Cổ Phong", HAIR_STYLES, ap.hairStyle, "hairStyle") +
+        this._renderOptionRow("Kiểu Tóc", HAIR_STYLES, ap.hairStyle, "hairStyle") +
         this._renderOptionRow("Màu Tóc", HAIR_COLORS, ap.hairColor, "hairColor", "base") +
-        this._renderOptionRow("Mũ / Quán / Mặt Nạ", HEADGEARS, ap.headgear, "headgear");
+        this._renderOptionRow("Mũ / Quán / Nón", HEADGEARS, ap.headgear, "headgear");
     } else if (this.customizerCat === "outfit") {
       rightControlsHtml =
-        this._renderOptionRow("Phom Y Phục / Chiến Giáp", OUTFIT_STYLES, ap.outfitStyle, "outfitStyle") +
-        this._renderOptionRow("Màu Y Phục Chủ Đạo", OUTFIT_COLORS, ap.outfitColor, "outfitColor", "base") +
-        this._renderOptionRow("Màu Đai Lưng & Viền Lụa", TRIM_COLORS, ap.trimColor, "trimColor", "base");
+        this._renderOptionRow("Phom Đạo Bào", OUTFIT_STYLES, ap.outfitStyle, "outfitStyle") +
+        this._renderOptionRow("Màu Đạo Bào", OUTFIT_COLORS, ap.outfitColor, "outfitColor", "base") +
+        this._renderOptionRow("Viền Lụa & Đai Ngọc", TRIM_COLORS, ap.trimColor, "trimColor", "base");
     } else {
-      const starterSection = isMirror
-        ? ""
-        : `
-          <div class="cust-group">
-            <div class="cust-label">Cổ Trùng Khởi Đầu Ưa Thích (Con đường về sau tự do định hình qua Hợp Cổ!)</div>
-            <div class="cust-chips">
-              ${STARTER_FAVORITES.map((id) => {
-                const g = GU_CATALOG[id];
-                return `
-                  <button type="button" class="cust-chip ${this.draftStarterGu === id ? "is-selected" : ""}" data-pick-starter="${id}">
-                    <span class="cust-swatch" style="background:${g.color}"></span>${g.shortLabel} (${g.element})
-                  </button>
-                `;
-              }).join("")}
-            </div>
-          </div>
-        `;
       rightControlsHtml =
-        this._renderOptionRow("Linh Đồng (Màu Mắt)", EYE_COLORS, ap.eyeColor, "eyeColor", "hex") +
+        this._renderOptionRow("Màu Mắt", EYE_COLORS, ap.eyeColor, "eyeColor", "hex") +
         this._renderOptionRow("Pháp Khí Đeo Lưng", BACK_ITEMS, ap.backItem, "backItem") +
-        starterSection;
+        (isMirror
+          ? ""
+          : `<div class="cust-group"><div class="cust-label">Khởi Đầu Tại Tạ Gia Trại</div><div class="ctl-sub-txt">Vào thành, ngươi sẽ bước xuống Nguyên Tuyền làm Lễ Khai Khiếu, chọn Cổ Bản Mệnh và tự thân đi tìm luyện hóa ngoài tự nhiên!</div></div>`);
     }
 
     const safeName = this.draftName.replace(/"/g, "&quot;");
-
     this.root.innerHTML = `
+      <canvas id="gate-bg-canvas" class="gate-bg-canvas"></canvas>
+      <a class="ctl-novel-corner-link" href="https://metruyenchu.com.vn/co-chan-nhan" target="_blank" rel="noopener noreferrer">${getUiIconSvg("bamboo_slip")}<span>Ngọc Giản Nguyên Tác · Cổ Chân Nhân ↗</span></a>
       <div class="gate-shell gate-shell--create">
         <div class="gate-topbar">
           <div class="gate-topbar-left">
-            <span class="gate-brand">${isMirror ? "🪞 GƯƠNG HÓA HÌNH · ĐỔI NGOẠI HÌNH" : `✨ TẠO NGOẠI HÌNH CỔ SƯ · Ô #${this.createSlotIndex + 1}`}</span>
-            <span class="gate-acc-info">Không khóa môn phái — Tự do biến hóa Đạo Lộ bằng Dung Hợp Cổ!</span>
+            <span class="gate-brand">${isMirror ? "THAY ĐỔI DIỆN MẠO" : `TẠO NHÂN VẬT CỔ TIÊN LỘ · Ô #${this.createSlotIndex + 1}`}</span>
           </div>
-          <button type="button" id="cust-back-btn" class="mini-hud-btn">← Quay Lại</button>
+          <button type="button" id="cust-back-btn" class="mini-hud-btn">Quay Lại</button>
         </div>
 
         <form id="cust-form" class="gate-create-grid">
@@ -500,41 +498,29 @@ export class GateScreens {
               ${[
                 ["idle", "Đứng"],
                 ["run", "Chạy"],
-                ["dash", "Lướt"],
-                ["tau-hoa", "Tẩu Hỏa"],
+                ["attack", "Đánh"],
+                ["sit", "Bế Quan"],
               ]
-                .map(
-                  ([id, lbl]) =>
-                    `<button type="button" class="floor-pill ${this.previewPose === id ? "is-selected" : ""}" data-pose="${id}">${lbl}</button>`
-                )
+                .map(([id, lbl]) => `<button type="button" class="floor-pill ${this.previewPose === id ? "is-selected" : ""}" data-pose="${id}">${lbl}</button>`)
                 .join("")}
-              <button type="button" id="btn-random-look" class="floor-pill" style="color:#ffd86e;border-color:#ffd86e">🎲 Ngẫu Nhiên</button>
+              <button type="button" id="btn-random-look" class="floor-pill">Ngẫu Nhiên</button>
             </div>
             <label class="acc-field" style="width:100%">
               <span>Đạo Hiệu Nhân Vật (2–18 ký tự) *</span>
-              <input id="cust-name-input" type="text" maxlength="18" value="${safeName}" placeholder="Nhập tên nhân vật..." required />
+              <input id="cust-name-input" type="text" maxlength="18" value="${safeName}" placeholder="vd: Cổ Nguyệt Phương Nguyên" required />
             </label>
           </div>
 
           <div class="gate-create-right">
             <div class="gate-tabs" style="margin-bottom:6px">
-              <button type="button" class="tab-btn ${this.customizerCat === "hair" ? "is-active" : ""}" data-cust-cat="hair">👤 Diện Mạo & Tóc</button>
-              <button type="button" class="tab-btn ${this.customizerCat === "outfit" ? "is-active" : ""}" data-cust-cat="outfit">🥋 Đạo Bào & Màu Sắc</button>
-              <button type="button" class="tab-btn ${this.customizerCat === "detail" ? "is-active" : ""}" data-cust-cat="detail">⚔️ Pháp Khí & Khởi Nguyên</button>
+              <button type="button" class="tab-btn ${this.customizerCat === "hair" ? "is-active" : ""}" data-cust-cat="hair">Diện Mạo</button>
+              <button type="button" class="tab-btn ${this.customizerCat === "outfit" ? "is-active" : ""}" data-cust-cat="outfit">Đạo Bào</button>
+              <button type="button" class="tab-btn ${this.customizerCat === "detail" ? "is-active" : ""}" data-cust-cat="detail">Chi Tiết & Pháp Khí</button>
             </div>
-
-            <div class="cust-scroll-panel">
-              ${rightControlsHtml}
-            </div>
-
-            ${
-              this.createError
-                ? `<div class="fusion-result is-fail" style="margin-top:6px">${this.createError}</div>`
-                : ""
-            }
-
-            <button type="submit" class="overlay-btn gate-btn-primary" style="margin-top:8px;width:100%">
-              ${isMirror ? "✨ Lưu Diện Mạo Mới & Trở Lại Thành" : "🔥 Hoàn Tất Hóa Hình & Vào Vạn Cổ Thành Online"}
+            <div class="cust-scroll-panel">${rightControlsHtml}</div>
+            ${this.createError ? `<div class="fusion-result is-fail" style="margin-top:6px">${this.createError}</div>` : ""}
+            <button type="submit" class="ctl-btn-jade" style="margin-top:8px;width:100%">
+              ${isMirror ? "Lưu Diện Mạo" : "Bước Vào Hang Ngầm · Khai Khiếu Đại Điển"}
             </button>
           </div>
         </form>
@@ -590,10 +576,7 @@ export class GateScreens {
       btn.addEventListener("click", () => {
         const key = btn.dataset.custKey;
         const val = btn.dataset.custVal;
-        this.draftAppearance = normalizeAppearance({
-          ...this.draftAppearance,
-          [key]: val,
-        });
+        this.draftAppearance = normalizeAppearance({ ...this.draftAppearance, [key]: val });
         this.render();
       });
     });
@@ -629,151 +612,11 @@ export class GateScreens {
           starterGuId: this.draftStarterGu,
         });
         this.close();
-        this.onEnterTown?.(this.createSlotIndex);
+        this.onEnterWorld?.(this.createSlotIndex);
       } catch (err) {
         this.createError = err?.message || "Không thể tạo nhân vật.";
         this.render();
       }
-    });
-  }
-
-  _renderDungeonSelect() {
-    const ch = this.account.getActiveCharacter();
-    const maxFloor = Math.min(3, Math.max(1, ch?.highest_floor_unlocked ?? 1));
-
-    this.root.innerHTML = `
-      <div class="overlay-card" style="max-width:520px">
-        <div class="overlay-badge">CỔNG BÍ CẢNH TAM TẦNG</div>
-        <div class="overlay-title">CHỌN TẦNG CHINH PHỤC</div>
-        <div class="overlay-sub">
-          Toàn bộ Cổ Trùng bạn đã dung hợp, Nguyên Thạch & Cổ Trùng nhặt được trong Bí Cảnh sẽ được bảo toàn cho nhân vật <b>${ch?.name ?? "Cổ Sư"}</b>!
-        </div>
-        <div class="overlay-btn-row" style="flex-direction:column">
-          <button type="button" class="overlay-btn" data-go-floor="1">🌲 Tầng 1 · Rừng Chướng Khí (Boss Ngô Công Vương)</button>
-          <button type="button" class="overlay-btn" data-go-floor="2" ${maxFloor < 2 ? "disabled" : ""}>
-            ${maxFloor < 2 ? "🔒 Tầng 2 · Bạch Cốt Mộ Địa (Diệt Boss T1 để mở)" : "💀 Tầng 2 · Bạch Cốt Mộ Địa (Boss Mạc Vô Tâm)"}
-          </button>
-          <button type="button" class="overlay-btn" data-go-floor="3" ${maxFloor < 3 ? "disabled" : ""}>
-            ${maxFloor < 3 ? "🔒 Tầng 3 · Xích Viêm Cổ Quật (Diệt Boss T2 để mở)" : "🌋 Tầng 3 · Xích Viêm Cổ Quật (Boss Vạn Cổ Tà Lô)"}
-          </button>
-          <button type="button" id="btn-cancel-dungeon" class="mini-hud-btn" style="padding:8px">← Ở Lại Vạn Cổ Thành</button>
-        </div>
-      </div>
-    `;
-
-    this.root.querySelector("#btn-cancel-dungeon")?.addEventListener("click", () => {
-      this.close();
-      this.onCloseToWorld?.();
-    });
-
-    this.root.querySelectorAll("[data-go-floor]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const floor = Number(btn.dataset.goFloor) || 1;
-        this.close();
-        this.onEnterDungeon?.(floor);
-      });
-    });
-  }
-
-  _renderLeaderboard() {
-    const rows = this.onlineHub?.leaderboard ?? [];
-    const listHtml =
-      rows.length === 0
-        ? `<div class="overlay-sub">Đang tải danh sách Thiên Kiêu từ Máy Chủ...</div>`
-        : rows
-            .map((r, i) => {
-              const realm = getRealmInfo(r.cultivation_exp ?? 0);
-              const guTags = Array.isArray(r.equipped_summary)
-                ? r.equipped_summary
-                    .map((g) => `<span class="rank-gu-pill" style="border-color:${g.color || "#4de6b0"}">${g.shortLabel || g.name}</span>`)
-                    .join("")
-                : "";
-              return `
-                <div class="rank-row">
-                  <div class="rank-num">#${i + 1}</div>
-                  <canvas class="rank-avatar" data-rank-idx="${i}" width="44" height="44"></canvas>
-                  <div class="rank-info">
-                    <div>
-                      <strong>${r.name}</strong>
-                      <span style="color:${r.path_color || "#4de6b0"};font-size:10px;font-weight:700"> · [${r.path_name || "Tán Tu"}]</span>
-                    </div>
-                    <div style="font-size:9.5px;color:#968fa3">${realm.title} (${r.cultivation_exp} Tu Vi) · Trảm ${r.bosses_slain} Cổ Vương</div>
-                    <div class="rank-gu-list">${guTags}</div>
-                  </div>
-                </div>
-              `;
-            })
-            .join("");
-
-    this.root.innerHTML = `
-      <div class="gate-shell" style="max-width:620px">
-        <div class="gate-topbar">
-          <div class="gate-topbar-left">
-            <span class="gate-brand">🏆 BIA THIÊN KIÊU ONLINE</span>
-            <span class="gate-acc-info">Đang hiện diện Online: <b>${this.onlineHub?.onlineCount ?? 1}</b> Cổ Sư</span>
-          </div>
-          <button type="button" id="btn-close-rank" class="mini-hud-btn">✕ Đóng</button>
-        </div>
-        <div class="rank-list-wrap">${listHtml}</div>
-      </div>
-    `;
-
-    this.root.querySelectorAll("[data-rank-idx]").forEach((c) => {
-      const idx = Number(c.dataset.rankIdx);
-      const r = rows[idx];
-      if (r) {
-        drawCustomCharacterPreview(c, r.appearance, {
-          pathColor: r.path_color || "#4de6b0",
-          scale: 1.25,
-        });
-      }
-    });
-
-    this.root.querySelector("#btn-close-rank")?.addEventListener("click", () => {
-      this.close();
-      this.onCloseToWorld?.();
-    });
-  }
-
-  _renderResultScreen() {
-    const ch = this.account.getActiveCharacter();
-    const isWin = this.screen === "victory";
-    const kills = this.endStats?.kills ?? 0;
-    const floorName = this.endStats?.floorName ?? "Bí Cảnh";
-
-    this.root.innerHTML = `
-      <div class="overlay-card">
-        <div class="overlay-title" style="color:${isWin ? "#4de6b0" : "#ff3855"}">
-          ${isWin ? "ĐẠI THÀNH CỔ TÔN!" : "HỒI THÀNH DƯỠNG THƯƠNG"}
-        </div>
-        <div class="overlay-sub">
-          ${
-            isWin
-              ? `<b>${ch?.name ?? "Cổ Sư"}</b> (${ch?.path_name ?? "Tán Tu"}) đã phá nát Vạn Cổ Tà Lô! Trảm ${kills} yêu trùng.`
-              : `Huyết Khí cạn tại ${floorName}. Toàn bộ Cổ Trùng đã luyện & Nguyên Thạch của <b>${ch?.name ?? "Cổ Sư"}</b> vẫn được bảo toàn nguyên vẹn!`
-          }
-        </div>
-        <div class="overlay-btn-row">
-          <button type="button" id="res-back-town" class="overlay-btn">🏯 Trở Về Vạn Cổ Thành Online</button>
-          <button type="button" id="res-retry-floor" class="mini-hud-btn" style="padding:9px 14px;font-size:12px">⚔️ Tái Chiến Tầng 1</button>
-        </div>
-      </div>
-    `;
-
-    this.root.querySelector("#res-back-town")?.addEventListener("click", () => {
-      this.sfx?.unlock();
-      this.close();
-      if (this.account.activeSlotIndex !== null) {
-        this.onEnterTown?.(this.account.activeSlotIndex);
-      } else {
-        this.openCharSelect();
-      }
-    });
-
-    this.root.querySelector("#res-retry-floor")?.addEventListener("click", () => {
-      this.sfx?.unlock();
-      this.close();
-      this.onEnterDungeon?.(1);
     });
   }
 }

@@ -1,8 +1,11 @@
-import { GAME_HEIGHT, GAME_WIDTH, PALETTE, TILE_SIZE } from "../config/constants.js";
+import { GAME_HEIGHT, GAME_WIDTH, PALETTE } from "../config/constants.js";
+import { bayerThreshold, fillPixelEllipse, plotPixelEllipse, plotPixelLine, plotRect } from "./PixelSpriteBaker.js";
 
 /**
- * Bộ dựng khung hình Pixel Art độ phân giải cố định 384x216, tắt làm mịn ảnh
- * và cung cấp helper vẽ telegraph ngắm chiêu (line, aoe, dash, arc).
+ * Bộ dựng khung hình Pixel Art 960x540 nghiêm ngặt:
+ * - Khóa buffer canvas tại đúng độ phân giải pixel nội bộ 960x540 (imageSmoothingEnabled = false).
+ * - Hiển thị sắc nét bằng CSS `image-rendering: pixelated`.
+ * - Ánh sáng Tĩnh U Tịch (Static Moody Twilight) — KHÔNG có chu kỳ Ngày/Đêm!
  */
 export class PixelRenderer {
   constructor(canvas) {
@@ -11,222 +14,245 @@ export class PixelRenderer {
     this.canvas.height = GAME_HEIGHT;
     this.ctx = canvas.getContext("2d", { alpha: false });
     this.ctx.imageSmoothingEnabled = false;
+    this.labelCanvas = null;
+    this.labelCtx = null;
+    if (typeof document !== "undefined" && typeof document.createElement === "function") {
+      const lc = document.createElement("canvas");
+      lc.id = "label-canvas";
+      lc.style.position = "absolute";
+      lc.style.inset = "0";
+      lc.style.width = "100%";
+      lc.style.height = "100%";
+      lc.style.pointerEvents = "none";
+      lc.style.zIndex = "2";
+      canvas.parentElement?.insertBefore(lc, canvas.nextSibling);
+      this.labelCanvas = lc;
+      this.labelCtx = lc.getContext("2d");
+    }
     this.width = GAME_WIDTH;
     this.height = GAME_HEIGHT;
+    this.zoom = 1.0;
+    this._view = { cssW: GAME_WIDTH, cssH: GAME_HEIGHT, coverScale: 1, offsetX: 0, offsetY: 0 };
+    this._weatherSeeds = Array.from({ length: 84 }, (_, i) => ({
+      x: (i * 113) % GAME_WIDTH,
+      y: (i * 67) % GAME_HEIGHT,
+      spd: 0.7 + ((i * 19) % 10) * 0.12,
+      size: (i % 3) + 1,
+    }));
+    this._vignetteCanvas = null;
+    window.addEventListener("resize", () => this.syncResolution());
   }
 
-  clear(color = PALETTE.stoneDark) {
+  setZoom(nextZoom) {
+    this.zoom = Math.max(0.85, Math.min(1.4, Number(nextZoom) || 1.0));
+  }
+
+  syncResolution() {
+    const parent = this.canvas.parentElement;
+    const vw = parent ? parent.clientWidth : window.innerWidth;
+    const vh = parent ? parent.clientHeight : window.innerHeight;
+    const cssW = vw > 0 ? vw : this.width;
+    const cssH = vh > 0 ? vh : this.height;
+    if (this.canvas.width !== GAME_WIDTH || this.canvas.height !== GAME_HEIGHT) {
+      this.canvas.width = GAME_WIDTH;
+      this.canvas.height = GAME_HEIGHT;
+    }
+    if (this.labelCanvas && this.labelCtx) {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const targetW = Math.max(1, Math.round(cssW * dpr));
+      const targetH = Math.max(1, Math.round(cssH * dpr));
+      if (this.labelCanvas.width !== targetW || this.labelCanvas.height !== targetH) {
+        this.labelCanvas.width = targetW;
+        this.labelCanvas.height = targetH;
+      }
+      this.ctx.__labelOverlay = {
+        ctx: this.labelCtx,
+        dpr,
+        scaleX: targetW / GAME_WIDTH,
+        scaleY: targetH / GAME_HEIGHT,
+      };
+    }
+    const coverScale = Math.max(cssW / GAME_WIDTH, cssH / GAME_HEIGHT);
+    const offsetX = (cssW - GAME_WIDTH * coverScale) * 0.5;
+    const offsetY = (cssH - GAME_HEIGHT * coverScale) * 0.5;
+    this._view = { cssW, cssH, coverScale, offsetX, offsetY };
+    return this._view;
+  }
+
+  clear(color = PALETTE.bgVoid) {
     const ctx = this.ctx;
+    this.syncResolution();
+    if (this.labelCtx && this.labelCanvas) {
+      this.labelCtx.setTransform(1, 0, 0, 1, 0, 0);
+      this.labelCtx.clearRect(0, 0, this.labelCanvas.width, this.labelCanvas.height);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, this.width, this.height);
   }
 
-  /**
-   * Chuyển tọa độ clientX/clientY trên màn hình thật sang tọa độ pixel 384x216.
-   */
   clientToGame(clientX, clientY) {
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) {
       return { x: this.width * 0.5, y: this.height * 0.5 };
     }
     return {
-      x: ((clientX - rect.left) / rect.width) * this.width,
-      y: ((clientY - rect.top) / rect.height) * this.height,
+      x: ((clientX - rect.left) / rect.width) * GAME_WIDTH,
+      y: ((clientY - rect.top) / rect.height) * GAME_HEIGHT,
+    };
+  }
+
+  clientToWorld(clientX, clientY, camera = { x: 0, y: 0 }) {
+    const g = this.clientToGame(clientX, clientY);
+    const z = this.zoom || 1.0;
+    const cx = this.width * 0.5;
+    const cy = this.height * 0.5;
+    return {
+      x: (g.x - cx) / z + cx + (camera?.x ?? 0),
+      y: (g.y - cy) / z + cy + (camera?.y ?? 0),
+    };
+  }
+
+  worldToClient(worldX, worldY, camera = { x: 0, y: 0 }) {
+    const rect = this.canvas.getBoundingClientRect();
+    const z = this.zoom || 1.0;
+    const cx = this.width * 0.5;
+    const cy = this.height * 0.5;
+    const gx = (worldX - (camera?.x ?? 0) - cx) * z + cx;
+    const gy = (worldY - (camera?.y ?? 0) - cy) * z + cy;
+    return {
+      x: rect.left + (gx / GAME_WIDTH) * rect.width,
+      y: rect.top + (gy / GAME_HEIGHT) * rect.height,
+      inBounds: gx >= -24 && gx <= this.width + 24 && gy >= -24 && gy <= this.height + 24,
     };
   }
 
   /**
-   * Vẽ sân đá cổ phong Dark Fantasy (xám đá, xanh rêu tối, nâu đất, phù văn cổ trận ở giữa).
+   * Vẽ vệt ngắm định hướng kỹ năng theo kiểu aimType hoàn toàn bằng pixel nguyên (0 ctx.arc / ctx.ellipse).
    */
-  drawDarkFantasyArena(time) {
+  drawAimTelegraph(originX, originY, aimState, slotDef) {
+    if (!aimState || !aimState.active || !slotDef) return;
     const ctx = this.ctx;
-    const cols = Math.ceil(this.width / TILE_SIZE);
-    const rows = Math.ceil(this.height / TILE_SIZE);
-
-    for (let gy = 0; gy < rows; gy++) {
-      for (let gx = 0; gx < cols; gx++) {
-        const hash = (gx * 73856093) ^ (gy * 19349663);
-        const mod = Math.abs(hash) % 9;
-        const x = gx * TILE_SIZE;
-        const y = gy * TILE_SIZE;
-
-        if (gx === 0 || gy === 0 || gx === cols - 1 || gy >= rows - 1) {
-          ctx.fillStyle = mod % 2 === 0 ? PALETTE.earthDark : "#1b1412";
-          ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-          ctx.fillStyle = "#2f231d";
-          ctx.fillRect(x + 1, y + 1, TILE_SIZE - 2, 2);
-          continue;
-        }
-
-        if (mod === 0 || mod === 4) {
-          ctx.fillStyle = PALETTE.mossDark;
-        } else if (mod === 2) {
-          ctx.fillStyle = "#181520";
-        } else {
-          ctx.fillStyle = PALETTE.stoneMid;
-        }
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-
-        // Viền gạch đá tối
-        ctx.fillStyle = PALETTE.stoneDark;
-        ctx.fillRect(x, y + TILE_SIZE - 1, TILE_SIZE, 1);
-        ctx.fillRect(x + TILE_SIZE - 1, y, 1, TILE_SIZE);
-
-        // Đốm rêu hoặc vết nứt ngẫu nhiên deterministic
-        if (mod === 1) {
-          ctx.fillStyle = PALETTE.mossMid;
-          ctx.fillRect(x + 3, y + 4, 3, 2);
-          ctx.fillRect(x + 9, y + 10, 2, 2);
-        } else if (mod === 6) {
-          ctx.fillStyle = "#262134";
-          ctx.fillRect(x + 2, y + 2, 4, 1);
-        }
-      }
-    }
-
-    // Cổ trận đồng ở tâm sân
-    const cx = Math.floor(this.width * 0.5);
-    const cy = Math.floor(this.height * 0.5);
-    const pulse = 0.28 + Math.sin(time * 2.2) * 0.08;
+    const isCancel = aimState.isCanceling;
+    const baseColor = isCancel ? "#d0573c" : (slotDef.color || "#5fbf8a");
+    const angle = aimState.angle;
+    const ratio = aimState.distanceRatio;
+    const ox = Math.round(originX);
+    const oy = Math.round(originY);
 
     ctx.save();
-    ctx.strokeStyle = `rgba(156, 122, 68, ${pulse})`;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 42, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgba(77, 230, 176, ${pulse * 0.65})`;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 28, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 4 điểm cổ tự xoay chậm
-    for (let i = 0; i < 4; i++) {
-      const a = time * 0.45 + (i * Math.PI) / 2;
-      const rx = Math.round(cx + Math.cos(a) * 35);
-      const ry = Math.round(cy + Math.sin(a) * 35);
-      ctx.fillStyle = PALETTE.bronzeBright;
-      ctx.fillRect(rx - 1, ry - 1, 2, 2);
+    if (slotDef.aimType === "line") {
+      const len = slotDef.range || 120;
+      const tx = Math.round(ox + Math.cos(angle) * len);
+      const ty = Math.round(oy + Math.sin(angle) * len);
+      ctx.globalAlpha = 0.85;
+      plotPixelLine(ctx, ox, oy, tx, ty, baseColor, 2);
+      plotRect(ctx, tx - 2, ty - 2, 5, 5, "#ffffff");
+    } else if (slotDef.aimType === "aoe") {
+      const dist = Math.max(22, (slotDef.range || 110) * Math.max(0.28, ratio));
+      const tx = Math.round(ox + Math.cos(angle) * dist);
+      const ty = Math.round(oy + Math.sin(angle) * dist);
+      const r = slotDef.radius ?? 28;
+      ctx.globalAlpha = 0.55;
+      plotPixelLine(ctx, ox, oy, tx, ty, baseColor, 1);
+      ctx.globalAlpha = 0.22;
+      fillPixelEllipse(ctx, tx, ty, r, Math.round(r * 0.72), baseColor, true);
+      ctx.globalAlpha = 0.92;
+      plotPixelEllipse(ctx, tx, ty, r, Math.round(r * 0.72), baseColor, 3, 0);
+    } else if (slotDef.aimType === "dash") {
+      const dist = (slotDef.range || 72) * Math.max(0.55, ratio);
+      const tx = Math.round(ox + Math.cos(angle) * dist);
+      const ty = Math.round(oy + Math.sin(angle) * dist);
+      ctx.globalAlpha = 0.78;
+      plotPixelLine(ctx, ox, oy, tx, ty, baseColor, 1);
+      plotRect(ctx, tx - 4, ty - 10, 8, 12, baseColor);
+    } else if (slotDef.aimType === "arc") {
+      const len = slotDef.range || 110;
+      const spread = slotDef.arcSpread ?? Math.PI * 0.45;
+      const start = angle - spread * 0.5;
+      const end = angle + spread * 0.5;
+      ctx.globalAlpha = 0.75;
+      plotPixelLine(ctx, ox, oy, ox + Math.cos(start) * len, oy + Math.sin(start) * len, baseColor, 1);
+      plotPixelLine(ctx, ox, oy, ox + Math.cos(end) * len, oy + Math.sin(end) * len, baseColor, 1);
+      for (let i = 0; i <= 16; i++) {
+        const a = start + (end - start) * (i / 16);
+        plotRect(ctx, ox + Math.cos(a) * len - 1, oy + Math.sin(a) * len - 1, 2, 2, baseColor);
+      }
     }
     ctx.restore();
   }
 
+  _getStaticVignetteCanvas() {
+    if (this._vignetteCanvas) return this._vignetteCanvas;
+    const c = document.createElement("canvas");
+    c.width = GAME_WIDTH;
+    c.height = GAME_HEIGHT;
+    const vctx = c.getContext("2d");
+    vctx.imageSmoothingEnabled = false;
+    // Viền tối góc tĩnh ~18% dithered pixel 2x2 để giữ toàn bộ địa hình rõ 100%
+    const cx = GAME_WIDTH * 0.5;
+    const cy = GAME_HEIGHT * 0.5;
+    for (let y = 0; y < GAME_HEIGHT; y += 4) {
+      for (let x = 0; x < GAME_WIDTH; x += 4) {
+        const dx = (x - cx) / cx;
+        const dy = (y - cy) / cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.72) continue;
+        const t = Math.min(1, (dist - 0.72) / 0.65);
+        if (bayerThreshold(x >> 2, y >> 2) < t * 0.75) {
+          vctx.fillStyle = "rgba(5, 7, 12, 0.22)";
+          vctx.fillRect(x, y, 4, 4);
+        }
+      }
+    }
+    this._vignetteCanvas = c;
+    return c;
+  }
+
   /**
-   * Vẽ vệt ngắm định hướng kỹ năng theo kiểu aimType (line, aoe, dash, arc).
+   * Ánh sáng Tĩnh U Tịch (Static Moody Twilight) + Thời tiết pixel cố định.
+   * TUYỆT ĐỐI KHÔNG thay đổi sáng/tối theo chu kỳ ngày/đêm.
    */
-  drawAimTelegraph(originX, originY, aimState, slotDef) {
-    if (!aimState || !aimState.active || !slotDef) return;
-
+  drawEnvironmentOverlay(time, { weather = "clear", biome = "grass" } = {}) {
     const ctx = this.ctx;
-    const isCancel = aimState.isCanceling;
-    const baseColor = isCancel ? "#ff3855" : slotDef.color;
-    const angle = aimState.angle;
-    const ratio = aimState.distanceRatio;
-
     ctx.save();
-    const ox = Math.round(originX);
-    const oy = Math.round(originY);
+    ctx.imageSmoothingEnabled = false;
 
-    if (slotDef.aimType === "line") {
-      const len = slotDef.range;
-      const tx = Math.round(ox + Math.cos(angle) * len);
-      const ty = Math.round(oy + Math.sin(angle) * len);
+    // 1. Tông màu u tịch trầm mặc cố định (~10% slate-blue wash, rõ nét 100% địa hình & quái vật)
+    ctx.fillStyle = "rgba(8, 12, 20, 0.10)";
+    ctx.fillRect(0, 0, this.width, this.height);
 
-      ctx.strokeStyle = baseColor;
-      ctx.globalAlpha = 0.35;
-      ctx.lineWidth = slotDef.radius ?? 8;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(tx, ty);
-      ctx.stroke();
-
-      ctx.globalAlpha = 0.9;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 3]);
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(tx, ty);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Mũi tên đích
-      ctx.fillStyle = baseColor;
-      ctx.fillRect(tx - 2, ty - 2, 4, 4);
-    } else if (slotDef.aimType === "aoe") {
-      const dist = Math.max(18, slotDef.range * Math.max(0.25, ratio));
-      const tx = Math.round(ox + Math.cos(angle) * dist);
-      const ty = Math.round(oy + Math.sin(angle) * dist);
-      const r = slotDef.radius ?? 24;
-
-      ctx.strokeStyle = baseColor;
-      ctx.globalAlpha = 0.45;
-      ctx.setLineDash([2, 3]);
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(tx, ty);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.globalAlpha = 0.22;
-      ctx.fillStyle = baseColor;
-      ctx.beginPath();
-      ctx.arc(tx, ty, r, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.globalAlpha = 0.92;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(tx, ty, r, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillRect(tx - 1, ty - 1, 2, 2);
-    } else if (slotDef.aimType === "dash") {
-      const dist = slotDef.range * Math.max(0.55, ratio);
-      const tx = Math.round(ox + Math.cos(angle) * dist);
-      const ty = Math.round(oy + Math.sin(angle) * dist);
-
-      ctx.strokeStyle = baseColor;
-      ctx.globalAlpha = 0.75;
-      ctx.setLineDash([3, 2]);
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(tx, ty);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Bóng phân thân đáp đất
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = baseColor;
-      ctx.fillRect(tx - 4, ty - 10, 8, 12);
-      ctx.globalAlpha = 0.95;
-      ctx.strokeStyle = baseColor;
-      ctx.strokeRect(tx - 4.5, ty - 10.5, 9, 13);
-    } else if (slotDef.aimType === "arc") {
-      const len = slotDef.range;
-      const spread = slotDef.arcSpread ?? Math.PI * 0.4;
-      const start = angle - spread * 0.5;
-      const end = angle + spread * 0.5;
-
-      ctx.fillStyle = baseColor;
-      ctx.globalAlpha = 0.2;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.arc(ox, oy, len, start, end);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = baseColor;
-      ctx.globalAlpha = 0.9;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.arc(ox, oy, len, start, end);
-      ctx.closePath();
-      ctx.stroke();
+    // 2. Thời tiết pixel sắc cạnh
+    if (weather === "rain" || weather === "storm") {
+      const dropCol = weather === "storm" ? "rgba(170, 220, 255, 0.42)" : "rgba(155, 205, 235, 0.28)";
+      for (const p of this._weatherSeeds) {
+        const px = Math.round((p.x + time * 55 * p.spd) % this.width);
+        const py = Math.round((p.y + time * 190 * p.spd) % this.height);
+        plotPixelLine(ctx, px, py, px - 3, py + 7, dropCol, 1);
+      }
+    } else if (weather === "snow") {
+      ctx.fillStyle = "rgba(232, 244, 255, 0.75)";
+      for (const p of this._weatherSeeds) {
+        const px = Math.round((p.x + Math.sin(time * 1.4 + p.y) * 14 + time * 12) % this.width);
+        const py = Math.round((p.y + time * 32 * p.spd) % this.height);
+        ctx.fillRect(px, py, p.size > 2 ? 2 : 1, p.size > 2 ? 2 : 1);
+      }
+    } else if (weather === "fog") {
+      ctx.fillStyle = "rgba(18, 28, 30, 0.16)";
+      ctx.fillRect(0, 0, this.width, this.height);
+    } else if (biome === "lakeside" || biome === "village" || biome === "bamboo") {
+      for (let i = 0; i < 24; i++) {
+        const p = this._weatherSeeds[i];
+        const px = Math.round((p.x + time * 16 * p.spd + Math.sin(time * 0.9 + i) * 10) % this.width);
+        const py = Math.round((p.y + time * 10 * p.spd) % this.height);
+        ctx.fillStyle = i % 3 === 0 ? "rgba(94, 242, 214, 0.35)" : "rgba(175, 195, 225, 0.22)";
+        ctx.fillRect(px, py, i % 4 === 0 ? 2 : 1, 1);
+      }
     }
 
+    // 3. Viền tối u tịch nhẹ ở bốn góc (~18% dithered)
+    ctx.drawImage(this._getStaticVignetteCanvas(), 0, 0);
     ctx.restore();
   }
 }

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0b0d0a" />
+    <title>Cổ Chân Nhân: Cổ Tiên Lộ — Khai Khiếu · Luyện Cổ · Độc Bộ Ngũ Vực</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Pixelify+Sans:wght@500;600;700&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="game-root">
+      <canvas id="game-canvas" width="960" height="540"></canvas>
+      <div id="hud-layer"></div>
+      <div id="minigame-root"></div>
+      <div id="fusion-modal-root"></div>
+      <div id="account-modal-root"></div>
+      <div id="overlay-screen" class="is-open">
+        <div class="overlay-card gate-boot-card">
+          <div class="overlay-badge">CỔ CHÂN NHÂN · FAN GAME PHI THƯƠNG MẠI</div>
+          <h1 class="overlay-title">CỔ TIÊN LỘ</h1>
+          <p id="boot-status" class="overlay-sub">Đang mở cổng Nam Cương...</p>
+          <pre id="boot-diag" class="boot-diag hidden"></pre>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        var shown = false;
+        function showBootError(label, err) {
+          var status = document.getElementById("boot-status");
+          var diag = document.getElementById("boot-diag");
+          if (status && !shown) {
+            status.textContent = "Lỗi khởi động (" + label + "). Vui lòng chụp màn hình này:";
+            shown = true;
+          }
+          if (diag) {
+            diag.classList.remove("hidden");
+            var msg = err && (err.stack || err.message) ? (err.stack || err.message) : String(err);
+            diag.textContent += "[" + label + "] " + msg + "\n";
+          }
+        }
+        window.addEventListener("error", function (e) {
+          showBootError("error", (e && (e.error || e.message)) || "Unknown error");
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+          showBootError("promise", e ? e.reason : "Unhandled rejection");
+        });
+      })();
+    </script>
+    <script defer src="./app.js"></script>
+  </body>
+</html>

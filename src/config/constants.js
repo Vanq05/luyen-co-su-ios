@@ -1,10 +1,10 @@
-export const GAME_WIDTH = 384;
-export const GAME_HEIGHT = 216;
+export const GAME_WIDTH = 960;
+export const GAME_HEIGHT = 540;
 export const TILE_SIZE = 16;
 export const FIXED_DT = 1 / 60;
 
 export const PALETTE = {
-  bgVoid: "#0d0c12",
+  bgVoid: "#0b0d0a",
   stoneDark: "#121018",
   stoneMid: "#1c1926",
   stoneLight: "#2e2a3d",
@@ -12,75 +12,101 @@ export const PALETTE = {
   mossMid: "#243b2e",
   earthDark: "#241b16",
   bronze: "#9c7a44",
-  bronzeBright: "#d6b16a",
-  jadeGlow: "#4de6b0",
+  bronzeBright: "#d9b25f",
+  jadeGlow: "#5fbf8a",
   moonCyan: "#5ef2d6",
   flameOrange: "#ff7b39",
-  bloodGlow: "#ff3855",
+  bloodGlow: "#d0573c",
   cursePurple: "#a84cff",
-  textPrimary: "#ece6d8",
-  textMuted: "#968fa3",
+  textPrimary: "#f1e6c8",
+  textMuted: "#a89d86",
+};
+
+export const COTIENLO_PALETTE = {
+  inkBg: "#0b0d0a",
+  inkPanel: "rgba(18, 16, 11, 0.86)",
+  parchment: "#efe3c8",
+  parchmentDark: "#e2d2b0",
+  woodDark: "#3b2818",
+  woodMid: "#5b4129",
+  gold: "#c89d54",
+  goldBright: "#d9b25f",
+  jade: "#38a889",
+  jadeBright: "#5fbf8a",
+  crimson: "#b82b24",
+  crimsonBright: "#d0573c",
+  textInk: "#261c12",
+  textLight: "#f1e6c8",
+  textSub: "#b8ad94",
+};
+
+export const RANK_ESSENCE_COLORS = {
+  1: { name: "Thanh Đồng Chân Nguyên", color: "#3ec99a" },
+  2: { name: "Xích Thiết Chân Nguyên", color: "#e63e44" },
+  3: { name: "Bạch Ngân Chân Nguyên", color: "#e2efff" },
+  4: { name: "Hoàng Kim Chân Nguyên", color: "#ffd047" },
+  5: { name: "Tử Tinh Chân Nguyên", color: "#c066ff" },
 };
 
 /**
- * 5 ô Không Khiếu mẫu cho Bước 1 (Sandbox điều khiển cảm ứng & vệt ngắm).
+ * Cấu hình 5 ô Không Khiếu mẫu giữ tương thích ngược nếu cần fallback.
  */
 export const APERTURE_SLOTS = {
   passive: {
     id: "passive",
-    slotType: "Bản Mệnh Cổ",
-    name: "Thiết Cốt Cổ",
-    shortLabel: "Thiết Cốt",
+    slotType: "Bị Động",
+    name: "Thú Bì Cổ",
+    shortLabel: "Thú Bì",
     badge: "BỊ ĐỘNG",
-    color: "#b4b8c8",
-    description: "+30% Giáp · -10% Tốc chạy",
+    color: "#c89d54",
+    description: "Kích hoạt Hướng Thủ · +Giáp",
   },
   skill1: {
     id: "skill1",
-    slotType: "Chủ Động 1",
+    slotType: "Ô 1",
     name: "Nguyệt Quang Cổ",
     shortLabel: "Nguyệt Quang",
-    keyHint: "J",
+    keyHint: "1",
     aimType: "line",
-    range: 112,
-    radius: 10,
-    cooldown: 1.6,
+    range: 140,
+    radius: 12,
+    cooldown: 1.4,
     color: "#5ef2d6",
   },
   skill2: {
     id: "skill2",
-    slotType: "Chủ Động 2",
+    slotType: "Ô 2",
     name: "Hỏa Thán Cổ",
     shortLabel: "Hỏa Thán",
-    keyHint: "K",
+    keyHint: "2",
     aimType: "aoe",
-    range: 96,
-    radius: 26,
-    cooldown: 3.2,
+    range: 120,
+    radius: 30,
+    cooldown: 3.0,
     color: "#ff7b39",
   },
   move: {
     id: "move",
-    slotType: "Di Chuyển Cổ",
+    slotType: "Lướt",
     name: "Ảnh Bộ Cổ",
     shortLabel: "Ảnh Bộ",
     keyHint: "Space",
     aimType: "dash",
-    range: 64,
+    range: 72,
     radius: 12,
-    cooldown: 2.2,
+    cooldown: 1.8,
     color: "#b36bff",
   },
   ult: {
     id: "ult",
-    slotType: "Sát Chiêu Cổ",
-    name: "Huyết Nguyệt Cổ",
-    shortLabel: "Huyết Nguyệt",
-    keyHint: "L",
+    slotType: "Sát Chiêu",
+    name: "Nguyệt Hoa Loạn Vũ",
+    shortLabel: "Nguyệt Hoa",
+    keyHint: "Q",
     aimType: "arc",
-    range: 122,
-    arcSpread: (75 * Math.PI) / 180,
-    cooldown: 7.5,
-    color: "#ff3358",
+    range: 140,
+    arcSpread: (90 * Math.PI) / 180,
+    cooldown: 8.0,
+    color: "#d9b25f",
   },
 };

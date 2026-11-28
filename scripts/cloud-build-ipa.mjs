@@ -8,6 +8,7 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +19,7 @@ const REPO_NAME = "luyen-co-su-ios";
 const WORKFLOW_FILE = "build-ios-ipa.yml";
 const BUILD_DIR = join(ROOT, "build");
 const FINAL_IPA = join(ROOT, "LuyenCoSu.ipa");
+const FINAL_APK = join(ROOT, "LuyenCoSu.apk");
 
 const TEXT_EXTS = new Set([
   ".sh",
@@ -40,11 +42,14 @@ const TEXT_EXTS = new Set([
   ".entitlements",
   ".gitignore",
   ".gitkeep",
+  ".gradle",
+  ".properties",
+  ".pro",
 ]);
 
 function isTextFile(filePath) {
   const name = filePath.split(/[\\/]/).pop();
-  if (name === "Podfile" || name === ".gitignore" || name === ".gitkeep") return true;
+  if (name === "Podfile" || name === "gradlew" || name === ".gitignore" || name === ".gitkeep") return true;
   return TEXT_EXTS.has(extname(filePath).toLowerCase());
 }
 
@@ -61,7 +66,7 @@ function getToken() {
   throw new Error("Chưa có GitHub token. Hãy chạy gh auth login trước.");
 }
 
-async function ghApi(token, path, options = {}) {
+async function ghApi(token, path, options = {}, attempt = 0) {
   const url = path.startsWith("http") ? path : `https://api.github.com${path}`;
   const res = await fetch(url, {
     ...options,
@@ -74,6 +79,18 @@ async function ghApi(token, path, options = {}) {
       ...(options.headers ?? {}),
     },
   });
+  if ((res.status === 403 || res.status === 429) && attempt < 4) {
+    const txt = await res.text();
+    if (res.status === 429 || txt.toLowerCase().includes("rate limit")) {
+      const retryAfter = Number(res.headers.get("retry-after")) || (attempt + 1) * 35;
+      console.log(`\n[cloud-build] GitHub rate limit hit (${res.status}), waiting ${retryAfter}s before retry...`);
+      await sleep(retryAfter * 1000);
+      return ghApi(token, path, options, attempt + 1);
+    }
+    const err = new Error(`GitHub API ${res.status} (${path}): ${txt}`);
+    err.status = res.status;
+    throw err;
+  }
   if (!res.ok) {
     const txt = await res.text();
     const err = new Error(`GitHub API ${res.status} (${path}): ${txt}`);
@@ -125,6 +142,16 @@ function collectFiles() {
     rel === "ios/App/build" ||
     rel.startsWith("ios/App/build/")
   );
+  walk(join(ROOT, "android"), (rel) =>
+    rel === "android/.gradle" ||
+    rel.startsWith("android/.gradle/") ||
+    rel === "android/build" ||
+    rel.startsWith("android/build/") ||
+    rel === "android/app/build" ||
+    rel.startsWith("android/app/build/") ||
+    rel === "android/capacitor-cordova-android-plugins/build" ||
+    rel.startsWith("android/capacitor-cordova-android-plugins/build/")
+  );
 
   // Chỉ lấy phần core cần thiết của pixelfx cho scripts/configure-ios.mjs
   addFile(join(ROOT, "tools", "pixelfx", "package.json"));
@@ -165,40 +192,66 @@ async function main() {
   const ref = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/ref/heads/${branch}`);
   const parentSha = ref.object.sha;
 
-  const files = collectFiles();
-  console.log(`[cloud-ipa] Uploading ${files.length} files via Git Blobs API...`);
-
-  const treeEntries = [];
-  const batchSize = 8;
-  for (let i = 0; i < files.length; i += batchSize) {
-    const batch = files.slice(i, i + batchSize);
-    const results = await Promise.all(
-      batch.map(async (absPath) => {
-        const rel = relative(ROOT, absPath).replace(/\\/g, "/");
-        let buf = readFileSync(absPath);
-        if (isTextFile(rel)) {
-          const text = buf.toString("utf8").replace(/\r\n/g, "\n");
-          buf = Buffer.from(text, "utf8");
-        }
-        const blob = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/blobs`, {
-          method: "POST",
-          body: JSON.stringify({
-            content: buf.toString("base64"),
-            encoding: "base64",
-          }),
-        });
-        return {
-          path: rel,
-          mode: rel.endsWith(".sh") ? "100755" : "100644",
-          type: "blob",
-          sha: blob.sha,
-        };
-      })
-    );
-    treeEntries.push(...results);
-    process.stdout.write(`.`);
+  const existingShaMap = new Map();
+  try {
+    const prevTree = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/trees/${parentSha}?recursive=1`);
+    for (const item of prevTree.tree ?? []) {
+      if (item.type === "blob" && item.path && item.sha) {
+        existingShaMap.set(item.path, item.sha);
+      }
+    }
+  } catch {
+    // Fallback to uploading all files if tree fetch fails
   }
-  console.log(`\n[cloud-ipa] Creating Git tree & commit on ${branch}...`);
+
+  const computeGitBlobSha = (buf) =>
+    createHash("sha1")
+      .update(Buffer.from(`blob ${buf.length}\0`, "utf8"))
+      .update(buf)
+      .digest("hex");
+
+  const files = collectFiles();
+  const treeEntries = [];
+  const toUpload = [];
+
+  for (const absPath of files) {
+    const rel = relative(ROOT, absPath).replace(/\\/g, "/");
+    let buf = readFileSync(absPath);
+    if (isTextFile(rel)) {
+      const text = buf.toString("utf8").replace(/\r\n/g, "\n");
+      buf = Buffer.from(text, "utf8");
+    }
+    const localSha = computeGitBlobSha(buf);
+    const mode = rel.endsWith(".sh") || rel.endsWith("/gradlew") ? "100755" : "100644";
+    if (existingShaMap.get(rel) === localSha) {
+      treeEntries.push({ path: rel, mode, type: "blob", sha: localSha });
+    } else {
+      toUpload.push({ rel, mode, buf });
+    }
+  }
+
+  console.log(`[cloud-build] ${files.length} files (${treeEntries.length} unchanged reused, ${toUpload.length} to upload)...`);
+
+  for (let i = 0; i < toUpload.length; i++) {
+    const item = toUpload[i];
+    const blob = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/blobs`, {
+      method: "POST",
+      body: JSON.stringify({
+        content: item.buf.toString("base64"),
+        encoding: "base64",
+      }),
+    });
+    treeEntries.push({
+      path: item.rel,
+      mode: item.mode,
+      type: "blob",
+      sha: blob.sha,
+    });
+    process.stdout.write(`.`);
+    if (i + 1 < toUpload.length) await sleep(350);
+  }
+  if (toUpload.length > 0) console.log("");
+  console.log(`[cloud-build] Creating Git tree & commit on ${branch}...`);
 
   const tree = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/trees`, {
     method: "POST",
@@ -206,10 +259,10 @@ async function main() {
   });
 
   const pushTimeIso = new Date().toISOString();
-  const commit = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/commits`, {
+    const commit = await ghApi(token, `/repos/${owner}/${REPO_NAME}/git/commits`, {
     method: "POST",
     body: JSON.stringify({
-      message: "Build Luyen Co Su iOS IPA",
+      message: "Build Luyen Co Su iOS IPA & Android APK",
       tree: tree.sha,
       parents: [parentSha],
     }),
@@ -281,46 +334,53 @@ async function main() {
   }
 
   const artRes = await ghApi(token, `/repos/${owner}/${REPO_NAME}/actions/runs/${run.id}/artifacts`);
-  const artifact = (artRes.artifacts ?? []).find((a) => a.name === "LuyenCoSu-iOS-IPA");
-  if (!artifact) {
-    throw new Error("Build thành công nhưng không tìm thấy artifact LuyenCoSu-iOS-IPA.");
-  }
-
-  console.log(`[cloud-ipa] Downloading artifact ${artifact.name} (${artifact.size_in_bytes} bytes)...`);
-  const zipRes = await fetch(artifact.archive_download_url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "User-Agent": "luyen-co-su-cloud-builder",
-    },
-    redirect: "manual",
-  });
-
-  let finalZipRes = zipRes;
-  if (zipRes.status >= 300 && zipRes.status < 400) {
-    const redirectUrl = zipRes.headers.get("location");
-    if (!redirectUrl) throw new Error("Redirect không có Location header.");
-    // Không gửi Authorization header sang Azure Blob Storage
-    finalZipRes = await fetch(redirectUrl);
-  }
-
-  if (!finalZipRes.ok) {
-    throw new Error(`Tải artifact thất bại: HTTP ${finalZipRes.status}`);
-  }
+  const targets = [
+    { artifactName: "LuyenCoSu-iOS-IPA", fileName: "LuyenCoSu.ipa", outPath: FINAL_IPA, label: "IPA (iOS)" },
+    { artifactName: "LuyenCoSu-Android-APK", fileName: "LuyenCoSu.apk", outPath: FINAL_APK, label: "APK (Android)" },
+  ];
 
   mkdirSync(BUILD_DIR, { recursive: true });
-  const zipPath = join(BUILD_DIR, "LuyenCoSu-artifact.zip");
-  const arrayBuf = await finalZipRes.arrayBuffer();
-  writeFileSync(zipPath, Buffer.from(arrayBuf));
+  for (const t of targets) {
+    const artifact = (artRes.artifacts ?? []).find((a) => a.name === t.artifactName);
+    if (!artifact) {
+      throw new Error(`Build thành công nhưng không tìm thấy artifact ${t.artifactName}.`);
+    }
 
-  execFileSync("tar.exe", ["-xf", zipPath, "-C", BUILD_DIR], { stdio: "inherit" });
-  const extractedIpa = join(BUILD_DIR, "LuyenCoSu.ipa");
-  if (!existsSync(extractedIpa)) {
-    throw new Error(`Đã giải nén nhưng không thấy ${extractedIpa}`);
+    console.log(`[cloud-build] Downloading ${t.artifactName} (${artifact.size_in_bytes} bytes)...`);
+    const zipRes = await fetch(artifact.archive_download_url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "luyen-co-su-cloud-builder",
+      },
+      redirect: "manual",
+    });
+
+    let finalZipRes = zipRes;
+    if (zipRes.status >= 300 && zipRes.status < 400) {
+      const redirectUrl = zipRes.headers.get("location");
+      if (!redirectUrl) throw new Error(`Redirect không có Location header cho ${t.artifactName}.`);
+      // Không gửi Authorization header sang Azure Blob Storage
+      finalZipRes = await fetch(redirectUrl);
+    }
+
+    if (!finalZipRes.ok) {
+      throw new Error(`Tải artifact ${t.artifactName} thất bại: HTTP ${finalZipRes.status}`);
+    }
+
+    const zipPath = join(BUILD_DIR, `${t.artifactName}.zip`);
+    const arrayBuf = await finalZipRes.arrayBuffer();
+    writeFileSync(zipPath, Buffer.from(arrayBuf));
+
+    execFileSync("tar.exe", ["-xf", zipPath, "-C", BUILD_DIR], { stdio: "inherit" });
+    const extracted = join(BUILD_DIR, t.fileName);
+    if (!existsSync(extracted)) {
+      throw new Error(`Đã giải nén nhưng không thấy ${extracted}`);
+    }
+
+    copyFileSync(extracted, t.outPath);
+    const sizeMb = (statSync(t.outPath).size / (1024 * 1024)).toFixed(2);
+    console.log(`[cloud-build] SUCCESS ${t.label}: ${t.outPath} (${sizeMb} MB)`);
   }
-
-  copyFileSync(extractedIpa, FINAL_IPA);
-  const ipaSizeMb = (statSync(FINAL_IPA).size / (1024 * 1024)).toFixed(2);
-  console.log(`[cloud-ipa] SUCCESS! File IPA sẵn sàng cài lên iPhone: ${FINAL_IPA} (${ipaSizeMb} MB)`);
 }
 
 main().catch((err) => {

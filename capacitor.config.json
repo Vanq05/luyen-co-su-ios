@@ -1,12 +1,16 @@
 {
   "appId": "com.luyencosu.roguelike",
-  "appName": "Luyện Cổ Sư",
+  "appName": "Cổ Tiên Lộ",
   "webDir": "dist",
   "bundledWebRuntime": false,
-  "backgroundColor": "#0d0c12",
+  "backgroundColor": "#07090d",
   "ios": {
     "contentInset": "never",
     "preferredContentMode": "mobile",
     "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "backgroundColor": "#07090d",
+    "allowMixedContent": true
   }
 }

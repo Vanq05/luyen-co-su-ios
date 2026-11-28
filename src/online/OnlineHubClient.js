@@ -83,19 +83,20 @@ export class OnlineHubClient {
       await this.account.ensureFreshToken();
       const uid = this.account.session.user.id;
       const slotIdx = this.account.activeSlotIndex ?? 0;
-      const payload = {
+        const pInfo = player.getPathInfo ? player.getPathInfo() : player.pathInfo;
+        const payload = {
         char_key: `${uid}:${slotIdx}`,
         user_id: uid,
         slot_index: slotIdx,
         name: ch.name,
         appearance: normalizeAppearance(player.appearance),
-        path_name: player.pathInfo?.name ?? ch.path_name ?? "Khởi Nguyên Cổ Đạo",
-        path_color: player.pathInfo?.color ?? ch.path_color ?? "#4de6b0",
-        realm_level: ch.realm_level ?? 1,
-        cultivation_exp: ch.cultivation_exp ?? 0,
-        bosses_slain: ch.bosses_slain ?? 0,
+        path_name: pInfo?.name ?? ch.path_name ?? "Nguyệt Đạo",
+        path_color: pInfo?.color ?? ch.path_color ?? "#5ef2d6",
+        realm_level: player.stageLevel ?? ch.realm_level ?? 1,
+        cultivation_exp: player.cultivationExp ?? ch.cultivation_exp ?? 0,
+        bosses_slain: player.bossesSlain ?? ch.bosses_slain ?? 0,
         equipped_summary: player.getEquippedSummary(),
-        scene: world.floorNumber === 0 ? "town" : `floor_${world.floorNumber}`,
+        scene: world.currentMapId || "ta_gia_trai",
         x: Math.round(player.x),
         y: Math.round(player.y),
         facing: Number((player.facing ?? 0).toFixed(2)),
@@ -161,7 +162,6 @@ export class OnlineHubClient {
 
         for (const r of rows ?? []) {
           if (r.char_key === myKey) continue;
-          if (r.scene !== "town") continue;
           seenKeys.add(r.char_key);
           const existing = this.remotePlayers.get(r.char_key);
           if (existing) {
@@ -172,25 +172,27 @@ export class OnlineHubClient {
             existing.realm_level = r.realm_level;
             existing.cultivation_exp = r.cultivation_exp;
             existing.bosses_slain = r.bosses_slain;
+            existing.scene = r.scene;
             existing.equipped_summary = Array.isArray(r.equipped_summary) ? r.equipped_summary : [];
-            existing.targetX = Number(r.x ?? 288);
-            existing.targetY = Number(r.y ?? 210);
+            existing.targetX = Number(r.x ?? 640);
+            existing.targetY = Number(r.y ?? 450);
             existing.moving = Boolean(r.moving);
           } else {
             this.remotePlayers.set(r.char_key, {
               char_key: r.char_key,
               name: r.name,
               appearance: normalizeAppearance(r.appearance),
-              path_name: r.path_name || "Khởi Nguyên Cổ Đạo",
-              path_color: r.path_color || "#4de6b0",
+              path_name: r.path_name || "Nguyệt Đạo",
+              path_color: r.path_color || "#5ef2d6",
               realm_level: r.realm_level ?? 1,
               cultivation_exp: r.cultivation_exp ?? 0,
               bosses_slain: r.bosses_slain ?? 0,
+              scene: r.scene || "ta_gia_trai",
               equipped_summary: Array.isArray(r.equipped_summary) ? r.equipped_summary : [],
-              x: Number(r.x ?? 288),
-              y: Number(r.y ?? 210),
-              targetX: Number(r.x ?? 288),
-              targetY: Number(r.y ?? 210),
+              x: Number(r.x ?? 640),
+              y: Number(r.y ?? 450),
+              targetX: Number(r.x ?? 640),
+              targetY: Number(r.y ?? 450),
               facing: Number(r.facing ?? 0),
               moving: Boolean(r.moving),
               isWalking: Boolean(r.moving),

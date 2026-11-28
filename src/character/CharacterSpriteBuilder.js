@@ -1,16 +1,17 @@
 /**
- * Bộ sinh Sprite Nhân Vật Pixel Art Đa Lớp (32x32 mỗi frame, chuẩn Dark Fantasy Cổ Phong).
- * Hỗ trợ tùy chỉnh tự do 7 lớp ngoại hình và xuất trực tiếp 6 bộ animation:
- * `idle` (4f), `run` (6f), `dash` (3f), `hurt` (2f), `death` (4f), `tau-hoa` (4f)
- * tương thích hoàn toàn với `drawSheetFrame()` trên cả Chiến Trường lẫn Sảnh Online.
+ * Bộ sinh Sprite Nhân Vật Pixel Art Chibi Cổ Phong (32x32 mỗi frame, chuẩn Cổ Tiên Lộ).
+ * Hỗ trợ tùy chỉnh đa lớp và xuất 9 bộ animation:
+ * `idle` (4f), `run` (6f), `attack` (4f), `dash` (3f), `sit` (2f), `fish` (2f), `hurt` (2f), `death` (4f), `tau-hoa` (4f).
+ * Ngoài ra cung cấp `drawCharacterPortrait()` cho khung Avatar góc trên-trái HUD (0 ellipse/arc/gradient mượt).
  */
+import { fillPixelEllipse, plotPixelEllipse, plotRect } from "../engine/PixelSpriteBaker.js";
 import { drawSheetFrame, getSheetFrameIndex } from "../engine/SpriteSheet.js";
 
 export const SKIN_TONES = [
-  { id: "bach_ngoc", name: "Bạch Ngọc", base: "#f3dcc4", shadow: "#c9a585", highlight: "#fff0e0" },
-  { id: "phan_hong", name: "Phấn Hồng", base: "#f0c8be", shadow: "#c28f84", highlight: "#ffe4dc" },
+  { id: "bach_ngoc", name: "Bạch Ngọc", base: "#f5dec8", shadow: "#cfa888", highlight: "#fff3e6" },
+  { id: "phan_hong", name: "Phấn Hồng", base: "#f2cabe", shadow: "#c49084", highlight: "#ffe6de" },
   { id: "dong_co", name: "Đồng Cổ", base: "#d49e72", shadow: "#9c6b43", highlight: "#ebbc94" },
-  { id: "bang_tuyet", name: "Băng Tuyết", base: "#dce6f2", shadow: "#9fb1c9", highlight: "#f5f9ff" },
+  { id: "bang_tuyet", name: "Băng Tuyết", base: "#dfe8f4", shadow: "#a1b3cc", highlight: "#f6faff" },
   { id: "huyen_mach", name: "Huyền Mạch", base: "#8c7268", shadow: "#59453e", highlight: "#b3968a" },
 ];
 
@@ -24,8 +25,8 @@ export const HAIR_STYLES = [
 ];
 
 export const HAIR_COLORS = [
-  { id: "den_huyen", name: "Đen Huyền", base: "#23202e", dark: "#12101a", light: "#454059" },
-  { id: "bach_phat", name: "Bạch Phát", base: "#d9e0ec", dark: "#96a2b8", light: "#ffffff" },
+  { id: "den_huyen", name: "Đen Huyền", base: "#1f1d29", dark: "#0f0e16", light: "#3f3b52" },
+  { id: "bach_phat", name: "Bạch Phát", base: "#dde4f0", dark: "#96a2b8", light: "#ffffff" },
   { id: "do_huyet", name: "Đỏ Huyết", base: "#c92845", dark: "#781326", light: "#ff6680" },
   { id: "xanh_bang", name: "Xanh Băng", base: "#3db8d9", dark: "#1d6b87", light: "#94ecff" },
   { id: "tim_u_minh", name: "Tím U Minh", base: "#8c42d6", dark: "#4c1d82", light: "#c88cff" },
@@ -51,8 +52,8 @@ export const OUTFIT_STYLES = [
 ];
 
 export const OUTFIT_COLORS = [
+  { id: "huyen_hac", name: "Huyền Hắc", base: "#22202b", dark: "#121018", light: "#3f3b4f" },
   { id: "thanh_ngoc", name: "Thanh Ngọc", base: "#216e5a", dark: "#123d32", light: "#42a88c" },
-  { id: "huyen_hac", name: "Huyền Hắc", base: "#2b273b", dark: "#161321", light: "#4c4666" },
   { id: "huyet_sat", name: "Huyết Sát", base: "#8a1c33", dark: "#4d0d1b", light: "#c93856" },
   { id: "xich_viem", name: "Xích Viêm", base: "#a84419", dark: "#5e2209", light: "#e37036" },
   { id: "bach_tuyet", name: "Bạch Tuyết", base: "#cfd6e6", dark: "#8792ab", light: "#f4f7ff" },
@@ -62,17 +63,17 @@ export const OUTFIT_COLORS = [
 ];
 
 export const TRIM_COLORS = [
-  { id: "vang_dong", name: "Vàng Đồng", base: "#d6b16a", light: "#ffe39e" },
-  { id: "ngoc_bich", name: "Ngọc Bích", base: "#4de6b0", light: "#b5ffe4" },
-  { id: "do_tham", name: "Chu Đỏ", base: "#ff4769", light: "#ff9eb0" },
+  { id: "vang_dong", name: "Vàng Đồng", base: "#d9b25f", light: "#ffe6a6" },
+  { id: "ngoc_bich", name: "Ngọc Bích", base: "#5fbf8a", light: "#b5ffe4" },
+  { id: "do_tham", name: "Chu Đỏ", base: "#d0573c", light: "#ff9e8a" },
   { id: "bac_sang", name: "Bạc Sáng", base: "#dce4f2", light: "#ffffff" },
   { id: "tim_ma", name: "Tử Tinh", base: "#b84dff", light: "#e2b3ff" },
   { id: "cam_lua", name: "Cam Hỏa", base: "#ff8c3a", light: "#ffd0a6" },
 ];
 
 export const EYE_COLORS = [
-  { id: "ngoc_bich", name: "Mắt Ngọc Bích", hex: "#4de6b0" },
-  { id: "huyet_dong", name: "Mắt Huyết Đồng", hex: "#ff3855" },
+  { id: "ngoc_bich", name: "Mắt Ngọc Bích", hex: "#5fbf8a" },
+  { id: "huyet_dong", name: "Mắt Huyết Đồng", hex: "#d0573c" },
   { id: "ho_phach", name: "Mắt Hổ Phách", hex: "#ffd15c" },
   { id: "bang_lam", name: "Mắt Băng Lam", hex: "#5ce1ff" },
   { id: "tu_quang", name: "Mắt Tử Quang", hex: "#d46bff" },
@@ -93,12 +94,12 @@ export function createDefaultAppearance() {
     skin: "bach_ngoc",
     hairStyle: "hiep_khach",
     hairColor: "den_huyen",
-    headgear: "ngoc_quan",
+    headgear: "none",
     outfitStyle: "truong_bao",
-    outfitColor: "thanh_ngoc",
+    outfitColor: "huyen_hac",
     trimColor: "vang_dong",
     eyeColor: "ngoc_bich",
-    backItem: "ho_lo",
+    backItem: "co_kiem",
   };
 }
 
@@ -157,11 +158,7 @@ function makeSurface(width, height) {
     ctx.imageSmoothingEnabled = false;
     return { canvas: c, ctx };
   }
-  // Fallback cho môi trường test Node không có DOM
-  return {
-    canvas: { width, height, isHeadlessMock: true },
-    ctx: null,
-  };
+  return { canvas: { width, height, isHeadlessMock: true }, ctx: null };
 }
 
 function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
@@ -175,9 +172,8 @@ function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
     ctx.fillRect(ox + x, oy + y, w, h);
   };
 
-  const outline = "#110e18";
+  const outline = "#100d14";
 
-  // Animation offsets
   let bobY = 0;
   let leanX = 0;
   let leftLegY = 0;
@@ -205,11 +201,20 @@ function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
     rightArmY = cycle.ra;
     capeSway = cycle.sw;
     leanX = 1;
+  } else if (state === "attack") {
+    leanX = frameIdx === 1 || frameIdx === 2 ? 2 : 0;
+    bobY = frameIdx === 1 ? 1 : 0;
+    rightArmY = frameIdx === 1 ? -3 : frameIdx === 2 ? -1 : 0;
+    capeSway = frameIdx === 1 ? -1 : 0;
+  } else if (state === "sit") {
+    bobY = frameIdx === 1 ? 3 : 4;
+  } else if (state === "fish") {
+    bobY = frameIdx === 1 ? 1 : 0;
+    rightArmY = -1;
   } else if (state === "dash") {
     leanX = 2;
     bobY = 1;
     capeSway = -2;
-    // Vệt tàn ảnh phía sau lưng khi lướt
     ctx.save();
     ctx.globalAlpha = 0.35;
     px(4 - frameIdx, 10, trimColor.base, 5, 12);
@@ -219,12 +224,9 @@ function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
     leanX = -1;
     bobY = frameIdx === 0 ? -1 : 0;
   } else if (state === "death") {
-    if (frameIdx === 0) {
-      bobY = 2;
-    } else if (frameIdx === 1) {
-      bobY = 5;
-    } else {
-      // Nằm gục hóa thành đốm linh hồn & y phục trên đất
+    if (frameIdx === 0) bobY = 2;
+    else if (frameIdx === 1) bobY = 5;
+    else {
       px(7, 23, outline, 18, 5);
       px(8, 24, outfitColor.dark, 15, 3);
       px(10, 23, outfitColor.base, 11, 3);
@@ -244,13 +246,22 @@ function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
   const bx = leanX;
   const by = bobY;
 
-  // Bóng đổ dưới chân
+  // Bóng đổ bầu dục dưới chân chuẩn chibi
   ctx.save();
-  ctx.globalAlpha = 0.35;
-  px(10, 26, "#06050a", 12, 2);
+  ctx.globalAlpha = 0.38;
+  px(9, 26, "#060807", 14, 2);
+  px(11, 25, "#060807", 10, 4);
   ctx.restore();
 
-  // === 1. PHÁP KHÍ ĐEO LƯNG (BACK LAYER) ===
+  // Vòng linh khí pixel khi ngồi thiền Bế quan
+  if (state === "sit") {
+    ctx.save();
+    ctx.globalAlpha = frameIdx === 0 ? 0.5 : 0.72;
+    plotPixelEllipse(ctx, ox + 16, oy + 26, 11, 4, "#5fbf8a", 2, frameIdx);
+    ctx.restore();
+  }
+
+  // === 1. PHÁP KHÍ ĐEO LƯNG ===
   if (backItem === "nguyet_luan") {
     px(7, 6 + by, trimColor.base, 18, 1);
     px(7, 19 + by, trimColor.base, 18, 1);
@@ -259,172 +270,181 @@ function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
   } else if (backItem === "huyet_duc") {
     const wingLift = frameIdx % 2 === 0 ? 0 : -1;
     px(4, 9 + by + wingLift, "#5e0f24", 6, 8);
-    px(5, 10 + by + wingLift, "#ff3855", 4, 5);
+    px(5, 10 + by + wingLift, "#d0573c", 4, 5);
     px(22, 9 + by + wingLift, "#5e0f24", 6, 8);
-    px(23, 10 + by + wingLift, "#ff3855", 4, 5);
+    px(23, 10 + by + wingLift, "#d0573c", 4, 5);
   } else if (backItem === "co_kiem") {
     px(8, 4 + by, outline, 3, 18);
     px(9, 5 + by, trimColor.light, 1, 3);
     px(7, 7 + by, trimColor.base, 5, 1);
-    px(9, 8 + by, "#6a748a", 1, 13);
+    px(9, 8 + by, "#8fa0b8", 1, 13);
   } else if (backItem === "ho_lo") {
     px(6, 11 + by, outline, 5, 9);
     px(7, 12 + by, "#d4943b", 3, 3);
-    px(7, 15 + by, "#ff4769", 3, 1);
+    px(7, 15 + by, "#d0573c", 3, 1);
     px(6, 16 + by, "#c27d29", 5, 3);
   }
 
-  // Tà áo choàng sau (nếu mặc Áo Choàng Tà Tu hoặc Trường Bào)
-  if (outfitStyle === "ta_tu") {
-    px(8 + capeSway, 14 + by, outline, 16, 11);
-    px(9 + capeSway, 15 + by, outfitColor.dark, 14, 9);
-    px(10 + capeSway, 23 + by, trimColor.base, 3, 2);
-    px(19 + capeSway, 23 + by, trimColor.base, 3, 2);
+  // Tà áo choàng sau
+  if (outfitStyle === "ta_tu" || outfitStyle === "truong_bao") {
+    px(8 + capeSway, 16 + by, outline, 16, 9);
+    px(9 + capeSway, 17 + by, outfitColor.dark, 14, 7);
+    px(10 + capeSway, 23 + by, trimColor.base, 2, 1);
+    px(20 + capeSway, 23 + by, trimColor.base, 2, 1);
   }
 
-  // === 2. CHÂN & GIÀY (LEGS / BOOTS) ===
-  px(11 + bx, 23 + leftLegY, outline, 4, 4);
-  px(12 + bx, 23 + leftLegY, "#231e30", 2, 3);
-  px(17 + bx, 23 + rightLegY, outline, 4, 4);
-  px(18 + bx, 23 + rightLegY, "#231e30", 2, 3);
+  // === 2. CHÂN & GIÀY (hoặc xếp bằng khi sit) ===
+  if (state === "sit") {
+    px(10 + bx, 22 + by, outline, 12, 4);
+    px(11 + bx, 23 + by, outfitColor.base, 10, 2);
+  } else {
+    px(11 + bx, 23 + leftLegY, outline, 4, 4);
+    px(12 + bx, 23 + leftLegY, "#231e30", 2, 3);
+    px(17 + bx, 23 + rightLegY, outline, 4, 4);
+    px(18 + bx, 23 + rightLegY, "#231e30", 2, 3);
+  }
 
-  // === 3. THÂN ĐẠO BÀO / CHIẾN GIÁP (TORSO & ROBE) ===
-  px(10 + bx, 14 + by, outline, 12, 10);
-  px(11 + bx, 15 + by, outfitColor.base, 10, 8);
-  px(11 + bx, 15 + by, outfitColor.light, 3, 7);
-  px(18 + bx, 15 + by, outfitColor.dark, 3, 7);
+  // === 3. THÂN ĐẠO BÀO ===
+  px(10 + bx, 15 + by, outline, 12, 9);
+  px(11 + bx, 16 + by, outfitColor.base, 10, 7);
+  px(11 + bx, 16 + by, outfitColor.light, 3, 6);
+  px(18 + bx, 16 + by, outfitColor.dark, 3, 6);
 
   if (outfitStyle === "truong_bao") {
-    // Vạt chéo cổ phong + đai ngọc
-    px(10 + bx, 21 + by, outline, 12, 4);
-    px(11 + bx, 21 + by, outfitColor.base, 10, 3);
-    px(14 + bx, 15 + by, trimColor.base, 2, 9);
+    px(10 + bx, 21 + by, outline, 12, 3);
+    px(11 + bx, 21 + by, outfitColor.base, 10, 2);
+    px(14 + bx, 16 + by, trimColor.base, 2, 7);
     px(11 + bx, 19 + by, trimColor.base, 10, 2);
     px(15 + bx, 19 + by, trimColor.light, 2, 2);
   } else if (outfitStyle === "doan_y") {
-    // Đoản y gọn gàng lộ đai lưng rộng
     px(11 + bx, 18 + by, trimColor.base, 10, 2);
-    px(13 + bx, 15 + by, trimColor.light, 1, 3);
-    px(18 + bx, 15 + by, trimColor.light, 1, 3);
+    px(13 + bx, 16 + by, trimColor.light, 1, 2);
+    px(18 + bx, 16 + by, trimColor.light, 1, 2);
   } else if (outfitStyle === "chien_giap") {
-    // Giáp vai + hộ tâm kính
-    px(8 + bx, 14 + by, outline, 4, 4);
-    px(20 + bx, 14 + by, outline, 4, 4);
-    px(9 + bx, 15 + by, trimColor.base, 3, 2);
-    px(20 + bx, 15 + by, trimColor.base, 3, 2);
-    px(13 + bx, 16 + by, "#b8c2d6", 6, 4);
-    px(15 + bx, 17 + by, trimColor.light, 2, 2);
-  } else if (outfitStyle === "ta_tu") {
-    // Viền tà ấn giữa ngực
-    px(12 + bx, 15 + by, trimColor.base, 2, 8);
-    px(18 + bx, 15 + by, trimColor.base, 2, 8);
+    px(8 + bx, 15 + by, outline, 4, 4);
+    px(20 + bx, 15 + by, outline, 4, 4);
+    px(9 + bx, 16 + by, trimColor.base, 3, 2);
+    px(20 + bx, 16 + by, trimColor.base, 3, 2);
+    px(13 + bx, 17 + by, "#b8c2d6", 6, 4);
+    px(15 + bx, 18 + by, trimColor.light, 2, 2);
+  } else {
+    px(12 + bx, 16 + by, trimColor.base, 2, 7);
+    px(18 + bx, 16 + by, trimColor.base, 2, 7);
     px(14 + bx, 18 + by, trimColor.light, 4, 2);
   }
 
-  // Hai tay & cổ tay áo
-  px(8 + bx, 16 + by + leftArmY, outline, 3, 6);
-  px(9 + bx, 16 + by + leftArmY, outfitColor.dark, 2, 4);
+  // Hai tay
+  px(8 + bx, 17 + by + leftArmY, outline, 3, 5);
+  px(9 + bx, 17 + by + leftArmY, outfitColor.dark, 2, 3);
   px(9 + bx, 20 + by + leftArmY, skin.base, 2, 2);
 
-  px(21 + bx, 16 + by + rightArmY, outline, 3, 6);
-  px(21 + bx, 16 + by + rightArmY, outfitColor.light, 2, 4);
+  px(21 + bx, 17 + by + rightArmY, outline, 3, 5);
+  px(21 + bx, 17 + by + rightArmY, outfitColor.light, 2, 3);
   px(21 + bx, 20 + by + rightArmY, skin.base, 2, 2);
 
-  // === 4. ĐẦU, KHUÔN MẶT & MẮT ===
-  // Tóc xõa sau gáy
+  // Cần câu trúc khi đang câu cá
+  if (state === "fish") {
+    px(23 + bx, 14 + by, "#8f6532", 7, 1);
+    px(28 + bx, 12 + by, "#b08046", 4, 1);
+    px(31 + bx, 13 + by, "#ffffff", 1, 9);
+  }
+
+  // Vệt chém khi attack
+  if (state === "attack" && (frameIdx === 1 || frameIdx === 2)) {
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    px(23 + bx, 12 + by, trimColor.light, 3, 9);
+    px(25 + bx, 14 + by, "#ffffff", 2, 6);
+    ctx.restore();
+  }
+
+  // === 4. ĐẦU CHIBI TO & MẶT CÓ HỒN ===
   if (hairStyle === "tien_phong" || hairStyle === "cuong_ma") {
-    px(9 + bx - capeSway, 9 + by, outline, 14, 9);
-    px(10 + bx - capeSway, 10 + by, hairColor.dark, 12, 7);
+    px(8 + bx - capeSway, 8 + by, outline, 16, 10);
+    px(9 + bx - capeSway, 9 + by, hairColor.dark, 14, 8);
   }
 
-  // Viền đầu & khuôn mặt
-  px(10 + bx, 6 + by, outline, 12, 10);
-  px(11 + bx, 7 + by, skin.base, 10, 8);
-  px(11 + bx, 7 + by, skin.highlight, 3, 6);
-  px(19 + bx, 8 + by, skin.shadow, 2, 6);
+  // Đầu tròn Chibi (rộng 14px, cao 11px)
+  px(9 + bx, 5 + by, outline, 14, 11);
+  px(10 + bx, 6 + by, skin.base, 12, 9);
+  px(10 + bx, 6 + by, skin.highlight, 4, 6);
+  px(20 + bx, 7 + by, skin.shadow, 2, 7);
 
-  // Đôi mắt phát sáng theo linh hồn
+  // Đôi mắt Chibi 2x3 long lanh
   const eyeHex = state === "tau-hoa" ? "#ff244c" : eyeColor.hex;
-  px(13 + bx, 11 + by, "#120f1a", 2, 2);
-  px(18 + bx, 11 + by, "#120f1a", 2, 2);
-  px(14 + bx, 11 + by, eyeHex, 1, 2);
+  px(12 + bx, 10 + by, "#120f1a", 2, 3);
+  px(18 + bx, 10 + by, "#120f1a", 2, 3);
+  px(13 + bx, 11 + by, eyeHex, 1, 2);
   px(19 + bx, 11 + by, eyeHex, 1, 2);
+  px(12 + bx, 10 + by, "#ffffff", 1, 1);
+  px(18 + bx, 10 + by, "#ffffff", 1, 1);
 
-  // Khăn bịt mặt Ảnh Sát (che nửa dưới mặt)
   if (headgear === "anh_sat") {
-    px(11 + bx, 12 + by, "#1a1726", 10, 3);
-    px(12 + bx, 13 + by, trimColor.base, 8, 1);
+    px(10 + bx, 12 + by, "#1a1726", 12, 3);
+    px(11 + bx, 13 + by, trimColor.base, 10, 1);
   }
 
-  // === 5. KIỂU TÓC (HAIRSTYLE) ===
+  // === 5. KIỂU TÓC ===
   if (hairStyle === "kho_tu") {
-    // Đầu trần + ấn chu sa giữa trán
-    px(15 + bx, 9 + by, trimColor.base, 2, 1);
+    px(15 + bx, 8 + by, trimColor.base, 2, 1);
   } else {
-    // Mái tóc trước trán & hai mai
-    px(10 + bx, 5 + by, outline, 12, 4);
-    px(11 + bx, 6 + by, hairColor.base, 10, 3);
-    px(12 + bx, 6 + by, hairColor.light, 5, 1);
-    px(10 + bx, 8 + by, hairColor.dark, 2, 5);
-    px(20 + bx, 8 + by, hairColor.dark, 2, 5);
+    px(9 + bx, 4 + by, outline, 14, 5);
+    px(10 + bx, 5 + by, hairColor.base, 12, 4);
+    px(11 + bx, 5 + by, hairColor.light, 6, 1);
+    px(9 + bx, 8 + by, hairColor.dark, 2, 6);
+    px(21 + bx, 8 + by, hairColor.dark, 2, 6);
 
     if (hairStyle === "hiep_khach") {
-      // Búi tóc đuôi ngựa cao
-      px(13 + bx, 2 + by, outline, 6, 4);
-      px(14 + bx, 3 + by, hairColor.base, 4, 3);
-      px(14 + bx, 5 + by, trimColor.base, 4, 1);
-      px(11 + bx - capeSway, 3 + by, hairColor.dark, 3, 3);
+      px(13 + bx, 1 + by, outline, 6, 4);
+      px(14 + bx, 2 + by, hairColor.base, 4, 3);
+      px(14 + bx, 4 + by, trimColor.base, 4, 1);
+      px(11 + bx - capeSway, 2 + by, hairColor.dark, 3, 3);
     } else if (hairStyle === "linh_dong") {
-      // Hai búi tròn hai bên
-      px(8 + bx, 5 + by, outline, 4, 4);
-      px(9 + bx, 6 + by, hairColor.base, 2, 2);
-      px(20 + bx, 5 + by, outline, 4, 4);
-      px(21 + bx, 6 + by, hairColor.base, 2, 2);
+      px(7 + bx, 4 + by, outline, 4, 4);
+      px(8 + bx, 5 + by, hairColor.base, 2, 2);
+      px(21 + bx, 4 + by, outline, 4, 4);
+      px(22 + bx, 5 + by, hairColor.base, 2, 2);
     } else if (hairStyle === "cuong_ma") {
-      // Tóc dựng gai cuồng dã
-      px(9 + bx, 3 + by, hairColor.base, 3, 3);
-      px(14 + bx, 2 + by, hairColor.light, 4, 4);
-      px(20 + bx, 3 + by, hairColor.base, 3, 3);
+      px(8 + bx, 2 + by, hairColor.base, 3, 3);
+      px(14 + bx, 1 + by, hairColor.light, 4, 4);
+      px(21 + bx, 2 + by, hairColor.base, 3, 3);
     } else if (hairStyle === "kiem_khach") {
-      px(12 + bx, 4 + by, hairColor.light, 8, 2);
+      px(11 + bx, 3 + by, hairColor.light, 10, 2);
     }
   }
 
-  // === 6. MŨ / QUÁN / SỪNG (HEADGEAR) ===
+  // === 6. MŨ / QUÁN ===
   if (headgear === "ngoc_quan") {
-    px(13 + bx, 2 + by, outline, 6, 4);
-    px(14 + bx, 3 + by, trimColor.base, 4, 3);
-    px(15 + bx, 3 + by, "#4de6b0", 2, 2);
-    px(12 + bx, 4 + by, trimColor.light, 8, 1);
+    px(13 + bx, 1 + by, outline, 6, 4);
+    px(14 + bx, 2 + by, trimColor.base, 4, 3);
+    px(15 + bx, 2 + by, "#5fbf8a", 2, 2);
+    px(12 + bx, 3 + by, trimColor.light, 8, 1);
   } else if (headgear === "dau_lap") {
-    // Nón lá hiệp khách rộng vành
-    px(5 + bx, 6 + by, outline, 22, 3);
-    px(8 + bx, 4 + by, outline, 16, 3);
-    px(12 + bx, 2 + by, outline, 8, 3);
-    px(6 + bx, 7 + by, "#b89352", 20, 1);
-    px(9 + bx, 5 + by, "#d4af6a", 14, 2);
-    px(13 + bx, 3 + by, trimColor.base, 6, 2);
+    px(4 + bx, 5 + by, outline, 24, 3);
+    px(7 + bx, 3 + by, outline, 18, 3);
+    px(12 + bx, 1 + by, outline, 8, 3);
+    px(5 + bx, 6 + by, "#b89352", 22, 1);
+    px(8 + bx, 4 + by, "#d9b25f", 16, 2);
+    px(13 + bx, 2 + by, trimColor.base, 6, 2);
   } else if (headgear === "sung_ma") {
-    px(9 + bx, 2 + by, "#5c0f22", 3, 4);
-    px(8 + bx, 1 + by, "#ff3855", 2, 3);
-    px(20 + bx, 2 + by, "#5c0f22", 3, 4);
-    px(22 + bx, 1 + by, "#ff3855", 2, 3);
+    px(8 + bx, 1 + by, "#5c0f22", 3, 4);
+    px(7 + bx, 0 + by, "#d0573c", 2, 3);
+    px(21 + bx, 1 + by, "#5c0f22", 3, 4);
+    px(23 + bx, 0 + by, "#d0573c", 2, 3);
   } else if (headgear === "kim_co") {
-    px(10 + bx, 7 + by, "#ffd86e", 12, 2);
-    px(15 + bx, 6 + by, "#ff3855", 2, 2);
+    px(9 + bx, 6 + by, "#ffd86e", 14, 2);
+    px(15 + bx, 5 + by, "#d0573c", 2, 2);
   }
 
-  // === 7. HIỆU ỨNG TRẠNG THÁI (HURT / TẨU HỎA NHẬP MA) ===
   if (state === "hurt" && frameIdx === 0) {
     ctx.save();
     ctx.globalAlpha = 0.45;
-    px(9 + bx, 5 + by, "#ff4a66", 14, 20);
+    px(8 + bx, 4 + by, "#ff4a66", 16, 21);
     ctx.restore();
   } else if (state === "tau-hoa") {
     const sparkCol = frameIdx % 2 === 0 ? "#d45eff" : "#ff244c";
-    px(6, 8 + (frameIdx % 3) * 3, sparkCol, 2, 3);
-    px(24, 10 + ((frameIdx + 1) % 3) * 3, sparkCol, 2, 3);
-    px(9 + (frameIdx % 2) * 12, 3, "#ff7af5", 2, 2);
+    px(5, 8 + (frameIdx % 3) * 3, sparkCol, 2, 3);
+    px(25, 10 + ((frameIdx + 1) % 3) * 3, sparkCol, 2, 3);
   }
 }
 
@@ -436,9 +456,7 @@ function buildStateSheet(resolved, state, frameCount, fps, loop) {
 
   for (let i = 0; i < frameCount; i++) {
     drawCharacterFrame(ctx, i * fw, 0, resolved, state, i);
-    frames.push({
-      frame: { x: i * fw, y: 0, w: fw, h: fh },
-    });
+    frames.push({ frame: { x: i * fw, y: 0, w: fw, h: fh } });
   }
 
   return {
@@ -446,11 +464,7 @@ function buildStateSheet(resolved, state, frameCount, fps, loop) {
     image: canvas,
     frames,
     meta: { size: { w: fw * frameCount, h: fh } },
-    pixelfx: {
-      fps,
-      loop,
-      pivot: [16, 26],
-    },
+    pixelfx: { fps, loop, pivot: [16, 26] },
   };
 }
 
@@ -460,10 +474,7 @@ const MAX_CACHE = 56;
 export function getCharacterSheets(rawAppearance) {
   const norm = normalizeAppearance(rawAppearance);
   const cacheKey = getAppearanceKey(norm);
-
-  if (SHEET_CACHE.has(cacheKey)) {
-    return SHEET_CACHE.get(cacheKey);
-  }
+  if (SHEET_CACHE.has(cacheKey)) return SHEET_CACHE.get(cacheKey);
 
   const resolved = {
     skin: byId(SKIN_TONES, norm.skin),
@@ -482,22 +493,24 @@ export function getCharacterSheets(rawAppearance) {
     cacheKey,
     idle: buildStateSheet(resolved, "idle", 4, 6, true),
     run: buildStateSheet(resolved, "run", 6, 11, true),
+    attack: buildStateSheet(resolved, "attack", 4, 14, false),
     dash: buildStateSheet(resolved, "dash", 3, 14, false),
+    sit: buildStateSheet(resolved, "sit", 2, 3, true),
+    fish: buildStateSheet(resolved, "fish", 2, 3, true),
     hurt: buildStateSheet(resolved, "hurt", 2, 10, false),
     death: buildStateSheet(resolved, "death", 4, 6, false),
     "tau-hoa": buildStateSheet(resolved, "tau-hoa", 4, 10, true),
   };
 
   if (SHEET_CACHE.size >= MAX_CACHE) {
-    const oldest = SHEET_CACHE.keys().next().value;
-    SHEET_CACHE.delete(oldest);
+    SHEET_CACHE.delete(SHEET_CACHE.keys().next().value);
   }
   SHEET_CACHE.set(cacheKey, bundle);
   return bundle;
 }
 
 /**
- * Vẽ nhân vật tùy chỉnh lên một `<canvas>` UI (bệ đá, màn hình Tạo Nhân Vật, Gương Hóa Hình, Bảng Xếp Hạng).
+ * Vẽ nhân vật Chibi lên `<canvas>` UI (bệ chọn nhân vật, Tạo nhân vật, Bảng Nhân Vật).
  */
 export function drawCustomCharacterPreview(canvas, appearance, opts = {}) {
   if (!canvas || typeof canvas.getContext !== "function") return;
@@ -511,12 +524,8 @@ export function drawCustomCharacterPreview(canvas, appearance, opts = {}) {
   const footY = Math.floor(h * 0.82);
 
   if (!appearance) {
-    ctx.fillStyle = "rgba(156, 122, 68, 0.16)";
-    ctx.beginPath();
-    ctx.ellipse(cx, footY, 22, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(156, 122, 68, 0.45)";
-    ctx.stroke();
+    fillPixelEllipse(ctx, cx, footY, 20, 6, "rgba(217, 178, 95, 0.14)");
+    plotPixelEllipse(ctx, cx, footY, 20, 6, "rgba(217, 178, 95, 0.45)");
     return;
   }
 
@@ -528,18 +537,121 @@ export function drawCustomCharacterPreview(canvas, appearance, opts = {}) {
   const timeSec = opts.timeSec ?? 0;
   const scale = opts.scale ?? Math.max(2, Math.floor(w / 34));
 
-  // Đế trận pháp dưới chân
-  ctx.save();
-  ctx.fillStyle = "rgba(26, 22, 38, 0.85)";
-  ctx.beginPath();
-  ctx.ellipse(cx, footY, 22, 7, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = auraColor;
-  ctx.stroke();
-  ctx.restore();
+  fillPixelEllipse(ctx, cx, footY, 20, 6, "rgba(18, 22, 18, 0.88)");
+  plotPixelEllipse(ctx, cx, footY, 20, 6, auraColor);
 
   const sheet = sheets[state] ?? sheets.idle;
   const fi = getSheetFrameIndex(sheet, timeSec, true);
   drawSheetFrame(ctx, sheet, fi, cx, footY - 2, { scale });
+}
+
+/**
+ * Vẽ Chân Dung Cận Cảnh Sắc Nét (Avatar góc trên-trái HUD, lưới 44x44 chi tiết, 0 ellipse/arc/gradient mượt).
+ */
+export function drawCharacterPortrait(canvas, rawAppearance, opts = {}) {
+  if (!canvas || typeof canvas.getContext !== "function") return;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.imageSmoothingEnabled = false;
+
+  const norm = normalizeAppearance(rawAppearance);
+  const skin = byId(SKIN_TONES, norm.skin);
+  const hair = byId(HAIR_COLORS, norm.hairColor);
+  const outfit = byId(OUTFIT_COLORS, norm.outfitColor);
+  const trim = byId(TRIM_COLORS, norm.trimColor);
+  const eye = byId(EYE_COLORS, norm.eyeColor);
+
+  // Nền ngọc bích đậm phân dải pixel sắc nét
+  plotRect(ctx, 0, 0, w, h, "#090c09");
+  plotRect(ctx, 4, 4, w - 8, h - 8, "#111b15");
+  plotRect(ctx, 10, 8, w - 20, h - 16, opts.bgTint || "#20392c");
+
+  const sx = w / 44;
+  const sy = h / 44;
+  const r = (x, y, rw, rh, col) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(Math.round(x * sx), Math.round(y * sy), Math.max(1, Math.round(rw * sx)), Math.max(1, Math.round(rh * sy)));
+  };
+
+  // Vòng sáng huyền ngọc pixel phía sau nhân vật
+  plotPixelEllipse(ctx, Math.round(w * 0.5), Math.round(h * 0.46), Math.round(w * 0.34), Math.round(h * 0.34), "rgba(217, 178, 95, 0.35)");
+
+  // Tóc dài xõa sau vai
+  if (norm.hairStyle !== "kho_tu") {
+    r(11, 10, 22, 26, "#0d0c12");
+    r(12, 11, 20, 24, hair.dark);
+    r(10, 15, 3, 18, hair.dark);
+    r(31, 15, 3, 18, hair.dark);
+  }
+
+  // Cổ & vai áo giao lĩnh nhiều lớp
+  r(8, 31, 28, 13, "#0e0c12");
+  r(9, 32, 26, 12, outfit.base);
+  r(10, 32, 8, 12, outfit.light);
+  r(26, 32, 8, 12, outfit.dark);
+  // Cổ áo V giao lĩnh viền vàng đồng
+  r(15, 31, 14, 5, skin.shadow);
+  r(18, 30, 8, 4, skin.base);
+  r(14, 32, 3, 11, trim.base);
+  r(27, 32, 3, 11, trim.base);
+  r(16, 35, 3, 8, trim.light);
+  r(25, 35, 3, 8, trim.light);
+  r(19, 37, 6, 7, outfit.dark);
+
+  // Khuôn mặt Chibi thon gọn (có má bầu và cằm)
+  r(13, 12, 18, 19, "#120f18");
+  r(14, 13, 16, 16, skin.base);
+  r(16, 29, 12, 2, skin.base);
+  r(18, 30, 8, 1, skin.shadow);
+  // Highlight má & bóng đổ sống mũi
+  r(14, 14, 5, 13, skin.highlight);
+  r(27, 14, 3, 14, skin.shadow);
+  r(15, 24, 3, 2, "#f0a8a0");
+  r(26, 24, 3, 2, "#f0a8a0");
+  r(20, 26, 4, 1, "#c47e74");
+
+  // Đôi mắt Chibi cổ phong to có chiều sâu
+  r(15, 19, 5, 5, "#100e17");
+  r(24, 19, 5, 5, "#100e17");
+  r(16, 20, 4, 4, "#ffffff");
+  r(24, 20, 4, 4, "#ffffff");
+  r(17, 20, 3, 4, eye.hex);
+  r(24, 20, 3, 4, eye.hex);
+  r(18, 21, 2, 2, "#120f1a");
+  r(25, 21, 2, 2, "#120f1a");
+  r(16, 20, 1, 1, "#ffffff");
+  r(24, 20, 1, 1, "#ffffff");
+  // Chân mày thanh tú
+  r(15, 17, 5, 1, hair.dark);
+  r(24, 17, 5, 1, hair.dark);
+
+  // Tóc mái nhiều lớp rủ xuống trán & hai bên mai
+  if (norm.hairStyle !== "kho_tu") {
+    r(12, 7, 20, 9, "#0d0c12");
+    r(13, 8, 18, 7, hair.base);
+    r(15, 9, 12, 2, hair.light);
+    // Lọn tóc mái rẽ ngôi tự nhiên
+    r(14, 13, 3, 5, hair.base);
+    r(19, 12, 4, 5, hair.base);
+    r(26, 13, 4, 5, hair.base);
+    r(12, 15, 2, 12, hair.dark);
+    r(30, 15, 2, 12, hair.dark);
+    if (norm.hairStyle === "hiep_khach") {
+      r(18, 2, 8, 6, "#0d0c12");
+      r(19, 3, 6, 5, hair.base);
+      r(18, 6, 8, 2, trim.base);
+    }
+  } else {
+    r(21, 14, 2, 2, trim.base);
+  }
+
+  if (norm.headgear === "ngoc_quan") {
+    r(18, 3, 8, 5, trim.base);
+    r(20, 4, 4, 3, "#5fbf8a");
+  } else if (norm.headgear === "kim_co") {
+    r(13, 12, 18, 2, "#ffd86e");
+    r(21, 11, 2, 2, "#d0573c");
+  }
 }
