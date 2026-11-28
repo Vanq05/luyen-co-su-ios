@@ -267,8 +267,8 @@ function patchBuildGradle() {
 
   if (!gradle.includes("signingConfig signingConfigs.release")) {
     gradle = gradle.replace(
-      "        release {",
-      `        release {\n            signingConfig signingConfigs.release`
+      /buildTypes\s*\{\s*release\s*\{/,
+      `buildTypes {\n        release {\n            signingConfig signingConfigs.release`
     );
   }
 
