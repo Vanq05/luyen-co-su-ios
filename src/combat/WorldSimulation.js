@@ -383,6 +383,9 @@ export class WorldSimulation {
       slowFactor: 0,
       stunTimer: 0,
       hurtFlash: 0,
+      animState: "idle",
+      attackAnimTimer: 0,
+      telegraphAnimTimer: 0,
       ...extra,
     };
     if (typeId === "van_thu_ban_long") {
@@ -812,6 +815,7 @@ export class WorldSimulation {
           plot.state = "growing";
           plot.seedId = seed.id;
           plot.timer = seed.itemDef.growTime ?? 32;
+          plot.maxTimer = plot.timer;
           plot.watered = false;
           this.sfx?.play("pickup");
           this.addFloatingText(g.x, g.y - 18, `Đã gieo ${seed.itemDef.name}! (${plot.timer}s)`, "#4de0c9");
@@ -821,6 +825,7 @@ export class WorldSimulation {
             return false;
           }
           plot.watered = true;
+          plot.maxTimer = Math.max(4, Math.round((plot.maxTimer ?? plot.timer ?? 32) * 0.65));
           plot.timer = Math.max(4, Math.round(plot.timer * 0.65));
           this.sfx?.play("pickup");
           this.addFloatingText(g.x, g.y - 18, `Tưới Linh Tuyền: còn ${Math.ceil(plot.timer)}s!`, "#5ef2d6");
@@ -840,6 +845,7 @@ export class WorldSimulation {
           plot.state = "empty";
           plot.seedId = null;
           plot.timer = 0;
+          plot.maxTimer = 32;
           plot.watered = false;
           this.sfx?.play("fusionSuccess");
           this.addFloatingText(g.x, g.y - 20, `Thu hoạch ${seedDef.name}${bonusMsg}!`, "#4de0c9");
@@ -1945,6 +1951,8 @@ export class WorldSimulation {
       const e = this.enemies[i];
       e.animTime += dt;
       if (e.hurtFlash > 0) e.hurtFlash = Math.max(0, e.hurtFlash - dt);
+      if (e.attackAnimTimer > 0) e.attackAnimTimer = Math.max(0, e.attackAnimTimer - dt);
+      if (e.telegraphAnimTimer > 0) e.telegraphAnimTimer = Math.max(0, e.telegraphAnimTimer - dt);
       if (e.poisonTimer > 0) { e.poisonTimer -= dt; e.hp -= e.poisonDps * dt; }
       if (e.burnTimer > 0) { e.burnTimer -= dt; e.hp -= e.burnDps * dt; }
       if (e.slowTimer > 0) e.slowTimer -= dt; else e.slowFactor = 0;
@@ -1954,8 +1962,8 @@ export class WorldSimulation {
         this.enemies.splice(i, 1);
         continue;
       }
-      if (e.stunTimer > 0) { e.stunTimer -= dt; continue; }
-      if (e.ai === "dummy") continue;
+      if (e.stunTimer > 0) { e.stunTimer -= dt; e.animState = "idle"; continue; }
+      if (e.ai === "dummy") { e.animState = "idle"; continue; }
 
       if (e.ai === "ban_long_boss") {
         this._updateBanLongBoss(e, dt, events);
@@ -1965,6 +1973,9 @@ export class WorldSimulation {
         this._updateThienTriNguVuong(e, dt, events);
         continue;
       }
+
+      const prevEx = e.x;
+      const prevEy = e.y;
 
       if (e.passive && e.provoked) {
         e.provokedTimer = (e.provokedTimer ?? 0) - dt;
@@ -2000,6 +2011,8 @@ export class WorldSimulation {
           e.y = resWander.y;
         }
         e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.04 * dt);
+        const movedW = Math.hypot(e.x - prevEx, e.y - prevEy) > 0.05;
+        e.animState = e.attackAnimTimer > 0 ? "attack" : movedW ? "move" : "idle";
         continue;
       }
 
@@ -2014,13 +2027,16 @@ export class WorldSimulation {
         const hy = e.homeY - e.y;
         const hd = Math.hypot(hx, hy);
         if (hd > 12) {
+          e.facingLeft = hx < 0;
           e.x += (hx / hd) * e.speed * 0.72 * dt;
           e.y += (hy / hd) * e.speed * 0.72 * dt;
           const resHome = resolveWorldMovement(mapDef, e.x, e.y, e.radius, (k) => getPropSprite(k));
           e.x = resHome.x;
           e.y = resHome.y;
-        } else if (e.passive) {
-          e.provoked = false;
+          e.animState = "move";
+        } else {
+          if (e.passive) e.provoked = false;
+          e.animState = "idle";
         }
         continue;
       }
@@ -2035,6 +2051,7 @@ export class WorldSimulation {
         e.aiTimer -= dt;
         if (e.aiTimer <= 0) {
           e.aiTimer = 2.0;
+          e.attackAnimTimer = 0.36;
           const a = Math.atan2(dy, dx);
           this.enemyProjectiles.push({ x: e.x, y: e.y - 6, vx: Math.cos(a) * 125, vy: Math.sin(a) * 125, radius: 5, damage: e.damage, color: e.projColor ?? "#ff5e6c", life: 2.2 });
         }
@@ -2055,8 +2072,10 @@ export class WorldSimulation {
           e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
           if (e.bossPattern === 0) {
             // Đòn 1: Dậm Địa Chấn (vùng cảnh báo tròn dither)
-            this.addFloatingText(e.x, e.y - 44, `⚡ ${e.shortName || "Thú Vương"} Tụ Lực Địa Chấn!`, "#ffd257");
+            e.telegraphAnimTimer = 1.05;
+            this.addFloatingText(e.x, e.y - 52, `⚡ ${e.shortName || "Thú Vương"} Tụ Lực Địa Chấn!`, "#ffd257");
             this.enemyTelegraphs.push({
+              ownerId: e.id,
               shape: "circle",
               x: this.player.x,
               y: this.player.y,
@@ -2069,8 +2088,10 @@ export class WorldSimulation {
             });
           } else if (e.bossPattern === 1) {
             // Đòn 2: Quét Quạt Tầm Rộng + Phóng Trảo Sóng
-            this.addFloatingText(e.x, e.y - 44, `⚡ Quét Diện Rộng! Né!`, "#ff8c42");
+            e.telegraphAnimTimer = 0.95;
+            this.addFloatingText(e.x, e.y - 52, `⚡ Quét Diện Rộng! Né!`, "#ff8c42");
             this.enemyTelegraphs.push({
+              ownerId: e.id,
               shape: "cone",
               x: e.x,
               y: e.y - 4,
@@ -2087,8 +2108,10 @@ export class WorldSimulation {
             });
           } else {
             // Đòn 3: Xung Kích Đường Thẳng (Wave Rect)
-            this.addFloatingText(e.x, e.y - 44, `⚡ Xung Kích Tuyến Thẳng!`, "#ff6b78");
+            e.telegraphAnimTimer = 1.0;
+            this.addFloatingText(e.x, e.y - 52, `⚡ Xung Kích Tuyến Thẳng!`, "#ff6b78");
             this.enemyTelegraphs.push({
+              ownerId: e.id,
               shape: "wave_rect",
               x: e.x,
               y: e.y - 4,
@@ -2107,6 +2130,7 @@ export class WorldSimulation {
         }
       }
       if (dist <= this.player.radius + e.radius) {
+        e.attackAnimTimer = Math.max(e.attackAnimTimer ?? 0, 0.36);
         const dealt = this.player.takeDamage(e.damage, events);
         if (dealt > 0) {
           const thorns = this.player.getThornsRatio();
@@ -2117,6 +2141,15 @@ export class WorldSimulation {
           }
         }
       }
+      const moved = Math.hypot(e.x - prevEx, e.y - prevEy) > 0.05;
+      e.animState =
+        e.attackAnimTimer > 0
+          ? "attack"
+          : e.telegraphAnimTimer > 0
+            ? "telegraph"
+            : moved
+              ? "move"
+              : "idle";
     }
 
     // Cảnh báo chiêu Boss (circle / cone / wave_rect)
@@ -2124,6 +2157,10 @@ export class WorldSimulation {
       const tg = this.enemyTelegraphs[i];
       tg.t += dt;
       if (tg.t >= tg.dur) {
+        if (tg.ownerId) {
+          const owner = this.enemies.find((x) => x.id === tg.ownerId);
+          if (owner) owner.attackAnimTimer = 0.48;
+        }
         if (tg.shape === "wave_rect") {
           const dx = this.player.x - tg.x;
           const dy = this.player.y - tg.y;
@@ -2312,6 +2349,7 @@ export class WorldSimulation {
     // Thiên Trì Ngư Vương bơi tuần tra quanh tâm hồ Thiên Trì & kích hoạt 3 chiêu thức Boss khi người chơi lại gần
     if ((e.chargeDashTimer ?? 0) > 0) {
       e.chargeDashTimer -= dt;
+      e.animState = "attack";
       e.x += (e.dashVx ?? 0) * dt;
       e.y += (e.dashVy ?? 0) * dt;
       if (Math.hypot(this.player.x - e.x, this.player.y - e.y) <= this.player.radius + 32) {
@@ -2329,7 +2367,10 @@ export class WorldSimulation {
     e.y = e.homeY + Math.cos(this.time * (activeFight ? 0.9 : 0.6)) * (activeFight ? 26 : 18);
     e.facingLeft = dx < 0;
 
-    if (!activeFight) return;
+    if (!activeFight) {
+      e.animState = "idle";
+      return;
+    }
 
     e.aiTimer = (e.aiTimer ?? 2.8) - dt;
     if (e.aiTimer <= 0) {
@@ -2338,8 +2379,10 @@ export class WorldSimulation {
       e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
       if (e.bossPattern === 0) {
         // Chiêu 1: Quẫy đuôi tạo Sóng Thủy Triều pixel cuộn trào rộng
-        this.addFloatingText(e.x, e.y - 52, "🌊 Ngư Vương Quẫy Đuôi: Thủy Triều Cuộn Trào!", "#5ef2d6");
+        e.telegraphAnimTimer = 1.15;
+        this.addFloatingText(e.x, e.y - 62, "🌊 Ngư Vương Quẫy Đuôi: Thủy Triều Cuộn Trào!", "#5ef2d6");
         this.enemyTelegraphs.push({
+          ownerId: e.id,
           shape: "wave_rect",
           x: e.x,
           y: e.y,
@@ -2357,8 +2400,10 @@ export class WorldSimulation {
         });
       } else if (e.bossPattern === 1) {
         // Chiêu 2: Lân Quang Thủy Kình phun 5 luồng thủy kình diện rộng
-        this.addFloatingText(e.x, e.y - 52, "⚡ Lân Quang Thủy Kình!", "#87ffeb");
+        e.telegraphAnimTimer = 1.05;
+        this.addFloatingText(e.x, e.y - 62, "⚡ Lân Quang Thủy Kình!", "#87ffeb");
         this.enemyTelegraphs.push({
+          ownerId: e.id,
           shape: "cone",
           x: e.x,
           y: e.y,
@@ -2375,8 +2420,10 @@ export class WorldSimulation {
         });
       } else {
         // Chiêu 3: Lao Vọt Xé Nước
-        this.addFloatingText(e.x, e.y - 52, "💧 Ngư Vương Xé Nước!", "#ffd257");
+        e.telegraphAnimTimer = 0.95;
+        this.addFloatingText(e.x, e.y - 62, "💧 Ngư Vương Xé Nước!", "#ffd257");
         this.enemyTelegraphs.push({
+          ownerId: e.id,
           shape: "wave_rect",
           x: e.x,
           y: e.y,
@@ -2397,6 +2444,7 @@ export class WorldSimulation {
         e.dashVy = Math.sin(ang) * 165;
       }
     }
+    e.animState = e.attackAnimTimer > 0 ? "attack" : e.telegraphAnimTimer > 0 ? "telegraph" : "idle";
   }
 
   _updateBanLongBoss(b, dt, events) {
@@ -2569,26 +2617,30 @@ export class WorldSimulation {
   }
 
   _renderSinglePhantom(ctx, ph) {
+    // Hư Ảnh Thú Lực Pixel sắc nét định hướng theo chiều lao tới (0 khối bầu dục)
+    const cx = Math.round(ph.x);
+    const cy = Math.round(ph.y - 12);
+    const dir = (ph.vx ?? 1) >= 0 ? 1 : -1;
     ctx.save();
-    ctx.globalAlpha = 0.78;
-    fillPixelEllipse(ctx, ph.x, ph.y - 12, 12, 10, ph.color, true);
-    plotPixelEllipse(ctx, ph.x, ph.y - 12, 12, 10, "#ffffff");
+    ctx.globalAlpha = 0.85;
+    plotRect(ctx, cx - 10, cy - 6, 20, 12, "#07090d");
+    plotRect(ctx, cx - 9, cy - 5, 18, 10, ph.color || "#ff9e5e");
+    plotRect(ctx, cx + dir * 3, cy - 7, 7, 5, "#ffffff");
+    plotPixelLine(ctx, cx - dir * 8, cy - 2, cx - dir * 16, cy - 6, ph.color || "#ff9e5e", 2);
+    plotPixelLine(ctx, cx - dir * 8, cy + 2, cx - dir * 15, cy + 5, "#fff4bd", 2);
     ctx.restore();
   }
 
   _renderSingleEnemy(ctx, e) {
     const isSelected = e.id === this.selectedTargetId;
-    if (isSelected) {
-      plotPixelEllipse(ctx, e.x, e.y + 3, e.radius + 7, 7, "#ffd257", 3, Math.floor(this.time * 6));
-    }
 
     if (e.typeId === "van_thu_ban_long") {
       drawBanLongBossPixelArt(ctx, e, this.time, this.banLongBreathWarn);
       return;
     }
 
-    const frames = getMonsterSpriteFrames(e.typeId);
-    const frameIdx = Math.floor(e.animTime * 5) % frames.length;
+    const frames = getMonsterSpriteFrames(e.typeId, e.animState || "idle");
+    const frameIdx = Math.floor(e.animTime * 6) % frames.length;
     const frm = frames[frameIdx] ?? frames[0];
     if (frm) {
       ctx.save();
@@ -2601,7 +2653,7 @@ export class WorldSimulation {
     }
 
     const pct = Math.max(0, Math.min(1, e.hp / e.maxHp));
-    const bw = Math.max(32, e.radius * 2 + 4);
+    const bw = Math.max(34, e.radius * 2 + 8);
     const barY = Math.round(e.y - (frm?.barOffsetY ?? 52));
     const isCalmPassive = Boolean(e.passive && !e.provoked);
     plotRect(ctx, Math.round(e.x - bw * 0.5) - 1, barY - 1, bw + 2, 5, "#06080d");
@@ -2617,6 +2669,16 @@ export class WorldSimulation {
     ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
     const nameCol = e.tier === "Bách thú vương" || e.tier === "Thiên thú vương" ? "#ff9e5e" : isCalmPassive ? "#cbd5e1" : "#ffffff";
     drawCrispPixelText(ctx, e.name, Math.round(e.x), barY - 4, nameCol, "#06080d");
+
+    // Dấu chỉ mục tiêu tinh thể vàng phía trên tên khi được chọn (bỏ hẳn vòng nét mảnh dưới chân)
+    if (isSelected) {
+      const mx = Math.round(e.x);
+      const my = barY - 17 + Math.round(Math.sin(this.time * 6) * 2);
+      plotRect(ctx, mx - 3, my - 3, 6, 4, "#06080d");
+      plotRect(ctx, mx - 2, my - 2, 4, 3, "#ffd257");
+      plotRect(ctx, mx - 1, my + 1, 2, 2, "#ffd257");
+      plotRect(ctx, mx - 1, my - 1, 2, 2, "#ffffff");
+    }
   }
 
   _renderRemotePlayer(ctx, rp) {

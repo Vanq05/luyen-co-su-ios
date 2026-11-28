@@ -7,6 +7,7 @@
 
 import { fillPixelEllipse, plotPixelEllipse } from "../engine/PixelSpriteBaker.js";
 import { getBanLongPropFrames } from "./BanLongAssets.js";
+import { getGardenAndGatherPropSprite } from "./HerbGardenArt.js";
 
 const ATLAS_CACHE = new Map();
 
@@ -3312,6 +3313,14 @@ export function getPropSprite(kind) {
   ) {
     const frames = getBanLongPropFrames(kind);
     if (frames?.[0]) result = frames[0];
+  } else if (
+    kind === "garden_water_jar" ||
+    kind === "garden_herb_rack" ||
+    kind === "garden_stone_lantern" ||
+    kind === "wild_herb_bush" ||
+    kind === "wild_ore_node"
+  ) {
+    result = getGardenAndGatherPropSprite(kind);
   }
 
   if (result) ATLAS_CACHE.set(kind, result);

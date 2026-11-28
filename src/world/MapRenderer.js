@@ -16,6 +16,7 @@ import {
   getBanLongMistSprite,
   getBanLongPropFrames,
 } from "./BanLongAssets.js";
+import { drawHerbGardenTerrace, getHerbPlotSprite } from "./HerbGardenArt.js";
 import { getBiomeTerrainSet, getPropSprite } from "./PixelMapArt.js";
 import {
   distToSegment,
@@ -713,6 +714,12 @@ export class MapRenderer {
       const w = right - left;
       const dH = deckBot - top;
 
+      // Khu Dược Viên Cổ Phong (lát đá chữ thập, hàng rào tre/gỗ, bờ đá rêu)
+      if (t.style === "herb_garden") {
+        drawHerbGardenTerrace(ctx, t, pal);
+        continue;
+      }
+
       // Sân tập võ / Vườn dược viền đá & gỗ phẳng
       if (t.style === "courtyard") {
         ctx.fillStyle = "rgba(10, 14, 9, 0.24)";
@@ -1405,15 +1412,24 @@ export class MapRenderer {
       ctx.restore();
     }
 
-    // Điểm Bãi Thú trên mặt đất (pixel ellipse dithered + chữ pixel sắc cạnh)
+    // Điểm Bãi Thú trên mặt đất (4 mốc đá góc tinh tế + nhãn tên sắc nét, bỏ vòng nét mảnh đứt đoạn)
     for (const sp of mapDef.beastSpots ?? []) {
       ctx.save();
       const col = sp.tier === "boss" ? "#b86bff" : sp.tier === "elite" ? "#d0573c" : "#5fbf8a";
-      ctx.globalAlpha = 0.55;
-      plotPixelEllipse(ctx, sp.x, sp.y, sp.r, Math.round(sp.r * 0.58), col, 4, 0);
-      ctx.globalAlpha = 0.9;
+      const rx = Math.round(sp.r * 0.72);
+      const ry = Math.round(sp.r * 0.44);
+      for (const [mx, my] of [
+        [sp.x - rx, sp.y - ry],
+        [sp.x + rx, sp.y - ry],
+        [sp.x - rx, sp.y + ry],
+        [sp.x + rx, sp.y + ry],
+      ]) {
+        plotRect(ctx, mx - 1, my - 1, 3, 3, "#0a0d0b");
+        plotRect(ctx, mx, my, 2, 2, col);
+      }
+      ctx.globalAlpha = 0.92;
       ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, sp.label, sp.x, sp.y - Math.round(sp.r * 0.58) - 4, col, "#07090d");
+      drawCrispPixelText(ctx, sp.label, sp.x, sp.y - ry - 5, col, "#07090d");
       ctx.restore();
     }
 
@@ -1559,18 +1575,31 @@ export class MapRenderer {
         ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
         drawCrispPixelText(ctx, g.label, g.x, g.y - 26, "#5ef2d6", "#06090d");
       } else if (g.kind === "herb_plot") {
-        const plot = playerGarden?.[g.plotIndex] ?? { state: "empty", timer: 0, watered: false };
-        const sprName = plot.state === "ready" ? "herb_plot_ready" : plot.state === "growing" ? "herb_plot_growing" : "herb_plot_empty";
-        const spr = getPropSprite(sprName);
+        const plot = playerGarden?.[g.plotIndex] ?? { state: "empty", timer: 0, maxTimer: 32, watered: false };
+        let stage = "empty";
+        if (plot.state === "ready") {
+          stage = "ready";
+        } else if (plot.state === "growing") {
+          const total = Math.max(8, plot.maxTimer || 32);
+          const pct = 1 - Math.max(0, plot.timer) / total;
+          stage = pct >= 0.45 ? "sapling" : "seedling";
+        }
+        const fIdx = Math.floor(time * 2.2 + (g.plotIndex ?? 0)) % 2;
+        const spr = getHerbPlotSprite(stage, Boolean(plot.watered), plot.seedId || "hat_linh_thao", fIdx);
         if (spr) ctx.drawImage(spr.canvas, Math.round(g.x - spr.anchorX), Math.round(g.y - spr.anchorY));
-        if (plot.state === "growing" && plot.watered) {
-          plotRect(ctx, g.x - 16, g.y - 11, 32, 12, "rgba(18, 66, 78, 0.28)");
+
+        if (stage === "ready") {
+          for (let m = 0; m < 3; m++) {
+            const mx = Math.round(g.x - 10 + m * 10 + Math.sin(time * 3 + m) * 2);
+            const my = Math.round(g.y - 16 - ((time * 10 + m * 5) % 8));
+            plotRect(ctx, mx, my, 2, 2, m === 1 ? "#fff4bd" : "#7effb0");
+          }
         }
         ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
         if (plot.state === "growing") {
-          drawCrispPixelText(ctx, `${Math.ceil(plot.timer)}s`, g.x, g.y - 13, plot.watered ? "#7ee8f7" : "#d8e3f0", "#06090d");
+          drawCrispPixelText(ctx, `${Math.ceil(plot.timer)}s`, g.x, g.y - 17, plot.watered ? "#7ee8f7" : "#f0e4c2", "#06090d");
         } else if (plot.state === "ready") {
-          drawCrispPixelText(ctx, "Thu hoạch", g.x, g.y - 14, "#7effb0", "#06090d");
+          drawCrispPixelText(ctx, "Thu hoạch", g.x, g.y - 21, "#7effb0", "#06090d");
         }
       } else if (g.kind === "fish") {
         const rx = Math.round(11 + Math.sin(time * 3) * 2);
@@ -1578,24 +1607,26 @@ export class MapRenderer {
         plotRect(ctx, g.x - 1, g.y - 4, 3, 5, "#d0573c");
         plotRect(ctx, g.x - 1, g.y - 4, 3, 2, "#ffffff");
       } else if (g.kind === "herb") {
-        plotRect(ctx, g.x - 6, g.y - 3, 12, 6, "#22572e");
-        plotRect(ctx, g.x - 4, g.y - 7, 3, 5, "#73eb5e");
-        plotRect(ctx, g.x + 1, g.y - 6, 3, 4, "#73eb5e");
-        plotRect(ctx, g.x - 1, g.y - 8, 2, 2, "#fff3b0");
+        const spr = getPropSprite("wild_herb_bush");
+        if (spr) ctx.drawImage(spr.canvas, Math.round(g.x - spr.anchorX), Math.round(g.y - spr.anchorY));
       } else if (g.kind === "mine") {
-        plotRect(ctx, g.x - 10, g.y - 7, 20, 12, "#3f464d");
-        plotRect(ctx, g.x - 8, g.y - 9, 15, 9, "#626d78");
-        plotRect(ctx, g.x - 4, g.y - 5, 4, 4, "#d9b25f");
-        plotRect(ctx, g.x + 2, g.y - 3, 3, 3, "#d9b25f");
+        const spr = getPropSprite("wild_ore_node");
+        if (spr) ctx.drawImage(spr.canvas, Math.round(g.x - spr.anchorX), Math.round(g.y - spr.anchorY));
       } else if (g.kind === "wild_gu") {
         const isTarget = Boolean(highlightGuId && g.guId === highlightGuId);
         const bobX = Math.round(Math.sin(time * 2.8 + g.x) * 3);
         const bobY = Math.round(Math.cos(time * 3.4 + g.y) * 2);
-        plotPixelEllipse(ctx, g.x, g.y + 4, Math.round(12 + Math.sin(time * 5) * 1.5), 6, isTarget ? "#ffe15c" : "#5ef2d6", 2, Math.floor(time * 4));
+        const auraCol = isTarget ? "#ffe15c" : "#5ef2d6";
+        for (let m = 0; m < 4; m++) {
+          const ang = time * 2.6 + (m * Math.PI) / 2;
+          const mx = Math.round(g.x + Math.cos(ang) * 12);
+          const my = Math.round(g.y + 1 + Math.sin(ang) * 5);
+          plotRect(ctx, mx - 1, my - 1, 2, 2, auraCol);
+        }
         const guCanvas = getGuPixelCanvas(g.guId);
         ctx.drawImage(guCanvas, Math.round(g.x + bobX - 12), Math.round(g.y + bobY - 14), 24, 24);
         ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-        drawCrispPixelText(ctx, g.label, g.x, g.y - 16, isTarget ? "#ffe15c" : "#80ffcf", "#06090d");
+        drawCrispPixelText(ctx, g.label, g.x, g.y - 17, isTarget ? "#ffe15c" : "#80ffcf", "#06090d");
       }
       ctx.restore();
     }

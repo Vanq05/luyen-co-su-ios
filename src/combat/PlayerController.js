@@ -171,6 +171,7 @@ export class PlayerController {
     this.gardenPlots = Array.from({ length: 4 }, () => ({
       state: "empty",
       timer: 0,
+      maxTimer: 32,
       seedId: null,
       watered: false,
     }));
@@ -638,11 +639,12 @@ export class PlayerController {
       this.gardenPlots = st.gardenPlots.map((p) => {
         const hasSeed = Boolean(p?.seedId);
         if ((p?.state === "ready" || p?.state === "growing") && !hasSeed) {
-          return { state: "empty", timer: 0, seedId: null, watered: false };
+          return { state: "empty", timer: 0, maxTimer: 32, seedId: null, watered: false };
         }
         return {
           state: p?.state || "empty",
           timer: Number(p?.timer ?? 0),
+          maxTimer: Number(p?.maxTimer ?? (p?.seedId ? (ITEMS_CATALOG[p.seedId]?.growTime ?? 32) : 32)),
           seedId: p?.seedId ?? null,
           watered: Boolean(p?.watered),
         };

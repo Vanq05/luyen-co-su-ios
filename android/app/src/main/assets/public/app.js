@@ -2437,21 +2437,21 @@
       h ^= key.charCodeAt(i);
       h = Math.imul(h, 16777619);
     }
-    const hash2 = Math.abs(h | 0);
-    const roll = hash2 % 1e3;
+    const hash3 = Math.abs(h | 0);
+    const roll = hash3 % 1e3;
     let baseSteps;
     let maxSteps;
     if (roll < 180) {
-      baseSteps = 13 + hash2 % 5;
+      baseSteps = 13 + hash3 % 5;
       maxSteps = Math.min(19, baseSteps + 2);
     } else if (roll < 630) {
-      baseSteps = 20 + hash2 % 7;
+      baseSteps = 20 + hash3 % 7;
       maxSteps = Math.min(29, baseSteps + 3);
     } else if (roll < 890) {
-      baseSteps = 29 + hash2 % 8;
+      baseSteps = 29 + hash3 % 8;
       maxSteps = Math.min(39, baseSteps + 3);
     } else {
-      baseSteps = 38 + hash2 % 5;
+      baseSteps = 38 + hash3 % 5;
       maxSteps = Math.min(45, baseSteps + 3);
     }
     return { baseSteps, maxSteps };
@@ -7063,6 +7063,7 @@
       this.gardenPlots = Array.from({ length: 4 }, () => ({
         state: "empty",
         timer: 0,
+        maxTimer: 32,
         seedId: null,
         watered: false
       }));
@@ -7494,11 +7495,12 @@
         this.gardenPlots = st.gardenPlots.map((p) => {
           const hasSeed = Boolean(p?.seedId);
           if ((p?.state === "ready" || p?.state === "growing") && !hasSeed) {
-            return { state: "empty", timer: 0, seedId: null, watered: false };
+            return { state: "empty", timer: 0, maxTimer: 32, seedId: null, watered: false };
           }
           return {
             state: p?.state || "empty",
             timer: Number(p?.timer ?? 0),
+            maxTimer: Number(p?.maxTimer ?? (p?.seedId ? ITEMS_CATALOG[p.seedId]?.growTime ?? 32 : 32)),
             seedId: p?.seedId ?? null,
             watered: Boolean(p?.watered)
           };
@@ -9690,6 +9692,292 @@
       ICON_DATA_URL_CACHE.set(cacheKey, dataUrl);
     }
     return `<img class="ctl-pixel-icon" src="${dataUrl}" alt="" draggable="false" />`;
+  }
+
+  // src/world/HerbGardenArt.js
+  var PLOT_CACHE = /* @__PURE__ */ new Map();
+  var PROP_CACHE = /* @__PURE__ */ new Map();
+  function hash2(x, y) {
+    let h = (x | 0) * 374761393 + (y | 0) * 668265263 ^ 1542469173;
+    h = (h ^ h >> 13) * 1274126177;
+    return Math.abs(h ^ h >> 16);
+  }
+  function drawHerbGardenTerrace(ctx, t, pal) {
+    const left = Math.round(t.x - t.rx);
+    const right = Math.round(t.x + t.rx);
+    const top = Math.round(t.y - t.ry);
+    const bot = Math.round(t.y + t.ry);
+    const w = right - left;
+    const h = bot - top;
+    ctx.fillStyle = "rgba(8, 12, 8, 0.36)";
+    ctx.fillRect(left - 2, top - 2, w + 4, h + 4);
+    ctx.fillStyle = "#192917";
+    ctx.fillRect(left, top, w, h);
+    for (let py = top + 2; py < bot - 2; py += 2) {
+      for (let px = left + 2; px < right - 2; px += 2) {
+        const n = hash2(px >> 1, py >> 1);
+        const isWalkCross = Math.abs(px - t.x) <= 9 || Math.abs(py - t.y) <= 7;
+        if (isWalkCross) {
+          ctx.fillStyle = n % 5 === 0 ? "#4a473f" : n % 2 === 0 ? "#635e53" : "#565249";
+        } else {
+          ctx.fillStyle = n % 7 === 0 ? "#243b1e" : n % 3 === 0 ? "#45331e" : "#382817";
+        }
+        ctx.fillRect(px, py, 2, 2);
+      }
+    }
+    for (let py = top + 2; py < bot - 6; py += 9) {
+      const sx = Math.round(t.x - 7);
+      ctx.fillStyle = "#222624";
+      ctx.fillRect(sx - 1, py - 1, 16, 7);
+      ctx.fillStyle = "#6c695f";
+      ctx.fillRect(sx, py, 14, 5);
+      ctx.fillStyle = "#878377";
+      ctx.fillRect(sx + 1, py, 10, 2);
+    }
+    for (let px = Math.round(t.x - 10); px < right - 6; px += 11) {
+      const sy = Math.round(t.y - 3);
+      ctx.fillStyle = "#222624";
+      ctx.fillRect(px - 1, sy - 1, 9, 8);
+      ctx.fillStyle = "#6c695f";
+      ctx.fillRect(px, sy, 7, 6);
+      ctx.fillStyle = "#878377";
+      ctx.fillRect(px + 1, sy, 4, 2);
+    }
+    const drawBorderStone = (bx, by) => {
+      ctx.fillStyle = "#121714";
+      ctx.fillRect(bx, by, 7, 6);
+      ctx.fillStyle = "#48524b";
+      ctx.fillRect(bx + 1, by + 1, 5, 4);
+      ctx.fillStyle = "#6a756b";
+      ctx.fillRect(bx + 1, by + 1, 3, 2);
+      if ((bx + by) % 14 === 0) {
+        ctx.fillStyle = "#2c5e35";
+        ctx.fillRect(bx + 3, by + 3, 3, 2);
+      }
+    };
+    for (let px = left - 1; px <= right - 6; px += 7) {
+      if (Math.abs(px - t.x) > 22) drawBorderStone(px, top - 2);
+      drawBorderStone(px, bot - 3);
+    }
+    for (let py = top; py <= bot - 5; py += 6) {
+      drawBorderStone(left - 2, py);
+      if (Math.abs(py - t.y) > 19) drawBorderStone(right - 4, py);
+    }
+    for (let px = left + 4; px <= right - 10; px += 14) {
+      ctx.fillStyle = "#1c120a";
+      ctx.fillRect(px, bot - 6, 4, 7);
+      ctx.fillStyle = "#6b4c28";
+      ctx.fillRect(px + 1, bot - 5, 2, 5);
+      ctx.fillStyle = "#916b3b";
+      ctx.fillRect(px + 1, bot - 5, 1, 2);
+      if (px + 14 <= right - 10) {
+        ctx.fillStyle = "#2b1b0e";
+        ctx.fillRect(px + 4, bot - 4, 10, 2);
+        ctx.fillStyle = "#7a572f";
+        ctx.fillRect(px + 4, bot - 3, 10, 1);
+      }
+    }
+    for (let py = top + 6; py <= bot - 10; py += 12) {
+      ctx.fillStyle = "#1c120a";
+      ctx.fillRect(left - 2, py, 4, 7);
+      ctx.fillStyle = "#6b4c28";
+      ctx.fillRect(left - 1, py + 1, 2, 5);
+    }
+    for (const [cx, cy] of [[left - 2, top - 2], [right - 5, top - 2], [left - 2, bot - 5], [right - 5, bot - 5]]) {
+      ctx.fillStyle = "#141816";
+      ctx.fillRect(cx, cy, 7, 7);
+      ctx.fillStyle = "#616e63";
+      ctx.fillRect(cx + 1, cy + 1, 5, 5);
+      ctx.fillStyle = "#2c5e35";
+      ctx.fillRect(cx + 3, cy + 4, 3, 2);
+    }
+    if (pal?.grassDark) {
+      ctx.fillStyle = pal.grassDark;
+      ctx.fillRect(left + 5, bot - 8, 3, 2);
+    }
+  }
+  function getHerbPlotSprite(stage = "empty", watered = false, seedId = "hat_linh_thao", frameIdx = 0) {
+    const f = frameIdx % 2;
+    const key = `${stage}_${watered ? 1 : 0}_${seedId || "hat_linh_thao"}_${f}`;
+    if (PLOT_CACHE.has(key)) return PLOT_CACHE.get(key);
+    const W = 56;
+    const H = 42;
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    if (!ctx) return { canvas: canvas2, anchorX: 28, anchorY: 28, solidRadius: 0 };
+    const soilRamp = watered ? ["#120c08", "#21160e", "#302014", "#402b1c", "#523824"] : ["#1a110a", "#332114", "#4a311e", "#634329", "#7d5738"];
+    const stoneCols = ["#161a18", "#3e4742", "#58635b", "#77857a"];
+    fillPixelEllipse(ctx, 28, 29, 24, 11, "rgba(7, 10, 7, 0.34)", true);
+    for (let y = 16; y <= 37; y++) {
+      for (let x = 6; x <= 49; x++) {
+        const edge = x === 6 || x === 49 || y === 16 || y === 37;
+        if (edge && (x + y) % 3 === 0) continue;
+        const isBorder = x <= 8 || x >= 47 || y <= 18 || y >= 35;
+        if (isBorder) {
+          const sc = hash2(x, y) % 5 === 0 ? "#285430" : stoneCols[1 + (x + y) % 3];
+          plotPixel(ctx, x, y, sc);
+        } else {
+          const furrowBand = (y - 19) % 5;
+          let shade = furrowBand === 0 ? 1 : furrowBand === 1 ? 4 : furrowBand === 2 ? 3 : 2;
+          if (bayerThreshold(x, y) > 0.68 && shade > 1) shade -= 1;
+          plotPixel(ctx, x, y, soilRamp[shade]);
+        }
+      }
+    }
+    for (const [px, py] of [[5, 14], [47, 14], [5, 33], [47, 33]]) {
+      plotRect(ctx, px, py, 4, 6, "#1f140c");
+      plotRect(ctx, px + 1, py + 1, 2, 4, "#6e4c28");
+      plotPixel(ctx, px + 1, py + 1, "#9c703e");
+    }
+    if (watered) {
+      plotPixel(ctx, 14, 22, "#7be8ff");
+      plotPixel(ctx, 28, 27, "#5ef2d6");
+      plotPixel(ctx, 39, 23, "#7be8ff");
+    } else if (stage === "empty") {
+      plotPixel(ctx, 17, 23, "#9c876c");
+      plotPixel(ctx, 34, 29, "#9c876c");
+    }
+    const sway = f === 1 ? 1 : 0;
+    const xs = [15, 28, 40];
+    const ys = [24, 29, 24];
+    if (stage === "seedling") {
+      for (let i = 0; i < 3; i++) {
+        const cx = xs[i];
+        const cy = ys[i];
+        plotRect(ctx, cx, cy - 3, 2, 4, "#246b31");
+        plotRect(ctx, cx - 2 + sway, cy - 5, 3, 2, "#70e368");
+        plotRect(ctx, cx + 1 + sway, cy - 4, 2, 2, "#a3ff8f");
+      }
+    } else if (stage === "sapling") {
+      const isBlood = seedId === "hat_huyet_thao";
+      const isRare = seedId === "hat_tram_nam";
+      const leafDark = isRare ? "#16474d" : "#1d572c";
+      const leafMid = isRare ? "#2b8a82" : "#3ca84d";
+      const leafHi = isRare ? "#6cf2d8" : "#80f073";
+      const budCol = isBlood ? "#e3545e" : isRare ? "#c98eff" : "#ffe066";
+      for (let i = 0; i < 3; i++) {
+        const cx = xs[i];
+        const cy = ys[i];
+        plotRect(ctx, cx - 1, cy - 8, 2, 9, leafDark);
+        plotRect(ctx, cx - 5 + sway, cy - 7, 5, 3, leafMid);
+        plotRect(ctx, cx + 1 + sway, cy - 6, 5, 3, leafMid);
+        plotRect(ctx, cx - 3 + sway, cy - 10, 6, 3, leafHi);
+        plotRect(ctx, cx - 1 + sway, cy - 12, 3, 2, budCol);
+      }
+    } else if (stage === "ready") {
+      const isBlood = seedId === "hat_huyet_thao";
+      const isRare = seedId === "hat_tram_nam";
+      const leafDark = isRare ? "#133f47" : "#184d25";
+      const leafMid = isRare ? "#24877d" : "#329c46";
+      const leafHi = isRare ? "#5cf2d6" : "#74e868";
+      const petalA = isBlood ? "#ff385c" : isRare ? "#b36bff" : "#ffd659";
+      const petalB = isBlood ? "#ff9e5e" : isRare ? "#6ef7ff" : "#fff7bd";
+      for (let i = 0; i < 3; i++) {
+        const cx = xs[i];
+        const cy = ys[i];
+        plotRect(ctx, cx - 1, cy - 11, 3, 12, leafDark);
+        plotRect(ctx, cx - 6, cy - 7, 12, 5, leafDark);
+        plotRect(ctx, cx - 7 + sway, cy - 10, 14, 5, leafMid);
+        plotRect(ctx, cx - 5 + sway, cy - 13, 10, 4, leafHi);
+        plotRect(ctx, cx - 3 + sway, cy - 17, 6, 5, petalA);
+        plotRect(ctx, cx - 1 + sway, cy - 18, 2, 2, petalB);
+        plotPixel(ctx, cx - 4 + sway, cy - 15, petalB);
+        plotPixel(ctx, cx + 3 + sway, cy - 15, petalB);
+        plotPixel(ctx, cx + sway, cy - 15, "#ffffff");
+      }
+      plotRect(ctx, 18 + sway, 5, 2, 2, petalB);
+      plotRect(ctx, 35 - sway, 4, 2, 2, "#ffffff");
+    }
+    applySelectiveOutline(ctx, W, H, "#162417", "#0a0d0a");
+    const res = { canvas: canvas2, anchorX: 28, anchorY: 28, solidRadius: 0 };
+    PLOT_CACHE.set(key, res);
+    return res;
+  }
+  function getGardenAndGatherPropSprite(kind) {
+    if (PROP_CACHE.has(kind)) return PROP_CACHE.get(kind);
+    let res = null;
+    if (kind === "garden_water_jar") {
+      const W = 32;
+      const H = 34;
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      fillPixelEllipse(ctx, 16, 28, 12, 4, "rgba(6, 10, 8, 0.36)", true);
+      fillPixelEllipse(ctx, 13, 21, 8, 9, "#3d2619");
+      fillPixelEllipse(ctx, 12, 20, 6, 7, "#633f2a");
+      plotRect(ctx, 8, 12, 10, 3, "#87593b");
+      plotRect(ctx, 9, 13, 8, 3, "#278ba1");
+      plotPixel(ctx, 12, 14, "#b8ffff");
+      plotRect(ctx, 6, 22, 4, 5, "#2a542f");
+      plotPixelLine(gSafe(ctx), 16, 14, 22, 8, "#8f6532", 2);
+      plotRect(ctx, 21, 22, 7, 7, "#6e5126");
+      plotRect(ctx, 22, 23, 4, 4, "#b8893c");
+      plotPixelLine(ctx, 27, 24, 30, 20, "#b8893c", 2);
+      applySelectiveOutline(ctx, W, H, "#241911", "#090706");
+      res = { canvas: canvas2, anchorX: 16, anchorY: 28, solidRadius: 0 };
+    } else if (kind === "garden_herb_rack") {
+      const W = 34;
+      const H = 38;
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      fillPixelEllipse(ctx, 17, 33, 13, 4, "rgba(6, 10, 8, 0.34)", true);
+      plotRect(ctx, 7, 9, 3, 24, "#5c431f");
+      plotRect(ctx, 24, 9, 3, 24, "#5c431f");
+      plotRect(ctx, 6, 11, 22, 2, "#8c6932");
+      plotRect(ctx, 6, 21, 22, 2, "#8c6932");
+      for (const bx of [11, 16, 21]) {
+        plotRect(ctx, bx - 1, 13, 3, 7, "#2a6e38");
+        plotRect(ctx, bx, 14, 2, 5, "#59bd5e");
+        plotPixel(ctx, bx, 12, "#d0573c");
+      }
+      plotPixelLine(ctx, 27, 14, 29, 32, "#785328", 2);
+      plotRect(ctx, 24, 13, 5, 2, "#8c99a8");
+      applySelectiveOutline(ctx, W, H, "#261c10", "#090705");
+      res = { canvas: canvas2, anchorX: 17, anchorY: 32, solidRadius: 0 };
+    } else if (kind === "garden_stone_lantern") {
+      const W = 26;
+      const H = 38;
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      fillPixelEllipse(ctx, 13, 33, 9, 4, "rgba(6, 10, 8, 0.38)", true);
+      plotRect(ctx, 7, 29, 12, 5, "#424a46");
+      plotRect(ctx, 10, 18, 6, 12, "#525c57");
+      plotRect(ctx, 8, 12, 10, 7, "#3e4642");
+      plotRect(ctx, 10, 13, 6, 5, "#ffae38");
+      plotRect(ctx, 11, 14, 4, 3, "#fff4bd");
+      plotRect(ctx, 6, 9, 14, 4, "#4b544f");
+      plotRect(ctx, 9, 6, 8, 3, "#69756d");
+      plotRect(ctx, 12, 4, 2, 2, "#89998e");
+      plotRect(ctx, 8, 25, 4, 4, "#295732");
+      applySelectiveOutline(ctx, W, H, "#1f2421", "#080a09");
+      res = { canvas: canvas2, anchorX: 13, anchorY: 32, solidRadius: 0 };
+    } else if (kind === "wild_herb_bush") {
+      const W = 28;
+      const H = 26;
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      fillPixelEllipse(ctx, 14, 21, 9, 3, "rgba(5, 10, 7, 0.36)", true);
+      plotRect(ctx, 7, 13, 14, 8, "#184723");
+      plotRect(ctx, 9, 9, 10, 8, "#319645");
+      plotRect(ctx, 11, 7, 6, 5, "#6de364");
+      plotRect(ctx, 8, 10, 3, 3, "#ffe46b");
+      plotRect(ctx, 16, 9, 3, 3, "#5ef2d6");
+      applySelectiveOutline(ctx, W, H, "#16331b", "#071009");
+      res = { canvas: canvas2, anchorX: 14, anchorY: 20, solidRadius: 0 };
+    } else if (kind === "wild_ore_node") {
+      const W = 32;
+      const H = 26;
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      fillPixelEllipse(ctx, 16, 21, 12, 4, "rgba(5, 8, 10, 0.4)", true);
+      plotRect(ctx, 6, 12, 20, 9, "#2d333b");
+      plotRect(ctx, 8, 8, 15, 9, "#4d5763");
+      plotRect(ctx, 11, 6, 8, 5, "#6b798a");
+      plotRect(ctx, 11, 11, 4, 5, "#e6b84c");
+      plotPixel(ctx, 12, 12, "#fff5b8");
+      plotRect(ctx, 18, 13, 4, 4, "#5ef2d6");
+      plotPixel(ctx, 19, 14, "#ffffff");
+      applySelectiveOutline(ctx, W, H, "#1c2128", "#07090d");
+      res = { canvas: canvas2, anchorX: 16, anchorY: 20, solidRadius: 0 };
+    }
+    function gSafe(c) {
+      return c;
+    }
+    if (res) PROP_CACHE.set(kind, res);
+    return res;
   }
 
   // src/world/PixelMapArt.js
@@ -12651,6 +12939,8 @@
     } else if (kind === "ban_long_statue" || kind === "ban_long_brazier" || kind === "ban_long_ruin_wall" || kind === "ban_long_cloud_pillar") {
       const frames = getBanLongPropFrames(kind);
       if (frames?.[0]) result = frames[0];
+    } else if (kind === "garden_water_jar" || kind === "garden_herb_rack" || kind === "garden_stone_lantern" || kind === "wild_herb_bush" || kind === "wild_ore_node") {
+      result = getGardenAndGatherPropSprite(kind);
     }
     if (result) ATLAS_CACHE.set(kind, result);
     return result;
@@ -13936,6 +14226,10 @@
         const deckBot = Math.round(t.y + t.ry);
         const w = right - left;
         const dH = deckBot - top;
+        if (t.style === "herb_garden") {
+          drawHerbGardenTerrace(ctx, t, pal);
+          continue;
+        }
         if (t.style === "courtyard") {
           ctx.fillStyle = "rgba(10, 14, 9, 0.24)";
           ctx.fillRect(left - 2, top - 2, w + 6, dH + 6);
@@ -14522,11 +14816,20 @@
       for (const sp of mapDef.beastSpots ?? []) {
         ctx.save();
         const col = sp.tier === "boss" ? "#b86bff" : sp.tier === "elite" ? "#d0573c" : "#5fbf8a";
-        ctx.globalAlpha = 0.55;
-        plotPixelEllipse(ctx, sp.x, sp.y, sp.r, Math.round(sp.r * 0.58), col, 4, 0);
-        ctx.globalAlpha = 0.9;
+        const rx = Math.round(sp.r * 0.72);
+        const ry = Math.round(sp.r * 0.44);
+        for (const [mx, my] of [
+          [sp.x - rx, sp.y - ry],
+          [sp.x + rx, sp.y - ry],
+          [sp.x - rx, sp.y + ry],
+          [sp.x + rx, sp.y + ry]
+        ]) {
+          plotRect(ctx, mx - 1, my - 1, 3, 3, "#0a0d0b");
+          plotRect(ctx, mx, my, 2, 2, col);
+        }
+        ctx.globalAlpha = 0.92;
         ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-        drawCrispPixelText(ctx, sp.label, sp.x, sp.y - Math.round(sp.r * 0.58) - 4, col, "#07090d");
+        drawCrispPixelText(ctx, sp.label, sp.x, sp.y - ry - 5, col, "#07090d");
         ctx.restore();
       }
       for (const w of mapDef.waterRegions ?? []) {
@@ -14648,18 +14951,30 @@
           ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
           drawCrispPixelText(ctx, g.label, g.x, g.y - 26, "#5ef2d6", "#06090d");
         } else if (g.kind === "herb_plot") {
-          const plot = playerGarden?.[g.plotIndex] ?? { state: "empty", timer: 0, watered: false };
-          const sprName = plot.state === "ready" ? "herb_plot_ready" : plot.state === "growing" ? "herb_plot_growing" : "herb_plot_empty";
-          const spr = getPropSprite(sprName);
+          const plot = playerGarden?.[g.plotIndex] ?? { state: "empty", timer: 0, maxTimer: 32, watered: false };
+          let stage = "empty";
+          if (plot.state === "ready") {
+            stage = "ready";
+          } else if (plot.state === "growing") {
+            const total = Math.max(8, plot.maxTimer || 32);
+            const pct = 1 - Math.max(0, plot.timer) / total;
+            stage = pct >= 0.45 ? "sapling" : "seedling";
+          }
+          const fIdx = Math.floor(time * 2.2 + (g.plotIndex ?? 0)) % 2;
+          const spr = getHerbPlotSprite(stage, Boolean(plot.watered), plot.seedId || "hat_linh_thao", fIdx);
           if (spr) ctx.drawImage(spr.canvas, Math.round(g.x - spr.anchorX), Math.round(g.y - spr.anchorY));
-          if (plot.state === "growing" && plot.watered) {
-            plotRect(ctx, g.x - 16, g.y - 11, 32, 12, "rgba(18, 66, 78, 0.28)");
+          if (stage === "ready") {
+            for (let m = 0; m < 3; m++) {
+              const mx = Math.round(g.x - 10 + m * 10 + Math.sin(time * 3 + m) * 2);
+              const my = Math.round(g.y - 16 - (time * 10 + m * 5) % 8);
+              plotRect(ctx, mx, my, 2, 2, m === 1 ? "#fff4bd" : "#7effb0");
+            }
           }
           ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
           if (plot.state === "growing") {
-            drawCrispPixelText(ctx, `${Math.ceil(plot.timer)}s`, g.x, g.y - 13, plot.watered ? "#7ee8f7" : "#d8e3f0", "#06090d");
+            drawCrispPixelText(ctx, `${Math.ceil(plot.timer)}s`, g.x, g.y - 17, plot.watered ? "#7ee8f7" : "#f0e4c2", "#06090d");
           } else if (plot.state === "ready") {
-            drawCrispPixelText(ctx, "Thu ho\u1EA1ch", g.x, g.y - 14, "#7effb0", "#06090d");
+            drawCrispPixelText(ctx, "Thu ho\u1EA1ch", g.x, g.y - 21, "#7effb0", "#06090d");
           }
         } else if (g.kind === "fish") {
           const rx = Math.round(11 + Math.sin(time * 3) * 2);
@@ -14667,24 +14982,26 @@
           plotRect(ctx, g.x - 1, g.y - 4, 3, 5, "#d0573c");
           plotRect(ctx, g.x - 1, g.y - 4, 3, 2, "#ffffff");
         } else if (g.kind === "herb") {
-          plotRect(ctx, g.x - 6, g.y - 3, 12, 6, "#22572e");
-          plotRect(ctx, g.x - 4, g.y - 7, 3, 5, "#73eb5e");
-          plotRect(ctx, g.x + 1, g.y - 6, 3, 4, "#73eb5e");
-          plotRect(ctx, g.x - 1, g.y - 8, 2, 2, "#fff3b0");
+          const spr = getPropSprite("wild_herb_bush");
+          if (spr) ctx.drawImage(spr.canvas, Math.round(g.x - spr.anchorX), Math.round(g.y - spr.anchorY));
         } else if (g.kind === "mine") {
-          plotRect(ctx, g.x - 10, g.y - 7, 20, 12, "#3f464d");
-          plotRect(ctx, g.x - 8, g.y - 9, 15, 9, "#626d78");
-          plotRect(ctx, g.x - 4, g.y - 5, 4, 4, "#d9b25f");
-          plotRect(ctx, g.x + 2, g.y - 3, 3, 3, "#d9b25f");
+          const spr = getPropSprite("wild_ore_node");
+          if (spr) ctx.drawImage(spr.canvas, Math.round(g.x - spr.anchorX), Math.round(g.y - spr.anchorY));
         } else if (g.kind === "wild_gu") {
           const isTarget = Boolean(highlightGuId && g.guId === highlightGuId);
           const bobX = Math.round(Math.sin(time * 2.8 + g.x) * 3);
           const bobY = Math.round(Math.cos(time * 3.4 + g.y) * 2);
-          plotPixelEllipse(ctx, g.x, g.y + 4, Math.round(12 + Math.sin(time * 5) * 1.5), 6, isTarget ? "#ffe15c" : "#5ef2d6", 2, Math.floor(time * 4));
+          const auraCol = isTarget ? "#ffe15c" : "#5ef2d6";
+          for (let m = 0; m < 4; m++) {
+            const ang = time * 2.6 + m * Math.PI / 2;
+            const mx = Math.round(g.x + Math.cos(ang) * 12);
+            const my = Math.round(g.y + 1 + Math.sin(ang) * 5);
+            plotRect(ctx, mx - 1, my - 1, 2, 2, auraCol);
+          }
           const guCanvas = getGuPixelCanvas(g.guId);
           ctx.drawImage(guCanvas, Math.round(g.x + bobX - 12), Math.round(g.y + bobY - 14), 24, 24);
           ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-          drawCrispPixelText(ctx, g.label, g.x, g.y - 16, isTarget ? "#ffe15c" : "#80ffcf", "#06090d");
+          drawCrispPixelText(ctx, g.label, g.x, g.y - 17, isTarget ? "#ffe15c" : "#80ffcf", "#06090d");
         }
         ctx.restore();
       }
@@ -15421,6 +15738,38 @@
       dropItems: ["bang_tuyen_tinh", "xich_nham_hoa_tuy", "mao_thach_cao"],
       ai: "ban_long_boss",
       color: "#19f0c8"
+    },
+    co_su_hac_bao: {
+      id: "co_su_hac_bao",
+      name: "C\u1ED5 S\u01B0 H\u1ECFa \u0110ao \xB7 L\xF4i \u0110\xE0i",
+      rank: 2,
+      tier: "B\xE1ch th\xFA v\u01B0\u01A1ng",
+      hp: 980,
+      speed: 58,
+      radius: 17,
+      damage: 34,
+      exp: 240,
+      stones: 160,
+      dropItems: ["hoi_huyet_thao", "mao_thach_trung"],
+      ai: "caster",
+      projColor: "#ff6b3d",
+      color: "#ff6b3d"
+    },
+    van_thu_vuong: {
+      id: "van_thu_vuong",
+      name: "T\xF9ng Ch\xE2m C\u1ED5 S\u01B0 \xB7 L\xF4i \u0110\xE0i",
+      rank: 3,
+      tier: "B\xE1ch th\xFA v\u01B0\u01A1ng",
+      hp: 1850,
+      speed: 56,
+      radius: 18,
+      damage: 52,
+      exp: 420,
+      stones: 320,
+      dropItems: ["suong_truc_linh_lo", "thao_duoc_tram_nam"],
+      ai: "caster",
+      projColor: "#5ef2d6",
+      color: "#5ef2d6"
     }
   };
   var WORLD_MAPS = {
@@ -15674,14 +16023,14 @@
         },
         {
           x: 202,
-          y: 492,
-          rx: 76,
-          ry: 38,
+          y: 493,
+          rx: 88,
+          ry: 40,
           height: 4,
-          style: "courtyard",
+          style: "herb_garden",
           stairs: [
-            { side: "north", offset: 0, width: 42 },
-            { side: "east", offset: 0, width: 36 }
+            { side: "north", offset: 0, width: 44 },
+            { side: "east", offset: 0, width: 38 }
           ]
         }
       ],
@@ -15729,6 +16078,9 @@
         { kind: "stone_stele", x: 858, y: 245 },
         { kind: "ancient_well", x: 552, y: 698 },
         { kind: "ancient_well", x: 255, y: 382 },
+        { kind: "garden_water_jar", x: 128, y: 480 },
+        { kind: "garden_stone_lantern", x: 128, y: 516 },
+        { kind: "garden_herb_rack", x: 274, y: 472 },
         { kind: "banners", x: 640, y: 282 }
       ],
       trees: [
@@ -15795,11 +16147,11 @@
       ],
       gatherNodes: [
         { id: "nguyen_tuyen_khai_khieu", kind: "spirit_spring", label: "Nguy\xEAn Tuy\u1EC1n Khai Khi\u1EBFu", x: 360, y: 336 },
-        { id: "garden_0", kind: "herb_plot", plotIndex: 0, label: "\xD4 Gia Vi\xEAn 1", x: 172, y: 478 },
-        { id: "garden_1", kind: "herb_plot", plotIndex: 1, label: "\xD4 Gia Vi\xEAn 2", x: 226, y: 478 },
-        { id: "garden_2", kind: "herb_plot", plotIndex: 2, label: "\xD4 Gia Vi\xEAn 3", x: 172, y: 506 },
-        { id: "garden_3", kind: "herb_plot", plotIndex: 3, label: "\xD4 Gia Vi\xEAn 4", x: 226, y: 506 },
-        { id: "herb_tagia_1", kind: "herb", label: "Kh\xF3m Th\u1EA3o D\u01B0\u1EE3c", item: "thao_duoc", x: 256, y: 492 },
+        { id: "garden_0", kind: "herb_plot", plotIndex: 0, label: "\xD4 D\u01B0\u1EE3c \u0110i\u1EC1n 1", x: 166, y: 478 },
+        { id: "garden_1", kind: "herb_plot", plotIndex: 1, label: "\xD4 D\u01B0\u1EE3c \u0110i\u1EC1n 2", x: 236, y: 478 },
+        { id: "garden_2", kind: "herb_plot", plotIndex: 2, label: "\xD4 D\u01B0\u1EE3c \u0110i\u1EC1n 3", x: 166, y: 510 },
+        { id: "garden_3", kind: "herb_plot", plotIndex: 3, label: "\xD4 D\u01B0\u1EE3c \u0110i\u1EC1n 4", x: 236, y: 510 },
+        { id: "herb_tagia_1", kind: "herb", label: "Kh\xF3m Th\u1EA3o D\u01B0\u1EE3c", item: "thao_duoc", x: 282, y: 518 },
         { id: "wild_gu_tuu_trung", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5: T\u1EEDu Tr\xF9ng", guId: "tuu_trung", x: 1085, y: 285 },
         { id: "wild_gu_hoa_than", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5: H\u1ECFa Th\xE1n C\u1ED5", guId: "dan_khieu_hoa_than", x: 205, y: 235 },
         { id: "wild_gu_thanh_doc", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5: Thanh \u0110\u1ED9c Tr\xF9ng", guId: "thanh_doc", x: 336, y: 758 },
@@ -16995,10 +17347,1202 @@
   }
   enrichWorldMaps();
 
+  // src/combat/MonsterArtBosses.js
+  var BOSS_CACHE = /* @__PURE__ */ new Map();
+  function hash22(x, y) {
+    let h = (x | 0) * 374761393 + (y | 0) * 668265263 ^ 1542469173;
+    h = (h ^ h >> 13) * 1274126177;
+    return Math.abs(h ^ h >> 16);
+  }
+  function paintMass(ctx, W, H, parts, ramp, mode = "smooth") {
+    const mask = new Uint8Array(W * H);
+    const owner = new Int16Array(W * H);
+    owner.fill(-1);
+    for (let i = 0; i < parts.length; i++) {
+      const pt = parts[i];
+      const minX = Math.max(2, Math.floor(pt.cx - pt.rx - 2));
+      const maxX = Math.min(W - 3, Math.ceil(pt.cx + pt.rx + 2));
+      const minY = Math.max(2, Math.floor(pt.cy - pt.ry - 2));
+      const maxY = Math.min(H - 3, Math.ceil(pt.cy + pt.ry + 2));
+      const cosA = pt.rot ? Math.cos(-pt.rot) : 1;
+      const sinA = pt.rot ? Math.sin(-pt.rot) : 0;
+      for (let py = minY; py <= maxY; py++) {
+        for (let px = minX; px <= maxX; px++) {
+          const dx0 = px - pt.cx;
+          const dy0 = py - pt.cy;
+          const dx = (dx0 * cosA - dy0 * sinA) / Math.max(1, pt.rx);
+          const dy = (dx0 * sinA + dy0 * cosA) / Math.max(1, pt.ry);
+          let dist = Math.hypot(dx, dy);
+          if (mode === "fur") {
+            const ang = Math.atan2(dy, dx);
+            dist -= 0.08 * Math.sin(ang * 9 + i * 1.4) + hash22(px, py) % 3 * 0.025;
+          } else if (mode === "rock") {
+            dist = dist * 0.62 + (Math.abs(dx) + Math.abs(dy)) * 0.28;
+          } else if (mode === "scales") {
+            dist -= 0.04 * Math.sin(py * 0.6);
+          }
+          if (dist <= 1) {
+            const idx = py * W + px;
+            mask[idx] = 1;
+            owner[idx] = i;
+          }
+        }
+      }
+    }
+    for (let py = 2; py < H - 2; py++) {
+      for (let px = 2; px < W - 2; px++) {
+        const idx = py * W + px;
+        if (!mask[idx]) continue;
+        const pt = parts[owner[idx]] ?? parts[0];
+        const rx = (px - pt.cx) / Math.max(1, pt.rx);
+        const ry = (py - pt.cy) / Math.max(1, pt.ry);
+        let lum = 0.56 - rx * 0.24 - ry * 0.36 + (pt.bias ?? 0);
+        if (mode === "fur") lum += (hash22(px >> 1, py) % 5 - 2) * 0.06;
+        else if (mode === "rock") lum += (px + py >> 2) % 2 === 0 ? 0.07 : -0.07;
+        else if (mode === "scales") lum += (px >> 2) + (py >> 1) & 1 ? 0.09 : -0.09;
+        else if (mode === "wart" && hash22(px >> 1, py >> 1) % 7 === 0) lum += 0.22;
+        const val = Math.max(0.05, Math.min(0.99, lum + (bayerThreshold(px, py) - 0.5) * 0.16));
+        const si = Math.min(ramp.length - 1, Math.max(1, Math.floor(val * (ramp.length - 1)) + 1));
+        ctx.fillStyle = ramp[si];
+        ctx.fillRect(px, py, 1, 1);
+      }
+    }
+  }
+  function finalizeBoss(tmpCtx, W, H, topOut, botOut, shadowRx = 26) {
+    applySelectiveOutline(tmpCtx, W, H, topOut, botOut);
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    const anchorY = H - 14;
+    if (ctx) {
+      fillPixelEllipse(ctx, Math.round(W * 0.5), anchorY, shadowRx, 6, "rgba(5, 7, 11, 0.44)", true);
+      ctx.drawImage(tmpCtx.canvas, 0, 0);
+    }
+    return {
+      canvas: canvas2,
+      anchorX: Math.round(W * 0.5),
+      anchorY,
+      barOffsetY: H - 22
+    };
+  }
+  function makeBossStates(fn) {
+    return {
+      idle: [0, 1, 2, 3].map((f) => fn("idle", f)),
+      telegraph: [0, 1, 2, 3].map((f) => fn("telegraph", f)),
+      attack: [0, 1, 2, 3].map((f) => fn("attack", f))
+    };
+  }
+  function buildDragonFishKing112() {
+    const W = 112;
+    const H = 96;
+    const bodyRamp = ["#061921", "#0c3a47", "#146e7a", "#26ada3", "#5ef0d4", "#d1fff5"];
+    const goldRamp = ["#3b2408", "#805212", "#c48823", "#f0c146", "#fff19e"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const lift = isTele ? -5 : isAtk ? f === 1 || f === 2 ? -3 : 1 : f % 2 === 0 ? -2 : 1;
+      const surge = isAtk && (f === 1 || f === 2) ? 8 : 0;
+      const ox = 54 + surge;
+      const oy = 50 + lift;
+      plotPixelLine(g, 20, 76, 92, 76, "#2c8c9e", 2);
+      for (let wx = 22; wx <= 88; wx += 10) {
+        const wy = 75 + ((wx + f * 3) % 4 === 0 ? -1 : 1);
+        plotRect(g, wx, wy, 5, 2, "#b5fff4");
+      }
+      const tailWag = isAtk ? f % 2 === 0 ? -8 : 8 : f === 1 ? -4 : f === 3 ? 4 : 0;
+      plotPixelLine(g, ox - 20, oy + 2, ox - 42, oy - 14 + tailWag, bodyRamp[3], 8);
+      plotPixelLine(g, ox - 20, oy + 4, ox - 44, oy + 14 + tailWag, bodyRamp[2], 8);
+      plotPixelLine(g, ox - 28, oy - 3 + Math.round(tailWag * 0.5), ox - 47, oy - 17 + tailWag, goldRamp[3], 3);
+      plotPixelLine(g, ox - 28, oy + 6 + Math.round(tailWag * 0.5), ox - 47, oy + 17 + tailWag, goldRamp[3], 3);
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox - 12, cy: oy + 2, rx: 16, ry: 12, rot: -0.15, bias: 0 },
+          { cx: ox + 4, cy: oy - 3, rx: 18, ry: 15, rot: 0.1, bias: 0.1 },
+          { cx: ox + 20, cy: oy - 4, rx: 13, ry: 12, bias: 0.08 }
+        ],
+        bodyRamp,
+        "scales"
+      );
+      for (let s = 0; s < 6; s++) {
+        const fx = ox - 14 + s * 6;
+        const fy = oy - 14 - Math.round(Math.sin(s * 0.5) * 6);
+        plotPixelLine(g, fx, fy + 6, fx - 5, fy - 7, goldRamp[3], 3);
+        plotPixel(g, fx - 5, fy - 7, goldRamp[4]);
+      }
+      plotPixelLine(g, ox + 2, oy + 6, ox - 12, oy + 19, goldRamp[2], 5);
+      plotPixelLine(g, ox - 3, oy + 11, ox - 15, oy + 21, bodyRamp[5], 2);
+      plotPixelLine(g, ox + 16, oy - 14, ox + 7, oy - 28, goldRamp[2], 3);
+      plotPixelLine(g, ox + 11, oy - 22, ox + 15, oy - 30, goldRamp[4], 2);
+      plotPixelLine(g, ox + 23, oy - 13, ox + 18, oy - 25, goldRamp[3], 2);
+      plotPixelLine(g, ox + 29, oy - 3, ox + 43, oy - 11 + f % 2 * 3, "#87ffeb", 2);
+      plotPixelLine(g, ox + 28, oy + 4, ox + 41, oy + 9 - f % 2 * 2, "#87ffeb", 2);
+      plotRect(g, ox + 21, oy - 8, 5, 4, "#0d0608");
+      plotRect(g, ox + 22, oy - 7, 4, 3, "#ff385c");
+      plotPixel(g, ox + 24, oy - 7, "#fff4bd");
+      if (isTele) {
+        const rad = 5 + f;
+        plotPixelEllipse(g, ox + 36, oy + 1, rad + 2, rad + 2, "#29d9c2", 2, f);
+        fillPixelEllipse(g, ox + 36, oy + 1, rad, rad, "#bafff5", true);
+      } else if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 32, oy + 1, ox + 50, oy + 1, "#5ef2d6", 6);
+        plotPixelLine(g, ox + 34, oy + 1, ox + 52, oy + 1, "#ffffff", 2);
+      }
+      return finalizeBoss(g, W, H, "#134e59", "#051217", 36);
+    });
+  }
+  function buildBoarKing96() {
+    const W = 96;
+    const H = 96;
+    const ramp = ["#140906", "#2e1309", "#542210", "#82381a", "#b85928", "#e89443"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 46 + (isAtk && (f === 1 || f === 2) ? 7 : 0);
+      const oy = 56 + (isTele ? -2 : isAtk ? 2 : f % 2 === 0 ? -1 : 1);
+      plotRect(g, ox - 20, oy + 8, 8, 16, ramp[1]);
+      plotRect(g, ox - 9, oy + 9, 8, 16, ramp[2]);
+      plotRect(g, ox + 7, oy + 9, 8, 16, ramp[2]);
+      plotRect(g, ox + 17, oy + 8, 8, 15, ramp[1]);
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox - 10, cy: oy - 1, rx: 18, ry: 14, bias: -0.04 },
+          { cx: ox + 5, cy: oy - 6, rx: 19, ry: 18, bias: 0.1 },
+          { cx: ox + 21, cy: oy, rx: 12, ry: 11, bias: 0.08 },
+          { cx: ox + 30, cy: oy + 4, rx: 6, ry: 5, bias: 0.08 }
+        ],
+        ramp,
+        "fur"
+      );
+      plotRect(g, ox - 3, oy - 18, 18, 12, "#4d3826");
+      plotRect(g, ox - 1, oy - 16, 14, 7, "#9c783e");
+      for (let s = 0; s < 7; s++) {
+        const sx = ox - 16 + s * 6;
+        const sy = oy - 21 - s % 2 * 4;
+        plotPixelLine(g, sx, sy + 7, sx - 3, sy - 5, "#ffae38", 3);
+        plotPixel(g, sx - 3, sy - 5, "#fff4bd");
+      }
+      plotPixelLine(g, ox + 27, oy + 7, ox + 37, oy - 5, "#fff5db", 3);
+      plotPixelLine(g, ox + 21, oy + 10, ox + 30, oy + 1, "#e8d2ae", 3);
+      plotRect(g, ox + 20, oy - 3, 5, 3, isTele ? "#ffffff" : "#ff243d");
+      if (isTele) {
+        plotPixelLine(g, ox + 8, oy + 24, ox + 24, oy + 24, "#ff9b26", 2);
+        plotRect(g, ox + 14 + f * 3, oy + 18 - f * 2, 3, 3, "#ffe680");
+      } else if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 33, oy - 8, ox + 42, oy + 8, "#ffcb47", 3);
+      }
+      return finalizeBoss(g, W, H, "#33170b", "#080505", 28);
+    });
+  }
+  function buildWolfKing96(isSnow) {
+    const W = 96;
+    const H = 96;
+    const ramp = isSnow ? ["#0e1824", "#274159", "#4e7396", "#7da6cc", "#b6d9f2", "#effaff"] : ["#081c17", "#11382e", "#1c5e4b", "#2e8f70", "#52c498", "#8cffe0"];
+    const fxCol = isSnow ? "#94f2ff" : "#5cf2ff";
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 46 + (isAtk && (f === 1 || f === 2) ? 7 : 0);
+      const oy = 56 + (isTele ? -3 : isAtk ? -4 : f % 2 === 0 ? -1 : 1);
+      plotPixelLine(g, ox - 18, oy + 2, ox - 36, oy - 12 + f % 2 * 4, ramp[2], 6);
+      plotPixelLine(g, ox - 25, oy - 4, ox - 38, oy - 14 + f % 2 * 4, fxCol, 2);
+      plotPixelLine(g, ox - 16, oy + 5, ox - 20, oy + 22, ramp[1], 4);
+      plotPixelLine(g, ox - 9, oy + 6, ox - 9, oy + 23, ramp[2], 4);
+      plotPixelLine(g, ox + 9, oy + 5, ox + 13, oy + (isAtk ? 15 : 22), ramp[3], 4);
+      plotPixelLine(g, ox + 16, oy + 5, ox + 21, oy + (isAtk ? 15 : 22), ramp[2], 4);
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox - 12, cy: oy + 2, rx: 13, ry: 9, bias: -0.05 },
+          { cx: ox + 4, cy: oy - 3, rx: 16, ry: 13, bias: 0.08 },
+          { cx: ox + 18, cy: oy - 8, rx: 11, ry: 10, bias: 0.08 },
+          { cx: ox + 29, cy: oy - 4, rx: 7, ry: 4.5, bias: 0.06 }
+        ],
+        ramp,
+        "fur"
+      );
+      plotPixelLine(g, ox + 12, oy - 14, ox + 8, oy - 29, fxCol, 3);
+      plotPixelLine(g, ox + 17, oy - 14, ox + 15, oy - 31, "#ffd15c", 3);
+      plotPixelLine(g, ox + 21, oy - 13, ox + 23, oy - 26, fxCol, 2);
+      plotPixelLine(g, ox - 3, oy - 12, ox + 8, oy - 20, fxCol, 2);
+      plotRect(g, ox + 20, oy - 10, 5, 3, "#ffffff");
+      plotRect(g, ox + 26, oy - 1, 3, 4, "#ffffff");
+      plotRect(g, ox + 31, oy - 1, 3, 4, "#ffffff");
+      if (isTele) {
+        plotPixelEllipse(g, ox + 4, oy - 4, 28 + f, 20 + f, fxCol, 3, f);
+      } else if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 29, oy - 16, ox + 41, oy - 2, fxCol, 3);
+        plotPixelLine(g, ox + 31, oy - 10, ox + 43, oy + 4, "#ffffff", 2);
+      }
+      return finalizeBoss(g, W, H, isSnow ? "#1e3a52" : "#113329", "#050b0a", 28);
+    });
+  }
+  function buildMonkeyKing96() {
+    const W = 96;
+    const H = 96;
+    const ramp = ["#0e1116", "#222830", "#3a4350", "#586578", "#7b8da6", "#a8bdd9"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 48;
+      const oy = 52 + (isTele ? -4 : isAtk && f === 2 ? 3 : 0);
+      plotRect(g, ox - 14, oy + 10, 10, 18, ramp[2]);
+      plotRect(g, ox + 4, oy + 10, 10, 18, ramp[1]);
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox, cy: oy, rx: 18, ry: 16, bias: 0.06 },
+          { cx: ox, cy: oy - 18, rx: 12, ry: 10, bias: 0.1 }
+        ],
+        ramp,
+        "rock"
+      );
+      plotRect(g, ox - 10, oy - 26, 20, 3, "#ffd15c");
+      plotRect(g, ox - 2, oy - 28, 4, 4, "#ff385c");
+      plotPixelLine(g, ox - 7, oy - 7, ox + 1, oy + 2, "#ffd15c", 2);
+      plotPixelLine(g, ox + 1, oy + 2, ox + 8, oy - 5, "#5ef2d6", 2);
+      plotRect(g, ox - 7, oy - 21, 4, 3, "#ff385c");
+      plotRect(g, ox + 3, oy - 21, 4, 3, "#ff385c");
+      for (const dir of [-1, 1]) {
+        const armY = isTele ? oy - 16 : isAtk && f === 2 ? oy + 20 : oy + 12;
+        const sx = ox + dir * 18;
+        const fx = ox + dir * 26;
+        plotPixelLine(g, sx, oy - 6, fx, armY, ramp[2], 9);
+        plotRect(g, fx - 7, armY - 6, 14, 13, ramp[4]);
+        plotRect(g, fx - 4, armY - 2, 8, 4, isTele || isAtk ? "#fff08a" : "#5ef2d6");
+      }
+      if (isAtk && f === 2) {
+        plotPixelLine(g, ox - 36, oy + 26, ox + 36, oy + 26, "#ffd15c", 3);
+      }
+      return finalizeBoss(g, W, H, "#232a36", "#07090d", 28);
+    });
+  }
+  function buildToadKing96() {
+    const W = 96;
+    const H = 96;
+    const ramp = ["#10071a", "#281240", "#492370", "#6e36a6", "#9957d6", "#c98eff"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 48;
+      const oy = 56 + (isAtk && f === 1 ? -5 : 0);
+      const sac = isTele ? 1.35 : 1.05;
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox - 19, cy: oy + 8, rx: 10, ry: 7, rot: -0.35 },
+          { cx: ox + 19, cy: oy + 8, rx: 10, ry: 7, rot: 0.35 },
+          { cx: ox, cy: oy, rx: 24, ry: 16, bias: 0.04 },
+          { cx: ox - 10, cy: oy - 15, rx: 7, ry: 5, bias: 0.14 },
+          { cx: ox + 10, cy: oy - 15, rx: 7, ry: 5, bias: 0.14 }
+        ],
+        ramp,
+        "wart"
+      );
+      plotPixelLine(g, ox - 12, oy - 19, ox - 18, oy - 30, "#d8cfbd", 3);
+      plotPixelLine(g, ox + 12, oy - 19, ox + 18, oy - 30, "#d8cfbd", 3);
+      plotRect(g, ox - 4, oy - 16, 8, 6, "#8cff66");
+      plotRect(g, ox - 15, oy - 8, 6, 5, "#8cff66");
+      plotRect(g, ox + 9, oy - 8, 6, 5, "#8cff66");
+      fillPixelEllipse(g, ox, oy + 9, Math.round(15 * sac), Math.round(7 * sac), "#8f3ec4", true);
+      plotRect(g, ox - 13, oy - 17, 5, 4, "#ff2e4c");
+      plotRect(g, ox + 8, oy - 17, 5, 4, "#ff2e4c");
+      plotPixel(g, ox - 11, oy - 16, "#ffffff");
+      plotPixel(g, ox + 10, oy - 16, "#ffffff");
+      if (isTele || isAtk) {
+        for (let b = 0; b < 5; b++) {
+          const bx = ox + (b - 2) * 12;
+          const by = oy - 24 - (f * 5 + b * 4) % 16;
+          plotRect(g, bx, by, 4, 4, "#9cff78");
+          plotPixel(g, bx, by, "#ffffff");
+        }
+      }
+      return finalizeBoss(g, W, H, "#2c1445", "#09040d", 30);
+    });
+  }
+  function buildScorpionKing96() {
+    const W = 96;
+    const H = 96;
+    const ramp = ["#0b0e17", "#1c2438", "#304063", "#4b6496", "#7492cc", "#acc7f7"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 47 + (isAtk && (f === 1 || f === 2) ? 6 : 0);
+      const oy = 58;
+      for (let l = 0; l < 4; l++) {
+        const lx = ox - 14 + l * 8;
+        plotPixelLine(g, lx, oy + 5, lx - 6, oy + 16 + (f + l) % 2 * 2, ramp[2], 3);
+        plotPixelLine(g, lx, oy - 4, lx - 4, oy - 12 - (f + l) % 2 * 2, ramp[1], 3);
+      }
+      const stX = isAtk ? 14 : 0;
+      plotPixelLine(g, ox - 16, oy, ox - 28, oy - 18, ramp[3], 7);
+      plotPixelLine(g, ox - 28, oy - 18, ox - 10 + stX, oy - 30, ramp[4], 6);
+      plotPixelLine(g, ox - 10 + stX, oy - 30, ox + 9 + stX, oy - 22, "#ff385c", 4);
+      plotPixelLine(g, ox + 4 + stX, oy - 24, ox + 12 + stX, oy - 17, "#ffffff", 2);
+      const open = isTele ? 4 : isAtk && f === 2 ? -3 : 0;
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox - 4, cy: oy, rx: 18, ry: 11, bias: 0.05 },
+          { cx: ox + 22, cy: oy - 8 - open, rx: 9, ry: 5, rot: -0.25, bias: 0.1 },
+          { cx: ox + 22, cy: oy + 8 + open, rx: 9, ry: 5, rot: 0.25, bias: 0.1 }
+        ],
+        ramp,
+        "scales"
+      );
+      plotRect(g, ox + 10, oy - 3, 4, 3, "#ff385c");
+      plotRect(g, ox + 10, oy + 3, 4, 3, "#ff385c");
+      plotRect(g, ox - 4, oy - 6, 6, 4, "#ffd15c");
+      return finalizeBoss(g, W, H, "#1c2842", "#07090d", 28);
+    });
+  }
+  function buildSerpentKing96() {
+    const W = 96;
+    const H = 96;
+    const ramp = ["#061924", "#0c3852", "#17658a", "#269cc4", "#5ad9eb", "#c7fcff"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 46;
+      const oy = 64;
+      for (let i = 0; i < 34; i++) {
+        const t = i / 33;
+        const sx = ox - 20 + Math.round(t * 28 + Math.sin(t * 5 + f * 0.5) * 8) + (isAtk ? Math.round(t * 9) : 0);
+        const sy = oy + 10 - Math.round(Math.pow(t, 1.3) * 38 + Math.cos(t * 4) * 4);
+        const r = t < 0.2 ? 3 + Math.round(t * 14) : 7;
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (dx * dx + dy * dy <= r * r) {
+              plotPixel(g, sx + dx, sy + dy, dy > r * 0.4 ? "#a3edf2" : dy < -1 ? ramp[4] : ramp[2]);
+            }
+          }
+        }
+      }
+      const hx = ox + 12 + (isAtk ? 9 : 0);
+      const hy = oy - 28;
+      plotRect(g, hx - 14, hy - 6, 22, 16, "#17658a");
+      plotRect(g, hx - 12, hy - 4, 4, 5, "#ffd15c");
+      plotPixelLine(g, hx - 2, hy - 8, hx - 8, hy - 22, "#ff7b66", 3);
+      plotPixelLine(g, hx + 4, hy - 8, hx + 2, hy - 22, "#ff7b66", 3);
+      paintMass(g, W, H, [{ cx: hx + 2, cy: hy, rx: 10, ry: 7, bias: 0.12 }], ramp, "scales");
+      plotRect(g, hx + 4, hy - 3, 4, 2, "#ffe15c");
+      if (isTele) {
+        fillPixelEllipse(g, hx + 14, hy + 1, 5 + f, 5 + f, "#87ffeb", true);
+      }
+      return finalizeBoss(g, W, H, "#124963", "#051017", 26);
+    });
+  }
+  function buildLavaBeastKing96() {
+    const W = 96;
+    const H = 96;
+    const ramp = ["#140806", "#33100b", "#5c1b10", "#912c16", "#d9571e", "#ffab38"];
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const ox = 46 + (isAtk && (f === 1 || f === 2) ? 7 : 0);
+      const oy = 56 + (isTele ? -3 : 0);
+      paintMass(
+        g,
+        W,
+        H,
+        [
+          { cx: ox - 6, cy: oy, rx: 22, ry: 16, bias: 0.05 },
+          { cx: ox + 14, cy: oy - 6, rx: 13, ry: 11, bias: 0.1 },
+          { cx: ox + 24, cy: oy - 2, rx: 7, ry: 5, bias: 0.08 }
+        ],
+        ramp,
+        "rock"
+      );
+      plotPixelLine(g, ox - 16, oy - 4, ox + 2, oy - 12, isTele ? "#ffffff" : "#ffe066", 2);
+      plotPixelLine(g, ox + 2, oy - 12, ox + 12, oy + 2, "#ff8c24", 2);
+      plotPixelLine(g, ox + 12, oy - 14, ox + 19, oy - 28, "#ff5c24", 3);
+      plotRect(g, ox + 18, oy - 8, 4, 3, "#ffffff");
+      for (let c = 0; c < 3; c++) {
+        const cy = oy + 4 + c * 5;
+        plotPixelLine(g, ox + 15, cy, ox + 30 + (isAtk ? 6 : 0), cy + 5, "#ffe066", 2);
+      }
+      return finalizeBoss(g, W, H, "#45140c", "#0a0404", 28);
+    });
+  }
+  function buildGuMasterBoss96(variant) {
+    const W = 96;
+    const H = 96;
+    const isFire = variant === "co_su_hac_bao";
+    const isWood = variant === "van_thu_vuong";
+    const ramp = isFire ? ["#12090d", "#33121b", "#5c1b29", "#942b3c", "#cf4c54", "#ff8d7a"] : isWood ? ["#091712", "#133629", "#215942", "#358562", "#59b88b", "#a3ffcf"] : ["#0d0a17", "#21183b", "#392766", "#593b99", "#825cc7", "#b896ff"];
+    const accent = isFire ? "#ff9436" : isWood ? "#ffd46b" : "#c87dff";
+    const eyeCol = isFire ? "#ff384c" : isWood ? "#5ef2d6" : "#d975ff";
+    return makeBossStates((state, f) => {
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const isTele = state === "telegraph";
+      const isAtk = state === "attack";
+      const bob = isTele ? -3 : isAtk ? -1 : f === 1 || f === 2 ? -1 : 0;
+      const lunge = isAtk && (f === 1 || f === 2) ? 7 : 0;
+      const ox = 46 + lunge;
+      const oy = 50 + bob;
+      for (let o = 0; o < 3; o++) {
+        const ang = o / 3 * Math.PI * 2 + f * 0.45;
+        const lx = ox + Math.round(Math.cos(ang) * (isTele ? 24 : 20));
+        const ly = oy - 10 + Math.round(Math.sin(ang) * 14);
+        plotRect(g, lx - 3, ly - 3, 6, 6, "#090a10");
+        plotRect(g, lx - 2, ly - 2, 4, 4, accent);
+        plotPixel(g, lx - 1, ly - 1, "#ffffff");
+      }
+      for (let y = oy - 12; y <= oy + 26; y++) {
+        const t = (y - (oy - 12)) / 38;
+        const hw = Math.round(9 + t * 11);
+        const sway = Math.round(Math.sin(t * 4 + f * 0.8) * 2 - lunge * t * 0.4);
+        for (let x = ox - hw + sway; x <= ox + hw + sway; x++) {
+          const lum = 0.54 - (x - ox) / hw * 0.25 - t * 0.14 + (bayerThreshold(x, y) - 0.5) * 0.15;
+          const si = Math.max(1, Math.min(5, Math.floor(lum * 5) + 1));
+          plotPixel(g, x, y, y > oy + 22 ? accent : ramp[si]);
+        }
+      }
+      plotPixelLine(g, ox - 7, oy - 11, ox, oy - 2, accent, 2);
+      plotPixelLine(g, ox + 7, oy - 11, ox, oy - 2, accent, 2);
+      plotRect(g, ox - 11, oy + 4, 22, 4, "#14121d");
+      plotRect(g, ox - 3, oy + 4, 6, 4, accent);
+      plotRect(g, ox - 15, oy - 13, 7, 6, "#4d5566");
+      plotRect(g, ox + 8, oy - 13, 7, 6, "#4d5566");
+      plotRect(g, ox - 12, oy - 28, 24, 24, ramp[1]);
+      paintMass(g, W, H, [{ cx: ox, cy: oy - 22, rx: 8, ry: 8, bias: 0.12 }], ["#1a1418", "#c9b3a8", "#e8d8ce", "#f7ede6"], "smooth");
+      plotRect(g, ox - 9, oy - 31, 18, 8, "#16141f");
+      plotRect(g, ox - 4, oy - 36, 8, 5, accent);
+      plotRect(g, ox - 5, oy - 22, 3, 2, eyeCol);
+      plotRect(g, ox + 2, oy - 22, 3, 2, eyeCol);
+      plotPixel(g, ox - 4, oy - 22, "#ffffff");
+      plotPixel(g, ox + 3, oy - 22, "#ffffff");
+      if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 10, oy - 4, ox + 34, oy + 2, "#ffffff", 3);
+        plotPixelLine(g, ox + 22, oy - 19, ox + 37, oy - 2, accent, 3);
+        plotPixelLine(g, ox + 37, oy - 2, ox + 22, oy + 17, accent, 3);
+      } else if (isTele) {
+        plotPixelLine(g, ox + 12, oy - 4, ox + 16, oy - 24, accent, 3);
+        plotPixelEllipse(g, ox + 16, oy - 26, 6 + f, 6 + f, accent, 2, f);
+      } else {
+        plotPixelLine(g, ox + 11, oy + 8, ox + 15, oy - 24, "#94a6bd", 2);
+        plotRect(g, ox + 13, oy - 27, 5, 5, accent);
+      }
+      return finalizeBoss(g, W, H, "#241d38", "#07060d", 22);
+    });
+  }
+  var BOSS_BUILDERS = {
+    thien_tri_ngu_vuong: buildDragonFishKing112,
+    lon_rung_vuong: buildBoarKing96,
+    tam_nha_dien_lang: () => buildWolfKing96(false),
+    soi_tuyet_vuong: () => buildWolfKing96(true),
+    thach_hau_vuong: buildMonkeyKing96,
+    thiem_thu_vuong: buildToadKing96,
+    thiet_giap_hat_vuong: buildScorpionKing96,
+    thuy_mang_vuong: buildSerpentKing96,
+    xich_viem_vuong: buildLavaBeastKing96,
+    mac_vo_tam: () => buildGuMasterBoss96("mac_vo_tam"),
+    co_su_hac_bao: () => buildGuMasterBoss96("co_su_hac_bao"),
+    van_thu_vuong: () => buildGuMasterBoss96("van_thu_vuong")
+  };
+  function isBossSpriteType(typeId) {
+    return Boolean(BOSS_BUILDERS[typeId]);
+  }
+  function getBossSpriteFrames(typeId, state = "idle") {
+    let bundle = BOSS_CACHE.get(typeId);
+    if (!bundle) {
+      const builder = BOSS_BUILDERS[typeId] ?? BOSS_BUILDERS.mac_vo_tam;
+      bundle = builder();
+      BOSS_CACHE.set(typeId, bundle);
+    }
+    return bundle[state] ?? bundle.idle;
+  }
+
+  // src/combat/MonsterArtRegular.js
+  var REGULAR_CACHE = /* @__PURE__ */ new Map();
+  function hash23(x, y) {
+    let h = (x | 0) * 374761393 + (y | 0) * 668265263 ^ 1542469173;
+    h = (h ^ h >> 13) * 1274126177;
+    return Math.abs(h ^ h >> 16);
+  }
+  function paintAnatomy(ctx, W, H, parts, ramp, opts = {}) {
+    const mask = new Uint8Array(W * H);
+    const owner = new Int16Array(W * H);
+    owner.fill(-1);
+    const mode = opts.texture || "smooth";
+    for (let i = 0; i < parts.length; i++) {
+      const pt = parts[i];
+      const minX = Math.max(2, Math.floor(pt.cx - pt.rx - 2));
+      const maxX = Math.min(W - 3, Math.ceil(pt.cx + pt.rx + 2));
+      const minY = Math.max(2, Math.floor(pt.cy - pt.ry - 2));
+      const maxY = Math.min(H - 3, Math.ceil(pt.cy + pt.ry + 2));
+      const cosA = pt.rot ? Math.cos(-pt.rot) : 1;
+      const sinA = pt.rot ? Math.sin(-pt.rot) : 0;
+      for (let py = minY; py <= maxY; py++) {
+        for (let px = minX; px <= maxX; px++) {
+          const dx0 = px - pt.cx;
+          const dy0 = py - pt.cy;
+          const dx = (dx0 * cosA - dy0 * sinA) / Math.max(1, pt.rx);
+          const dy = (dx0 * sinA + dy0 * cosA) / Math.max(1, pt.ry);
+          let dist = Math.hypot(dx, dy);
+          if (mode === "fur") {
+            const ang = Math.atan2(dy, dx);
+            dist -= 0.09 * Math.sin(ang * 8 + i * 1.7) + hash23(px, py) % 3 * 0.028;
+          } else if (mode === "rock") {
+            dist = dist * 0.62 + (Math.abs(dx) + Math.abs(dy)) * 0.28;
+          } else if (mode === "chitin") {
+            dist = dist * 0.8 + Math.max(Math.abs(dx), Math.abs(dy)) * 0.2;
+          }
+          if (dist <= 1) {
+            const idx = py * W + px;
+            mask[idx] = 1;
+            owner[idx] = i;
+          }
+        }
+      }
+    }
+    for (let py = 2; py < H - 2; py++) {
+      for (let px = 2; px < W - 2; px++) {
+        const idx = py * W + px;
+        if (!mask[idx]) continue;
+        const pt = parts[owner[idx]] ?? parts[0];
+        const rx = (px - pt.cx) / Math.max(1, pt.rx);
+        const ry = (py - pt.cy) / Math.max(1, pt.ry);
+        let lum = 0.56 - rx * 0.24 - ry * 0.36 + (pt.bias ?? 0);
+        if (mode === "fur") {
+          lum += (hash23(px >> 1, py) % 5 - 2) * 0.06;
+        } else if (mode === "rock") {
+          lum += (px + py >> 2) % 2 === 0 ? 0.07 : -0.07;
+        } else if (mode === "wart") {
+          if (hash23(px >> 1, py >> 1) % 7 === 0) lum += 0.24;
+        } else if (mode === "scales") {
+          const sc = (px >> 2) + (py >> 1) & 1;
+          lum += sc ? 0.08 : -0.09;
+        } else if (mode === "chitin") {
+          if ((py >> 2 & 1) === 0) lum += 0.1;
+        }
+        const dith = (bayerThreshold(px, py) - 0.5) * 0.16;
+        const val = Math.max(0.05, Math.min(0.99, lum + dith));
+        const si = Math.min(ramp.length - 1, Math.max(1, Math.floor(val * (ramp.length - 1)) + 1));
+        ctx.fillStyle = ramp[si];
+        ctx.fillRect(px, py, 1, 1);
+      }
+    }
+  }
+  function finalizeFrame64(tmpCtx, W, H, topOut, botOut, shadowRx = 14, shadowY = 56, noShadow = false) {
+    applySelectiveOutline(tmpCtx, W, H, topOut, botOut);
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    if (ctx) {
+      if (!noShadow) {
+        fillPixelEllipse(ctx, Math.round(W * 0.5), shadowY, shadowRx, 4, "rgba(6, 8, 12, 0.38)", true);
+      }
+      ctx.drawImage(tmpCtx.canvas, 0, 0);
+    }
+    return {
+      canvas: canvas2,
+      anchorX: Math.round(W * 0.5),
+      anchorY: shadowY,
+      barOffsetY: shadowY - 2
+    };
+  }
+  function makeThreeStates(buildFrameFn) {
+    return {
+      idle: [0, 1, 2, 3].map((f) => buildFrameFn("idle", f)),
+      move: [0, 1, 2, 3].map((f) => buildFrameFn("move", f)),
+      attack: [0, 1, 2, 3].map((f) => buildFrameFn("attack", f))
+    };
+  }
+  function buildWraith64() {
+    const ramp = ["#0b0c1c", "#181d42", "#2b3570", "#4658ab", "#778ee0", "#c9dcff"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const hover = state === "idle" ? f === 1 || f === 2 ? -2 : 0 : state === "move" ? f % 2 === 0 ? -3 : -1 : -2;
+      const lunge = state === "attack" ? f === 1 || f === 2 ? 7 : -2 : state === "move" ? 3 : 0;
+      const ox = 31 + lunge;
+      const oy = 31 + hover;
+      if (state === "move" || state === "attack") {
+        for (let t = 0; t < 12; t++) {
+          const tx = ox - 11 - t % 4 * 3 - hash23(t, f) % 3;
+          const ty = oy - 6 + t * 3 % 24;
+          if (bayerThreshold(tx, ty + f) > 0.36) {
+            plotRect(g, tx, ty, 2, 2, t % 2 === 0 ? "#4658ab" : "#8fb3ff");
+          }
+        }
+      }
+      for (let s = -10; s <= 10; s += 2) {
+        const len = 10 + Math.round(Math.sin((s + f * 3) * 0.45) * 4);
+        const col = Math.abs(s) > 6 ? ramp[1] : Math.abs(s) > 2 ? ramp[2] : ramp[3];
+        for (let k = 0; k < len; k++) {
+          const sx = ox + s - Math.round(k * (lunge > 0 ? 0.45 : 0.2) + Math.sin(k * 0.5 + f) * 1.4);
+          const sy = oy + 12 + k;
+          if (sy < 60 && (k < len - 3 || (s + k + f & 1) === 0)) {
+            plotRect(g, sx, sy, 2, 1, k > len - 4 ? "#6878cf" : col);
+          }
+        }
+      }
+      for (let y = oy - 8; y <= oy + 13; y++) {
+        const t = (y - (oy - 8)) / 21;
+        const hw = Math.round(7 + t * 7);
+        for (let x = ox - hw; x <= ox + hw; x++) {
+          const relX = (x - ox) / Math.max(1, hw);
+          const fold = Math.sin(relX * 7 + f * 0.5) * 0.14;
+          const lum = 0.54 - relX * 0.2 - t * 0.16 + fold + (bayerThreshold(x, y) - 0.5) * 0.15;
+          const si = Math.max(1, Math.min(5, Math.floor(lum * 5) + 1));
+          plotPixel(g, x, y, ramp[si]);
+        }
+      }
+      plotPixelLine(g, ox - 7, oy - 6, ox + 7, oy - 6, "#8862db", 2);
+      plotPixelLine(g, ox - 1, oy - 5, ox - 3, oy + 7, "#b48cff", 2);
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox, cy: oy - 13, rx: 9, ry: 8, bias: 0.04 },
+          { cx: ox - 1, cy: oy - 21, rx: 4, ry: 3, bias: 0.1 }
+        ],
+        ramp,
+        { texture: "smooth" }
+      );
+      plotRect(g, ox - 5, oy - 15, 11, 8, "#080914");
+      plotRect(g, ox - 4, oy - 14, 9, 6, "#b9c4db");
+      plotRect(g, ox - 2, oy - 9, 5, 2, "#8c99b5");
+      plotRect(g, ox - 4, oy - 12, 3, 2, "#6ef7ff");
+      plotRect(g, ox + 2, oy - 12, 3, 2, "#6ef7ff");
+      plotPixel(g, ox - 3, oy - 12, "#ffffff");
+      plotPixel(g, ox + 3, oy - 12, "#ffffff");
+      const clawReach = state === "attack" && (f === 1 || f === 2) ? 9 : state === "move" ? 4 : 1;
+      const clawY = oy - 1 + (state === "attack" && f === 1 ? -4 : 0);
+      plotPixelLine(g, ox - 8, oy - 3, ox - 12, oy + 4, ramp[2], 3);
+      plotPixelLine(g, ox - 12, oy + 4, ox - 15, oy + 6, "#7af5ff", 1);
+      plotPixelLine(g, ox + 6, oy - 4, ox + 13 + clawReach, clawY, ramp[3], 3);
+      for (let c = -1; c <= 1; c++) {
+        plotPixelLine(
+          g,
+          ox + 13 + clawReach,
+          clawY + c * 2,
+          ox + 19 + clawReach,
+          clawY + c * 3,
+          c === 0 ? "#e6ffff" : "#80b8ff",
+          1
+        );
+      }
+      if (state === "attack" && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 16, oy - 14, ox + 26, oy - 2, "#b496ff", 2);
+        plotPixelLine(g, ox + 26, oy - 2, ox + 18, oy + 12, "#80ffff", 2);
+      }
+      return finalizeFrame64(g, 64, 64, "#242c5c", "#070812", 12, 56, true);
+    });
+  }
+  function buildHornetSwarm64() {
+    const bodyRamp = ["#170f06", "#3b230a", "#6e4212", "#b36f1c", "#ebb134", "#ffea8a"];
+    const wingRamp = ["#33546b", "#77b5cf", "#c7f2ff"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const bob = (f % 2 === 0 ? -1 : 1) + (state === "move" ? -2 : 0);
+      const fwd = state === "attack" && (f === 1 || f === 2) ? 6 : 0;
+      const ox = 31 + fwd;
+      const oy = 32 + bob;
+      for (let m = 0; m < 2; m++) {
+        const mx = ox + (m === 0 ? -19 : 16) + (f + m) % 2 * 2;
+        const my = oy + (m === 0 ? -14 : -17) + (f % 2 === 0 ? 1 : -1);
+        plotRect(g, mx - 2, my, 5, 3, "#c47d1c");
+        plotPixel(g, mx, my, "#170f06");
+        plotRect(g, mx - 1, my - 2, 3, 2, "#c7f2ff");
+      }
+      const wSpan = f % 2 === 0 ? 13 : 9;
+      const wLift = f === 0 || f === 2 ? -10 : -5;
+      for (let x = ox - 10; x <= ox + 2; x++) {
+        for (let y = oy + wLift - wSpan; y <= oy - 4; y++) {
+          const d = Math.hypot((x - (ox - 4)) / 7, (y - (oy + wLift - 4)) / wSpan);
+          if (d <= 1 && (bayerThreshold(x, y) > 0.3 || d > 0.82)) {
+            plotPixel(g, x, y, d > 0.8 ? wingRamp[0] : d > 0.45 ? wingRamp[1] : wingRamp[2]);
+          }
+        }
+      }
+      for (let i = 0; i < 14; i++) {
+        const t = i / 13;
+        const bx = ox - 4 - Math.round(t * 14);
+        const by = oy + Math.round(Math.sin(t * Math.PI * 0.8) * 6);
+        const r = Math.max(2, Math.round(Math.sin(t * Math.PI) * 6.5) + 1);
+        const stripe = i % 3 === 0 ? bodyRamp[1] : i % 3 === 1 ? bodyRamp[4] : bodyRamp[3];
+        for (let dy = -r; dy <= r; dy++) {
+          plotPixel(g, bx, by + dy, dy < -1 ? bodyRamp[5] : stripe);
+        }
+      }
+      const stingerLen = state === "attack" && (f === 1 || f === 2) ? 10 : 5;
+      plotPixelLine(g, ox - 18, oy + 5, ox - 18 - stingerLen, oy + 8, "#ff2e4c", 2);
+      plotPixel(g, ox - 19 - stingerLen, oy + 8, "#ffffff");
+      for (let l = 0; l < 3; l++) {
+        const lx = ox - 2 + l * 4;
+        const s = (f + l) % 2 * 2;
+        plotPixelLine(g, lx, oy + 3, lx - 3, oy + 10 + s, "#3b230a", 1);
+        plotPixelLine(g, lx - 3, oy + 10 + s, lx + 1, oy + 14 + s, "#6e4212", 1);
+      }
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox + 2, cy: oy - 1, rx: 8, ry: 7, bias: 0.08 },
+          { cx: ox + 12, cy: oy + 1, rx: 6, ry: 6, bias: 0.05 }
+        ],
+        bodyRamp,
+        { texture: "chitin" }
+      );
+      plotRect(g, ox + 13, oy - 2, 4, 4, "#a81327");
+      plotRect(g, ox + 14, oy - 1, 2, 2, "#ff4d66");
+      plotPixel(g, ox + 15, oy - 1, "#ffffff");
+      plotPixelLine(g, ox + 15, oy + 6, ox + 20, oy + 8, "#ffe4b5", 1);
+      plotPixelLine(g, ox + 13, oy - 5, ox + 19, oy - 10 + f % 2, "#3b230a", 1);
+      if (state === "attack" && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 18, oy + 1, ox + 27, oy + 2, "#ffea8a", 2);
+        plotPixel(g, ox + 28, oy + 2, "#ffffff");
+      }
+      return finalizeFrame64(g, 64, 64, "#3b230a", "#0d0803", 12, 55);
+    });
+  }
+  function buildBoar64() {
+    const ramp = ["#120906", "#26140b", "#452414", "#6b3b20", "#965831", "#c27d4a"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const bob = isAtk ? f === 1 ? 2 : -1 : state === "move" ? f % 2 === 1 ? -2 : 0 : f === 2 ? 1 : 0;
+      const fwd = isAtk ? f === 1 || f === 2 ? 7 : -2 : 0;
+      const ox = 31 + fwd;
+      const oy = 37 + bob;
+      const legF = state === "move" ? f === 1 ? -4 : f === 3 ? 3 : 0 : isAtk ? 3 : 0;
+      const legB = state === "move" ? f === 2 ? -4 : f === 0 ? 3 : 0 : isAtk ? -3 : 0;
+      plotRect(g, ox - 15 + legB, oy + 7, 5, 10, ramp[1]);
+      plotRect(g, ox - 7 - legB, oy + 8, 5, 10, ramp[2]);
+      plotRect(g, ox + 6 + legF, oy + 8, 5, 10, ramp[2]);
+      plotRect(g, ox + 13 - legF, oy + 7, 5, 9, ramp[1]);
+      plotRect(g, ox - 15 + legB, oy + 15, 5, 3, "#090708");
+      plotRect(g, ox + 6 + legF, oy + 16, 5, 3, "#090708");
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox - 9, cy: oy + 1, rx: 12, ry: 9, bias: -0.05 },
+          { cx: ox + 2, cy: oy - 3, rx: 13, ry: 12, bias: 0.1 },
+          { cx: ox + 14, cy: oy + (isAtk ? 4 : 1), rx: 9, ry: 8, bias: 0.08 },
+          { cx: ox + 21, cy: oy + (isAtk ? 6 : 4), rx: 5, ry: 3.5, bias: 0.06 }
+        ],
+        ramp,
+        { texture: "fur" }
+      );
+      plotRect(g, ox + 24, oy + (isAtk ? 4 : 2), 3, 5, "#9e5352");
+      plotPixel(g, ox + 25, oy + (isAtk ? 5 : 3), "#381214");
+      for (let s = 0; s < 6; s++) {
+        const sx = ox - 12 + s * 5;
+        const sy = oy - 10 - Math.round(Math.sin(s * 0.55) * 5);
+        plotPixelLine(g, sx, sy + 4, sx - 2, sy - 3, ramp[1], 2);
+        plotPixel(g, sx - 2, sy - 3, "#ad6e42");
+      }
+      plotRect(g, ox + 9, oy - 7, 4, 5, ramp[2]);
+      plotRect(g, ox + 14, oy - 1 + (isAtk ? 2 : 0), 4, 2, "#ff2a40");
+      plotPixel(g, ox + 17, oy - 1 + (isAtk ? 2 : 0), "#ffe6ea");
+      plotPixelLine(g, ox + 19, oy + 7, ox + 26, oy - 1, "#fff5db", 2);
+      plotPixel(g, ox + 26, oy - 2, "#ffffff");
+      plotPixelLine(g, ox - 20, oy - 1, ox - 25, oy - 5 + f % 2 * 3, ramp[3], 2);
+      if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 24, oy - 4, ox + 30, oy + 4, "#ffffff", 2);
+        plotPixelLine(g, ox + 22, oy + 8, ox + 29, oy + 10, "#ffd15c", 1);
+      }
+      return finalizeFrame64(g, 64, 64, "#29150b", "#080506", 17, 56);
+    });
+  }
+  function buildWolf642(isSnow) {
+    const ramp = isSnow ? ["#0f1824", "#283f57", "#4c6d8f", "#7aa0c4", "#b2d3eb", "#ebfbff"] : ["#081915", "#10332b", "#1a5444", "#2a7d63", "#49b08a", "#7ef7c7"];
+    const auraCol = isSnow ? "#94f2ff" : "#5cf2ff";
+    const eyeCol = isSnow ? "#6bf4ff" : "#40ffec";
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const bob = isAtk ? f === 1 ? -5 : -1 : state === "move" ? f % 2 === 1 ? -2 : 0 : 0;
+      const fwd = isAtk ? f === 1 || f === 2 ? 7 : -2 : 0;
+      const ox = 31 + fwd;
+      const oy = 37 + bob;
+      const wag = state === "move" ? f % 2 === 0 ? -4 : 2 : [-1, -4, 1, -2][f];
+      plotPixelLine(g, ox - 14, oy + 1, ox - 25, oy - 5 + wag, ramp[2], 4);
+      plotPixelLine(g, ox - 20, oy - 2 + Math.round(wag * 0.5), ox - 26, oy - 6 + wag, ramp[4], 2);
+      const sA = state === "move" ? [-4, -1, 3, 1][f] : isAtk ? -4 : 0;
+      const sB = state === "move" ? [3, 1, -4, -1][f] : isAtk ? 5 : 0;
+      plotPixelLine(g, ox - 12, oy + 3, ox - 14 + sA, oy + 15, ramp[1], 3);
+      plotPixelLine(g, ox - 7, oy + 4, ox - 7 + sB, oy + 15, ramp[2], 3);
+      plotPixelLine(g, ox + 6, oy + 3, ox + 9 + sB, oy + 14 + (isAtk ? -3 : 0), ramp[3], 3);
+      plotPixelLine(g, ox + 11, oy + 3, ox + 15 + sA, oy + 14 + (isAtk ? -3 : 0), ramp[2], 3);
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox - 10, cy: oy + 2, rx: 9, ry: 6, bias: -0.06 },
+          { cx: ox + 2, cy: oy - 1, rx: 11, ry: 8.5, bias: 0.08 },
+          { cx: ox + 13, cy: oy - 4, rx: 7.5, ry: 6.5, bias: 0.08 },
+          { cx: ox + 21, cy: oy - 1, rx: 5, ry: 3, bias: 0.05 }
+        ],
+        ramp,
+        { texture: "fur" }
+      );
+      plotPixelLine(g, ox + 9, oy - 8, ox + 7, oy - 15, ramp[3], 3);
+      plotPixelLine(g, ox + 13, oy - 8, ox + 12, oy - 15, ramp[4], 3);
+      plotPixelLine(g, ox - 2, oy - 7, ox + 6, oy - 11 - f % 2, auraCol, 2);
+      plotPixelLine(g, ox + 3, oy - 3, ox - 5, oy + 2, auraCol, 1);
+      if (isSnow) {
+        plotPixelLine(g, ox - 7, oy - 8, ox - 11, oy - 13, "#d9fbff", 2);
+      }
+      plotRect(g, ox + 14, oy - 5, 4, 2, eyeCol);
+      plotPixel(g, ox + 17, oy - 5, "#ffffff");
+      plotRect(g, ox + 19, oy + 1, 2, 3, "#ffffff");
+      plotRect(g, ox + 23, oy + 1, 2, 2, "#ffffff");
+      if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 22, oy - 10, ox + 30, oy - 2, auraCol, 2);
+        plotPixelLine(g, ox + 23, oy - 6, ox + 31, oy + 2, "#ffffff", 1);
+      }
+      return finalizeFrame64(g, 64, 64, isSnow ? "#1c3347" : "#112b24", "#060b0a", 18, 56);
+    });
+  }
+  function buildStoneMonkey642() {
+    const ramp = ["#0e1116", "#232830", "#3a424d", "#55606e", "#768394", "#9eadbf"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const bob = isAtk ? f === 1 ? -4 : f === 2 ? 2 : 0 : state === "move" ? f % 2 === 0 ? -2 : 0 : 0;
+      const ox = 32;
+      const oy = 33 + bob;
+      plotPixelLine(g, ox - 9, oy + 8, ox - 19, oy + 3, ramp[2], 3);
+      plotPixelLine(g, ox - 19, oy + 3, ox - 21, oy - 7 + f % 2 * 2, ramp[4], 2);
+      const lStep = state === "move" ? f === 1 ? -2 : 2 : 0;
+      plotRect(g, ox - 10, oy + 9 + lStep, 7, 11, ramp[2]);
+      plotRect(g, ox + 3, oy + 9 - lStep, 7, 11, ramp[1]);
+      plotRect(g, ox - 10, oy + 17 + lStep, 7, 3, "#1f242b");
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox, cy: oy + 1, rx: 13, ry: 11, bias: 0.06 },
+          { cx: ox, cy: oy - 12, rx: 9, ry: 7.5, bias: 0.1 }
+        ],
+        ramp,
+        { texture: "rock" }
+      );
+      plotRect(g, ox - 11, oy - 14, 3, 5, ramp[3]);
+      plotRect(g, ox + 8, oy - 14, 3, 5, ramp[3]);
+      plotRect(g, ox - 10, oy - 8, 5, 3, "#2a5e39");
+      plotRect(g, ox + 5, oy - 7, 4, 3, "#2a5e39");
+      plotPixelLine(g, ox - 5, oy - 4, ox + 1, oy + 2, "#42f5c5", 1);
+      plotPixelLine(g, ox + 1, oy + 2, ox + 6, oy - 2, "#42f5c5", 1);
+      plotRect(g, ox - 5, oy - 14, 3, 2, "#5ef2d6");
+      plotRect(g, ox + 2, oy - 14, 3, 2, "#5ef2d6");
+      plotPixel(g, ox - 4, oy - 14, "#ffffff");
+      plotPixel(g, ox + 3, oy - 14, "#ffffff");
+      for (const dir of [-1, 1]) {
+        const slam = isAtk ? f === 1 ? -12 : f === 2 ? 7 : 0 : state === "move" ? dir > 0 ? lStep : -lStep : 0;
+        const sx = ox + dir * 12;
+        const fx = ox + dir * 17;
+        const fy = oy + 10 + slam;
+        plotPixelLine(g, sx, oy - 4, fx, fy, ramp[2], 6);
+        plotRect(g, fx - 5, fy - 4, 10, 9, ramp[3]);
+        plotRect(g, fx - 3, fy - 2, 5, 4, ramp[4]);
+        plotRect(g, fx - 2, fy, 4, 2, "#5ef2d6");
+      }
+      if (isAtk && f === 2) {
+        plotPixelLine(g, ox - 20, oy + 19, ox - 10, oy + 21, "#80ffe0", 2);
+        plotPixelLine(g, ox + 10, oy + 21, ox + 20, oy + 19, "#80ffe0", 2);
+      }
+      return finalizeFrame64(g, 64, 64, "#1c242e", "#07090d", 17, 56);
+    });
+  }
+  function buildPoisonToad642() {
+    const ramp = ["#0a190c", "#183b1a", "#2a6328", "#448f38", "#6ec24f", "#a3f26b"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const hop = state === "move" ? f === 1 ? -6 : f === 2 ? -3 : 0 : isAtk ? f === 1 ? -3 : 0 : 0;
+      const ox = 32;
+      const oy = 40 + hop;
+      const swell = isAtk && (f === 1 || f === 2) ? 1.3 : f === 2 || f === 3 ? 1.15 : 1;
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox - 14, cy: oy + 5, rx: 7, ry: 5, rot: -0.35 },
+          { cx: ox + 14, cy: oy + 5, rx: 7, ry: 5, rot: 0.35 }
+        ],
+        ramp,
+        { texture: "wart" }
+      );
+      plotRect(g, ox - 12, oy + 7, 5, 7, ramp[2]);
+      plotRect(g, ox + 7, oy + 7, 5, 7, ramp[2]);
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox, cy: oy, rx: 17, ry: 11, bias: 0.04 },
+          { cx: ox - 7, cy: oy - 11, rx: 5, ry: 4, bias: 0.14 },
+          { cx: ox + 7, cy: oy - 11, rx: 5, ry: 4, bias: 0.14 }
+        ],
+        ramp,
+        { texture: "wart" }
+      );
+      fillPixelEllipse(g, ox, oy + 6, Math.round(11 * swell), Math.round(5 * swell), "#7be866", true);
+      plotRect(g, ox - 10, oy - 7, 4, 3, "#8f3ec4");
+      plotRect(g, ox + 6, oy - 6, 4, 3, "#8f3ec4");
+      plotRect(g, ox - 2, oy - 9, 5, 3, "#bf66ff");
+      plotRect(g, ox - 9, oy - 12, 4, 3, "#ffe15c");
+      plotRect(g, ox + 5, oy - 12, 4, 3, "#ffe15c");
+      plotRect(g, ox - 8, oy - 11, 1, 2, "#0a080c");
+      plotRect(g, ox + 6, oy - 11, 1, 2, "#0a080c");
+      for (let b = 0; b < 3; b++) {
+        const bx = ox + (b - 1) * 9 + (f + b) % 2 * 2;
+        const by = oy - 16 - (f * 4 + b * 5) % 13;
+        plotRect(g, bx - 1, by - 1, 3, 3, "#9cff78");
+        plotPixel(g, bx - 1, by - 1, "#ffffff");
+      }
+      if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox, oy + 4, ox + 12, oy + 2, "#a3ff75", 3);
+        plotRect(g, ox + 12, oy, 5, 5, "#d8ffbd");
+      }
+      return finalizeFrame64(g, 64, 64, "#1e381c", "#070b07", 19, 56);
+    });
+  }
+  function buildScorpion642() {
+    const ramp = ["#0e1117", "#232a36", "#3a4557", "#586780", "#7d8fa8", "#b0c3db"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const bob = state === "move" && f % 2 === 1 ? -1 : 0;
+      const ox = 31 + (isAtk && (f === 1 || f === 2) ? 4 : 0);
+      const oy = 38 + bob;
+      for (let l = 0; l < 3; l++) {
+        const lx = ox - 10 + l * 7;
+        const step = state === "move" ? (f + l) % 2 * 3 : f % 2;
+        plotPixelLine(g, lx, oy + 4, lx - 5, oy + 12 + step, ramp[2], 2);
+        plotPixelLine(g, lx, oy - 3, lx - 3, oy - 9 - step, ramp[1], 2);
+      }
+      const strikeX = isAtk && (f === 1 || f === 2) ? 11 : f === 1 ? -2 : 0;
+      const strikeY = isAtk && (f === 1 || f === 2) ? 6 : 0;
+      plotPixelLine(g, ox - 13, oy, ox - 21, oy - 13, ramp[3], 5);
+      plotPixelLine(g, ox - 21, oy - 13, ox - 8 + strikeX, oy - 21 + strikeY, ramp[4], 4);
+      plotPixelLine(g, ox - 8 + strikeX, oy - 21 + strikeY, ox + 5 + strikeX, oy - 16 + strikeY, "#5ef2d6", 3);
+      plotPixel(g, ox + 6 + strikeX, oy - 15 + strikeY, "#ffffff");
+      const snap = isAtk && f === 2 ? -2 : 0;
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox - 3, cy: oy, rx: 13, ry: 7.5, bias: 0.05 },
+          { cx: ox + 16, cy: oy - 4 - snap, rx: 6.5, ry: 3.5, rot: -0.25, bias: 0.1 },
+          { cx: ox + 16, cy: oy + 6 + snap, rx: 6.5, ry: 3.5, rot: 0.25, bias: 0.1 }
+        ],
+        ramp,
+        { texture: "chitin" }
+      );
+      plotRect(g, ox + 7, oy - 2, 3, 2, "#ff385c");
+      plotRect(g, ox + 7, oy + 2, 3, 2, "#ff385c");
+      plotPixel(g, ox + 20, oy - 3 - snap, "#cbd5e1");
+      plotPixel(g, ox + 20, oy + 5 + snap, "#cbd5e1");
+      return finalizeFrame64(g, 64, 64, "#1c2536", "#07090d", 19, 56);
+    });
+  }
+  function buildWaterSerpent64() {
+    const ramp = ["#061924", "#0c384f", "#156380", "#269cb8", "#5ad4e6", "#b8fbff"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const sway = state === "move" ? [0, 3, 0, -3][f] : [0, 2, 0, -2][f];
+      const strike = isAtk && (f === 1 || f === 2) ? 8 : 0;
+      const ox = 31;
+      const oy = 42;
+      const segs = 28;
+      for (let i = 0; i < segs; i++) {
+        const t = i / (segs - 1);
+        const sx = ox - 18 + Math.round(t * 28 + Math.sin(t * 4.8 + f * 0.6) * (6 + sway * 0.5)) + Math.round(t * strike);
+        const sy = oy + 8 - Math.round(Math.pow(t, 1.35) * 24 + Math.cos(t * 5.2 + f * 0.6) * 4);
+        const r = t < 0.25 ? 2 + Math.round(t * 10) : t > 0.85 ? 4 : 5;
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (dx * dx + dy * dy <= r * r) {
+              const belly = dy > r * 0.35;
+              const scaleSpot = ((sx >> 1) + (sy >> 1) & 1) === 0;
+              const col = belly ? "#8cdbe3" : dy < -1 ? ramp[4] : scaleSpot ? ramp[3] : ramp[2];
+              plotPixel(g, sx + dx, sy + dy, col);
+            }
+          }
+        }
+      }
+      const hx = ox + 11 + strike;
+      const hy = oy - 16 + (isAtk ? 2 : 0);
+      plotPixelLine(g, hx - 5, hy - 3, hx - 11, hy - 11, "#4de8d9", 3);
+      plotPixelLine(g, hx - 4, hy + 2, hx - 11, hy + 8, "#3aa8e8", 3);
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: hx, cy: hy, rx: 7, ry: 5, bias: 0.1 },
+          { cx: hx + 6, cy: hy + 1, rx: 4, ry: 2.5, bias: 0.14 }
+        ],
+        ramp,
+        { texture: "scales" }
+      );
+      plotRect(g, hx + 2, hy - 2, 3, 2, "#ffe15c");
+      plotPixel(g, hx + 3, hy - 2, "#07090d");
+      if (f % 2 === 1 || isAtk) {
+        plotPixelLine(g, hx + 10, hy + 1, hx + 16, hy + 1, "#ff385c", 1);
+        plotPixel(g, hx + 17, hy, "#ff385c");
+        plotPixel(g, hx + 17, hy + 2, "#ff385c");
+      }
+      return finalizeFrame64(g, 64, 64, "#124259", "#051017", 16, 56);
+    });
+  }
+  function buildBambooPuppet64() {
+    const ramp = ["#0b2117", "#184732", "#297552", "#42ab78", "#74e0a8", "#ccffea"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const bob = state === "move" && f % 2 === 1 ? -1 : 0;
+      const ox = 32;
+      const oy = 34 + bob;
+      const lS = state === "move" ? f === 1 ? -3 : f === 3 ? 3 : 0 : 0;
+      plotRect(g, ox - 6, oy + 11 + lS, 4, 10, ramp[2]);
+      plotRect(g, ox + 2, oy + 11 - lS, 4, 10, ramp[1]);
+      plotRect(g, ox - 6, oy + 15 + lS, 4, 1, "#c93838");
+      plotRect(g, ox + 2, oy + 15 - lS, 4, 1, "#c93838");
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox, cy: oy + 2, rx: 8, ry: 10, bias: 0.06 },
+          { cx: ox, cy: oy - 10, rx: 6, ry: 6, bias: 0.08 }
+        ],
+        ramp,
+        { texture: "chitin" }
+      );
+      plotRect(g, ox - 7, oy - 1, 14, 2, "#b82e3c");
+      plotRect(g, ox - 3, oy + 3, 6, 3, "#5ef2d6");
+      plotPixelLine(g, ox - 14, oy - 12, ox, oy - 21, "#4e6b3d", 3);
+      plotPixelLine(g, ox + 14, oy - 12, ox, oy - 21, "#6c9152", 3);
+      plotRect(g, ox - 12, oy - 14, 24, 3, "#364f2a");
+      plotRect(g, ox - 4, oy - 9, 2, 2, "#80ffdb");
+      plotRect(g, ox + 2, oy - 9, 2, 2, "#80ffdb");
+      const swAng = isAtk && (f === 1 || f === 2) ? 1 : 0;
+      if (swAng) {
+        plotPixelLine(g, ox + 7, oy + 2, ox + 26, oy - 2, "#b8fff0", 3);
+        plotPixelLine(g, ox + 20, oy - 13, ox + 28, oy + 1, "#5ef2d6", 2);
+        plotPixelLine(g, ox + 28, oy + 1, ox + 20, oy + 13, "#ffffff", 1);
+      } else {
+        plotPixelLine(g, ox + 8, oy + 4, ox + 20, oy - 12, "#8be8ba", 2);
+        plotPixel(g, ox + 20, oy - 12, "#ffffff");
+      }
+      return finalizeFrame64(g, 64, 64, "#153626", "#06120c", 13, 56);
+    });
+  }
+  function buildLavaBeetle64() {
+    const ramp = ["#120908", "#2b120e", "#4f1d14", "#7d2d1a", "#c95322", "#ffa438"];
+    return makeThreeStates((state, f) => {
+      const tmp = createPixelCanvas(64, 64);
+      const g = tmp.ctx;
+      const isAtk = state === "attack";
+      const fwd = isAtk && (f === 1 || f === 2) ? 6 : 0;
+      const bob = state === "move" && f % 2 === 1 ? -1 : 0;
+      const ox = 30 + fwd;
+      const oy = 38 + bob;
+      for (let l = 0; l < 3; l++) {
+        const lx = ox - 11 + l * 8;
+        const sh = state === "move" ? (f + l) % 2 * 3 : 0;
+        plotPixelLine(g, lx, oy + 5, lx - 4, oy + 14 + sh, ramp[2], 2);
+      }
+      paintAnatomy(
+        g,
+        64,
+        64,
+        [
+          { cx: ox - 3, cy: oy, rx: 15, ry: 10, bias: 0.04 },
+          { cx: ox + 12, cy: oy + 2, rx: 8, ry: 7, bias: 0.08 }
+        ],
+        ramp,
+        { texture: "rock" }
+      );
+      plotPixelLine(g, ox - 12, oy - 2, ox - 3, oy - 6, "#ff9924", 2);
+      plotPixelLine(g, ox - 3, oy - 6, ox + 5, oy - 1, "#ffe86b", 1);
+      plotPixelLine(g, ox - 6, oy + 2, ox + 3, oy + 4, "#ff621f", 1);
+      plotPixelLine(g, ox + 16, oy + 4, ox + 26, oy - 3, "#4a1b12", 4);
+      plotPixelLine(g, ox + 26, oy - 3, ox + 23, oy - 10, "#ff7b29", 2);
+      plotPixel(g, ox + 23, oy - 11, "#fff29c");
+      plotRect(g, ox + 13, oy - 2, 3, 2, "#fff066");
+      plotRect(g, ox - 4 + f % 3 * 3, oy - 14 - f * 2, 2, 2, "#ffe066");
+      if (isAtk && (f === 1 || f === 2)) {
+        plotPixelLine(g, ox + 24, oy - 5, ox + 31, oy + 2, "#ffaa33", 2);
+      }
+      return finalizeFrame64(g, 64, 64, "#3b150e", "#0a0404", 18, 56);
+    });
+  }
+  function getRegularMonsterFrames(typeId, state = "idle") {
+    let bundle = REGULAR_CACHE.get(typeId);
+    if (!bundle) {
+      if (typeId === "mong_canh_ma_anh") bundle = buildWraith64();
+      else if (typeId === "ong_mat_rung") bundle = buildHornetSwarm64();
+      else if (typeId === "lon_rung") bundle = buildBoar64();
+      else if (typeId === "hao_dien_lang") bundle = buildWolf642(false);
+      else if (typeId === "soi_tuyet") bundle = buildWolf642(true);
+      else if (typeId === "thach_hau") bundle = buildStoneMonkey642();
+      else if (typeId === "coc_doc_hac_thuy") bundle = buildPoisonToad642();
+      else if (typeId === "thiet_giap_bo_cap") bundle = buildScorpion642();
+      else if (typeId === "thuy_mang") bundle = buildWaterSerpent64();
+      else if (typeId === "kiem_truc_yeu") bundle = buildBambooPuppet64();
+      else if (typeId === "xich_viem_thu") bundle = buildLavaBeetle64();
+      else bundle = buildWraith64();
+      REGULAR_CACHE.set(typeId, bundle);
+    }
+    return bundle[state] ?? bundle.idle;
+  }
+
   // src/combat/MonsterSpriteBuilder.js
-  function getMonsterSpriteFrames(typeId) {
+  function getMonsterSpriteFrames(typeId, state = "idle") {
     if (typeId === "ban_long_thach_ve") return bakeBanLongSentinelFrames();
-    return bakeMonsterFrames64(typeId);
+    if (typeId === "coc_thao_nhan") return bakeMonsterFrames64("coc_thao_nhan");
+    if (isBossSpriteType(typeId)) return getBossSpriteFrames(typeId, state);
+    return getRegularMonsterFrames(typeId, state);
   }
   function drawBanLongBossPixelArt(ctx, boss, time, breathWarn = 0) {
     return drawBanLongCoilingBoss(ctx, boss, time, breathWarn);
@@ -17307,6 +18851,9 @@
         slowFactor: 0,
         stunTimer: 0,
         hurtFlash: 0,
+        animState: "idle",
+        attackAnimTimer: 0,
+        telegraphAnimTimer: 0,
         ...extra
       };
       if (typeId === "van_thu_ban_long") {
@@ -17701,6 +19248,7 @@
             plot.state = "growing";
             plot.seedId = seed.id;
             plot.timer = seed.itemDef.growTime ?? 32;
+            plot.maxTimer = plot.timer;
             plot.watered = false;
             this.sfx?.play("pickup");
             this.addFloatingText(g.x, g.y - 18, `\u0110\xE3 gieo ${seed.itemDef.name}! (${plot.timer}s)`, "#4de0c9");
@@ -17710,6 +19258,7 @@
               return false;
             }
             plot.watered = true;
+            plot.maxTimer = Math.max(4, Math.round((plot.maxTimer ?? plot.timer ?? 32) * 0.65));
             plot.timer = Math.max(4, Math.round(plot.timer * 0.65));
             this.sfx?.play("pickup");
             this.addFloatingText(g.x, g.y - 18, `T\u01B0\u1EDBi Linh Tuy\u1EC1n: c\xF2n ${Math.ceil(plot.timer)}s!`, "#5ef2d6");
@@ -17729,6 +19278,7 @@
             plot.state = "empty";
             plot.seedId = null;
             plot.timer = 0;
+            plot.maxTimer = 32;
             plot.watered = false;
             this.sfx?.play("fusionSuccess");
             this.addFloatingText(g.x, g.y - 20, `Thu ho\u1EA1ch ${seedDef.name}${bonusMsg}!`, "#4de0c9");
@@ -18758,6 +20308,8 @@
         const e = this.enemies[i];
         e.animTime += dt;
         if (e.hurtFlash > 0) e.hurtFlash = Math.max(0, e.hurtFlash - dt);
+        if (e.attackAnimTimer > 0) e.attackAnimTimer = Math.max(0, e.attackAnimTimer - dt);
+        if (e.telegraphAnimTimer > 0) e.telegraphAnimTimer = Math.max(0, e.telegraphAnimTimer - dt);
         if (e.poisonTimer > 0) {
           e.poisonTimer -= dt;
           e.hp -= e.poisonDps * dt;
@@ -18775,9 +20327,13 @@
         }
         if (e.stunTimer > 0) {
           e.stunTimer -= dt;
+          e.animState = "idle";
           continue;
         }
-        if (e.ai === "dummy") continue;
+        if (e.ai === "dummy") {
+          e.animState = "idle";
+          continue;
+        }
         if (e.ai === "ban_long_boss") {
           this._updateBanLongBoss(e, dt, events);
           continue;
@@ -18786,6 +20342,8 @@
           this._updateThienTriNguVuong(e, dt, events);
           continue;
         }
+        const prevEx = e.x;
+        const prevEy = e.y;
         if (e.passive && e.provoked) {
           e.provokedTimer = (e.provokedTimer ?? 0) - dt;
           if (e.provokedTimer <= 0 && Math.hypot(this.player.x - e.x, this.player.y - e.y) > 150) {
@@ -18820,6 +20378,8 @@
             e.y = resWander.y;
           }
           e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.04 * dt);
+          const movedW = Math.hypot(e.x - prevEx, e.y - prevEy) > 0.05;
+          e.animState = e.attackAnimTimer > 0 ? "attack" : movedW ? "move" : "idle";
           continue;
         }
         const dx = this.player.x - e.x;
@@ -18832,13 +20392,16 @@
           const hy = e.homeY - e.y;
           const hd = Math.hypot(hx, hy);
           if (hd > 12) {
+            e.facingLeft = hx < 0;
             e.x += hx / hd * e.speed * 0.72 * dt;
             e.y += hy / hd * e.speed * 0.72 * dt;
             const resHome = resolveWorldMovement(mapDef, e.x, e.y, e.radius, (k) => getPropSprite(k));
             e.x = resHome.x;
             e.y = resHome.y;
-          } else if (e.passive) {
-            e.provoked = false;
+            e.animState = "move";
+          } else {
+            if (e.passive) e.provoked = false;
+            e.animState = "idle";
           }
           continue;
         }
@@ -18852,6 +20415,7 @@
           e.aiTimer -= dt;
           if (e.aiTimer <= 0) {
             e.aiTimer = 2;
+            e.attackAnimTimer = 0.36;
             const a = Math.atan2(dy, dx);
             this.enemyProjectiles.push({ x: e.x, y: e.y - 6, vx: Math.cos(a) * 125, vy: Math.sin(a) * 125, radius: 5, damage: e.damage, color: e.projColor ?? "#ff5e6c", life: 2.2 });
           }
@@ -18870,8 +20434,10 @@
             const ang = Math.atan2(dy, dx);
             e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
             if (e.bossPattern === 0) {
-              this.addFloatingText(e.x, e.y - 44, `\u26A1 ${e.shortName || "Th\xFA V\u01B0\u01A1ng"} T\u1EE5 L\u1EF1c \u0110\u1ECBa Ch\u1EA5n!`, "#ffd257");
+              e.telegraphAnimTimer = 1.05;
+              this.addFloatingText(e.x, e.y - 52, `\u26A1 ${e.shortName || "Th\xFA V\u01B0\u01A1ng"} T\u1EE5 L\u1EF1c \u0110\u1ECBa Ch\u1EA5n!`, "#ffd257");
               this.enemyTelegraphs.push({
+                ownerId: e.id,
                 shape: "circle",
                 x: this.player.x,
                 y: this.player.y,
@@ -18883,8 +20449,10 @@
                 shakeAmp: 3
               });
             } else if (e.bossPattern === 1) {
-              this.addFloatingText(e.x, e.y - 44, `\u26A1 Qu\xE9t Di\u1EC7n R\u1ED9ng! N\xE9!`, "#ff8c42");
+              e.telegraphAnimTimer = 0.95;
+              this.addFloatingText(e.x, e.y - 52, `\u26A1 Qu\xE9t Di\u1EC7n R\u1ED9ng! N\xE9!`, "#ff8c42");
               this.enemyTelegraphs.push({
+                ownerId: e.id,
                 shape: "cone",
                 x: e.x,
                 y: e.y - 4,
@@ -18900,8 +20468,10 @@
                 shakeAmp: 2.5
               });
             } else {
-              this.addFloatingText(e.x, e.y - 44, `\u26A1 Xung K\xEDch Tuy\u1EBFn Th\u1EB3ng!`, "#ff6b78");
+              e.telegraphAnimTimer = 1;
+              this.addFloatingText(e.x, e.y - 52, `\u26A1 Xung K\xEDch Tuy\u1EBFn Th\u1EB3ng!`, "#ff6b78");
               this.enemyTelegraphs.push({
+                ownerId: e.id,
                 shape: "wave_rect",
                 x: e.x,
                 y: e.y - 4,
@@ -18920,6 +20490,7 @@
           }
         }
         if (dist <= this.player.radius + e.radius) {
+          e.attackAnimTimer = Math.max(e.attackAnimTimer ?? 0, 0.36);
           const dealt = this.player.takeDamage(e.damage, events);
           if (dealt > 0) {
             const thorns = this.player.getThornsRatio();
@@ -18930,11 +20501,17 @@
             }
           }
         }
+        const moved = Math.hypot(e.x - prevEx, e.y - prevEy) > 0.05;
+        e.animState = e.attackAnimTimer > 0 ? "attack" : e.telegraphAnimTimer > 0 ? "telegraph" : moved ? "move" : "idle";
       }
       for (let i = this.enemyTelegraphs.length - 1; i >= 0; i--) {
         const tg = this.enemyTelegraphs[i];
         tg.t += dt;
         if (tg.t >= tg.dur) {
+          if (tg.ownerId) {
+            const owner = this.enemies.find((x) => x.id === tg.ownerId);
+            if (owner) owner.attackAnimTimer = 0.48;
+          }
           if (tg.shape === "wave_rect") {
             const dx = this.player.x - tg.x;
             const dy = this.player.y - tg.y;
@@ -19105,6 +20682,7 @@
     _updateThienTriNguVuong(e, dt, events) {
       if ((e.chargeDashTimer ?? 0) > 0) {
         e.chargeDashTimer -= dt;
+        e.animState = "attack";
         e.x += (e.dashVx ?? 0) * dt;
         e.y += (e.dashVy ?? 0) * dt;
         if (Math.hypot(this.player.x - e.x, this.player.y - e.y) <= this.player.radius + 32) {
@@ -19119,15 +20697,20 @@
       e.x = e.homeX + Math.sin(this.time * (activeFight ? 1.15 : 0.75)) * (activeFight ? 54 : 42);
       e.y = e.homeY + Math.cos(this.time * (activeFight ? 0.9 : 0.6)) * (activeFight ? 26 : 18);
       e.facingLeft = dx < 0;
-      if (!activeFight) return;
+      if (!activeFight) {
+        e.animState = "idle";
+        return;
+      }
       e.aiTimer = (e.aiTimer ?? 2.8) - dt;
       if (e.aiTimer <= 0) {
         e.aiTimer = 3.4;
         const ang = Math.atan2(dy, dx);
         e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
         if (e.bossPattern === 0) {
-          this.addFloatingText(e.x, e.y - 52, "\u{1F30A} Ng\u01B0 V\u01B0\u01A1ng Qu\u1EABy \u0110u\xF4i: Th\u1EE7y Tri\u1EC1u Cu\u1ED9n Tr\xE0o!", "#5ef2d6");
+          e.telegraphAnimTimer = 1.15;
+          this.addFloatingText(e.x, e.y - 62, "\u{1F30A} Ng\u01B0 V\u01B0\u01A1ng Qu\u1EABy \u0110u\xF4i: Th\u1EE7y Tri\u1EC1u Cu\u1ED9n Tr\xE0o!", "#5ef2d6");
           this.enemyTelegraphs.push({
+            ownerId: e.id,
             shape: "wave_rect",
             x: e.x,
             y: e.y,
@@ -19144,8 +20727,10 @@
             shakeAmp: 3.2
           });
         } else if (e.bossPattern === 1) {
-          this.addFloatingText(e.x, e.y - 52, "\u26A1 L\xE2n Quang Th\u1EE7y K\xECnh!", "#87ffeb");
+          e.telegraphAnimTimer = 1.05;
+          this.addFloatingText(e.x, e.y - 62, "\u26A1 L\xE2n Quang Th\u1EE7y K\xECnh!", "#87ffeb");
           this.enemyTelegraphs.push({
+            ownerId: e.id,
             shape: "cone",
             x: e.x,
             y: e.y,
@@ -19161,8 +20746,10 @@
             shakeAmp: 2.5
           });
         } else {
-          this.addFloatingText(e.x, e.y - 52, "\u{1F4A7} Ng\u01B0 V\u01B0\u01A1ng X\xE9 N\u01B0\u1EDBc!", "#ffd257");
+          e.telegraphAnimTimer = 0.95;
+          this.addFloatingText(e.x, e.y - 62, "\u{1F4A7} Ng\u01B0 V\u01B0\u01A1ng X\xE9 N\u01B0\u1EDBc!", "#ffd257");
           this.enemyTelegraphs.push({
+            ownerId: e.id,
             shape: "wave_rect",
             x: e.x,
             y: e.y,
@@ -19183,6 +20770,7 @@
           e.dashVy = Math.sin(ang) * 165;
         }
       }
+      e.animState = e.attackAnimTimer > 0 ? "attack" : e.telegraphAnimTimer > 0 ? "telegraph" : "idle";
     }
     _updateBanLongBoss(b, dt, events) {
       const bloodCount = this.banLongPillars.filter((p) => p.alive && p.kind === "blood").length;
@@ -19319,23 +20907,26 @@
       ctx.restore();
     }
     _renderSinglePhantom(ctx, ph) {
+      const cx = Math.round(ph.x);
+      const cy = Math.round(ph.y - 12);
+      const dir = (ph.vx ?? 1) >= 0 ? 1 : -1;
       ctx.save();
-      ctx.globalAlpha = 0.78;
-      fillPixelEllipse(ctx, ph.x, ph.y - 12, 12, 10, ph.color, true);
-      plotPixelEllipse(ctx, ph.x, ph.y - 12, 12, 10, "#ffffff");
+      ctx.globalAlpha = 0.85;
+      plotRect(ctx, cx - 10, cy - 6, 20, 12, "#07090d");
+      plotRect(ctx, cx - 9, cy - 5, 18, 10, ph.color || "#ff9e5e");
+      plotRect(ctx, cx + dir * 3, cy - 7, 7, 5, "#ffffff");
+      plotPixelLine(ctx, cx - dir * 8, cy - 2, cx - dir * 16, cy - 6, ph.color || "#ff9e5e", 2);
+      plotPixelLine(ctx, cx - dir * 8, cy + 2, cx - dir * 15, cy + 5, "#fff4bd", 2);
       ctx.restore();
     }
     _renderSingleEnemy(ctx, e) {
       const isSelected = e.id === this.selectedTargetId;
-      if (isSelected) {
-        plotPixelEllipse(ctx, e.x, e.y + 3, e.radius + 7, 7, "#ffd257", 3, Math.floor(this.time * 6));
-      }
       if (e.typeId === "van_thu_ban_long") {
         drawBanLongBossPixelArt(ctx, e, this.time, this.banLongBreathWarn);
         return;
       }
-      const frames = getMonsterSpriteFrames(e.typeId);
-      const frameIdx = Math.floor(e.animTime * 5) % frames.length;
+      const frames = getMonsterSpriteFrames(e.typeId, e.animState || "idle");
+      const frameIdx = Math.floor(e.animTime * 6) % frames.length;
       const frm = frames[frameIdx] ?? frames[0];
       if (frm) {
         ctx.save();
@@ -19347,7 +20938,7 @@
         ctx.restore();
       }
       const pct = Math.max(0, Math.min(1, e.hp / e.maxHp));
-      const bw = Math.max(32, e.radius * 2 + 4);
+      const bw = Math.max(34, e.radius * 2 + 8);
       const barY = Math.round(e.y - (frm?.barOffsetY ?? 52));
       const isCalmPassive = Boolean(e.passive && !e.provoked);
       plotRect(ctx, Math.round(e.x - bw * 0.5) - 1, barY - 1, bw + 2, 5, "#06080d");
@@ -19356,6 +20947,14 @@
       ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
       const nameCol = e.tier === "B\xE1ch th\xFA v\u01B0\u01A1ng" || e.tier === "Thi\xEAn th\xFA v\u01B0\u01A1ng" ? "#ff9e5e" : isCalmPassive ? "#cbd5e1" : "#ffffff";
       drawCrispPixelText(ctx, e.name, Math.round(e.x), barY - 4, nameCol, "#06080d");
+      if (isSelected) {
+        const mx = Math.round(e.x);
+        const my = barY - 17 + Math.round(Math.sin(this.time * 6) * 2);
+        plotRect(ctx, mx - 3, my - 3, 6, 4, "#06080d");
+        plotRect(ctx, mx - 2, my - 2, 4, 3, "#ffd257");
+        plotRect(ctx, mx - 1, my + 1, 2, 2, "#ffd257");
+        plotRect(ctx, mx - 1, my - 1, 2, 2, "#ffffff");
+      }
     }
     _renderRemotePlayer(ctx, rp) {
       const rpSheets = getCharacterSheets(rp.appearance);
