@@ -45,7 +45,7 @@ function patchInfoPlist() {
 
   let plist = readFileSync(INFO_PLIST_PATH, "utf8");
 
-  const orientArray = `<array>\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t\t<string>UIInterfaceOrientationLandscapeLeft</string>\n\t\t<string>UIInterfaceOrientationLandscapeRight</string>\n\t</array>`;
+  const orientArray = `<array>\n\t\t<string>UIInterfaceOrientationLandscapeLeft</string>\n\t\t<string>UIInterfaceOrientationLandscapeRight</string>\n\t</array>`;
 
   plist = setOrReplacePlistKey(plist, "CFBundleDisplayName", "<string>Cổ Tiên Lộ</string>");
   plist = setOrReplacePlistKey(plist, "UISupportedInterfaceOrientations", orientArray);

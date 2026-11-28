@@ -20612,8 +20612,8 @@
         ft.y -= 18 * dt;
         if (ft.life <= 0) this.floatingTexts.splice(i, 1);
       }
-      const viewW = GAME_WIDTH / (renderer2?.zoom || 1);
-      const viewH = GAME_HEIGHT / (renderer2?.zoom || 1);
+      const viewW = (renderer2?.width || GAME_WIDTH) / (renderer2?.zoom || 1);
+      const viewH = (renderer2?.height || GAME_HEIGHT) / (renderer2?.zoom || 1);
       const maxCamX = mapDef.width - viewW;
       const maxCamY = mapDef.height - viewH;
       const targetCamX = maxCamX <= 0 ? maxCamX * 0.5 : Math.max(0, Math.min(maxCamX, this.player.x - viewW * 0.5));
@@ -20821,12 +20821,14 @@
       const mapDef = this.getMapDef();
       renderer2.clear("#0b0d0a");
       const z = renderer2.zoom || 1;
+      const viewW = renderer2.width || GAME_WIDTH;
+      const viewH = renderer2.height || GAME_HEIGHT;
       const shakeX = this.shakeTimer > 0 ? Math.round((Math.random() * 2 - 1) * this.shakeAmp) : 0;
       const shakeY = this.shakeTimer > 0 ? Math.round((Math.random() * 2 - 1) * this.shakeAmp) : 0;
       ctx.save();
-      ctx.translate(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5);
+      ctx.translate(viewW * 0.5, viewH * 0.5);
       ctx.scale(z, z);
-      ctx.translate(-GAME_WIDTH * 0.5 - Math.round(this.camera.x) + shakeX, -GAME_HEIGHT * 0.5 - Math.round(this.camera.y) + shakeY);
+      ctx.translate(-viewW * 0.5 - Math.round(this.camera.x) + shakeX, -viewH * 0.5 - Math.round(this.camera.y) + shakeY);
       this.mapRenderer.renderMapBase(
         ctx,
         mapDef,
@@ -21200,11 +21202,24 @@
       const parent = this.canvas.parentElement;
       const vw = parent ? parent.clientWidth : window.innerWidth;
       const vh = parent ? parent.clientHeight : window.innerHeight;
-      const cssW = vw > 0 ? vw : this.width;
-      const cssH = vh > 0 ? vh : this.height;
-      if (this.canvas.width !== GAME_WIDTH || this.canvas.height !== GAME_HEIGHT) {
-        this.canvas.width = GAME_WIDTH;
-        this.canvas.height = GAME_HEIGHT;
+      const cssW = vw > 0 ? vw : GAME_WIDTH;
+      const cssH = vh > 0 ? vh : GAME_HEIGHT;
+      const aspect = cssW / Math.max(1, cssH);
+      let targetGameW = GAME_WIDTH;
+      let targetGameH = GAME_HEIGHT;
+      if (aspect >= 1) {
+        targetGameH = GAME_HEIGHT;
+        targetGameW = Math.max(720, Math.min(1440, Math.round(GAME_HEIGHT * aspect)));
+      } else {
+        targetGameW = GAME_WIDTH;
+        targetGameH = Math.max(540, Math.min(1800, Math.round(GAME_WIDTH / Math.max(0.4, aspect))));
+      }
+      if (this.canvas.width !== targetGameW || this.canvas.height !== targetGameH) {
+        this.canvas.width = targetGameW;
+        this.canvas.height = targetGameH;
+        this.width = targetGameW;
+        this.height = targetGameH;
+        this._vignetteCanvas = null;
       }
       if (this.labelCanvas && this.labelCtx) {
         const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -21217,13 +21232,13 @@
         this.ctx.__labelOverlay = {
           ctx: this.labelCtx,
           dpr,
-          scaleX: targetW / GAME_WIDTH,
-          scaleY: targetH / GAME_HEIGHT
+          scaleX: targetW / this.width,
+          scaleY: targetH / this.height
         };
       }
-      const coverScale = Math.max(cssW / GAME_WIDTH, cssH / GAME_HEIGHT);
-      const offsetX = (cssW - GAME_WIDTH * coverScale) * 0.5;
-      const offsetY = (cssH - GAME_HEIGHT * coverScale) * 0.5;
+      const coverScale = Math.max(cssW / this.width, cssH / this.height);
+      const offsetX = (cssW - this.width * coverScale) * 0.5;
+      const offsetY = (cssH - this.height * coverScale) * 0.5;
       this._view = { cssW, cssH, coverScale, offsetX, offsetY };
       return this._view;
     }
@@ -21245,8 +21260,8 @@
         return { x: this.width * 0.5, y: this.height * 0.5 };
       }
       return {
-        x: (clientX - rect.left) / rect.width * GAME_WIDTH,
-        y: (clientY - rect.top) / rect.height * GAME_HEIGHT
+        x: (clientX - rect.left) / rect.width * this.width,
+        y: (clientY - rect.top) / rect.height * this.height
       };
     }
     clientToWorld(clientX, clientY, camera = { x: 0, y: 0 }) {
@@ -21267,8 +21282,8 @@
       const gx = (worldX - (camera?.x ?? 0) - cx) * z + cx;
       const gy = (worldY - (camera?.y ?? 0) - cy) * z + cy;
       return {
-        x: rect.left + gx / GAME_WIDTH * rect.width,
-        y: rect.top + gy / GAME_HEIGHT * rect.height,
+        x: rect.left + gx / this.width * rect.width,
+        y: rect.top + gy / this.height * rect.height,
         inBounds: gx >= -24 && gx <= this.width + 24 && gy >= -24 && gy <= this.height + 24
       };
     }
@@ -21326,16 +21341,18 @@
       ctx.restore();
     }
     _getStaticVignetteCanvas() {
-      if (this._vignetteCanvas) return this._vignetteCanvas;
+      if (this._vignetteCanvas && this._vignetteCanvas.width === this.width && this._vignetteCanvas.height === this.height) {
+        return this._vignetteCanvas;
+      }
       const c = document.createElement("canvas");
-      c.width = GAME_WIDTH;
-      c.height = GAME_HEIGHT;
+      c.width = this.width;
+      c.height = this.height;
       const vctx = c.getContext("2d");
       vctx.imageSmoothingEnabled = false;
-      const cx = GAME_WIDTH * 0.5;
-      const cy = GAME_HEIGHT * 0.5;
-      for (let y = 0; y < GAME_HEIGHT; y += 4) {
-        for (let x = 0; x < GAME_WIDTH; x += 4) {
+      const cx = this.width * 0.5;
+      const cy = this.height * 0.5;
+      for (let y = 0; y < this.height; y += 4) {
+        for (let x = 0; x < this.width; x += 4) {
           const dx = (x - cx) / cx;
           const dy = (y - cy) / cy;
           const dist = Math.hypot(dx, dy);
@@ -25595,46 +25612,52 @@
     _startBambooBackdrop() {
       const bg = this.root.querySelector("#gate-bg-canvas");
       if (!bg) return;
-      bg.width = GAME_WIDTH;
-      bg.height = GAME_HEIGHT;
+      const vw = window.innerWidth || GAME_WIDTH;
+      const vh = window.innerHeight || GAME_HEIGHT;
+      const aspect = vw / Math.max(1, vh);
+      const bgW = aspect >= 1 ? Math.max(720, Math.min(1440, Math.round(GAME_HEIGHT * aspect))) : GAME_WIDTH;
+      const bgH = aspect >= 1 ? GAME_HEIGHT : Math.max(540, Math.min(1800, Math.round(GAME_WIDTH / Math.max(0.4, aspect))));
+      bg.width = bgW;
+      bg.height = bgH;
       const ctx = bg.getContext("2d");
       ctx.imageSmoothingEnabled = false;
       const fireflies = Array.from({ length: 34 }, (_, i) => ({
-        x: i * 113 % GAME_WIDTH,
-        y: i * 67 % GAME_HEIGHT,
+        x: i * 113 % bgW,
+        y: i * 67 % bgH,
         spd: 0.45 + i % 5 * 0.22
       }));
       const drawBg = (now) => {
         const t = now * 1e-3;
         const skyBands = [
-          [0, 120, "#05070d"],
-          [120, 110, "#090e18"],
-          [230, 120, "#0e1722"],
-          [350, 110, "#091119"],
-          [460, 80, "#04060a"]
+          [0, Math.round(bgH * 0.22), "#05070d"],
+          [Math.round(bgH * 0.22), Math.round(bgH * 0.2), "#090e18"],
+          [Math.round(bgH * 0.42), Math.round(bgH * 0.22), "#0e1722"],
+          [Math.round(bgH * 0.64), Math.round(bgH * 0.2), "#091119"],
+          [Math.round(bgH * 0.84), bgH - Math.round(bgH * 0.84), "#04060a"]
         ];
         for (const [sy, sh, col] of skyBands) {
-          plotRect(ctx, 0, sy, GAME_WIDTH, sh, col);
+          plotRect(ctx, 0, sy, bgW, sh, col);
         }
-        const mx = 768;
+        const mx = Math.round(bgW * 0.8);
         const my = 92;
         plotRect(ctx, mx - 44, my - 30, 88, 60, "#101b2a");
         plotRect(ctx, mx - 30, my - 42, 60, 84, "#101b2a");
         plotRect(ctx, mx - 24, my - 24, 48, 48, "#25394f");
         plotRect(ctx, mx - 18, my - 18, 36, 36, "#96b8d1");
         plotRect(ctx, mx - 10, my - 18, 28, 32, "#0b1320");
-        for (let rx = 0; rx < GAME_WIDTH; rx += 16) {
+        for (let rx = 0; rx < bgW; rx += 16) {
           const mh = 56 + Math.round((Math.sin(rx * 0.015) * 28 + Math.cos(rx * 0.032) * 18) / 4) * 4;
-          plotRect(ctx, rx, GAME_HEIGHT - 120 - mh, 16, mh + 120, "#070c13");
+          plotRect(ctx, rx, bgH - 120 - mh, 16, mh + 120, "#070c13");
         }
-        for (let i = 0; i < 20; i++) {
+        const cols = Math.ceil(bgW / 50) + 1;
+        for (let i = 0; i < cols; i++) {
           const bx = i * 50 + i % 3 * 9;
           const sway = Math.round(Math.sin(t * 0.75 + i) * 3);
           const col = i % 2 === 0 ? "#0c1920" : "#071016";
           const hi = i % 2 === 0 ? "#18333a" : "#102229";
           const w = i % 3 === 0 ? 6 : 4;
-          for (let seg = 0; seg < 12; seg++) {
-            const sy = GAME_HEIGHT - seg * 46;
+          for (let seg = 0; seg < 14; seg++) {
+            const sy = bgH - seg * 46;
             const sx = bx + Math.round(sway * seg / 11);
             plotRect(ctx, sx, sy - 46, w, 45, col);
             plotRect(ctx, sx, sy - 46, 1, 45, hi);
@@ -25647,8 +25670,8 @@
         }
         for (let i = 0; i < fireflies.length; i++) {
           const f = fireflies[i];
-          const fx = Math.round((f.x + Math.sin(t * f.spd + i) * 26 + GAME_WIDTH) % GAME_WIDTH);
-          const fy = Math.round((f.y - t * 11 * f.spd + GAME_HEIGHT * 10) % GAME_HEIGHT);
+          const fx = Math.round((f.x + Math.sin(t * f.spd + i) * 26 + bgW) % bgW);
+          const fy = Math.round((f.y - t * 11 * f.spd + bgH * 10) % bgH);
           plotRect(ctx, fx - 1, fy - 1, 4, 4, i % 3 === 0 ? "rgba(139, 92, 246, 0.35)" : "rgba(77, 224, 201, 0.35)");
           plotRect(ctx, fx, fy, 2, 2, i % 3 === 0 ? "#b88cff" : "#7fffdf");
         }
@@ -26691,6 +26714,7 @@
           if (inGameplay) hud?.focusChatInput();
         },
         onZoom: (delta) => {
+          renderer._userZoomed = true;
           renderer.setZoom(renderer.zoom + delta);
         },
         onEscape: () => {
@@ -26704,6 +26728,24 @@
   function boot() {
     initUI();
     gateScreens.openInitialScreen();
+    const applyMobileLandscapeScale = () => {
+      const vw = window.innerWidth || 1280;
+      const vh = window.innerHeight || 720;
+      const isPhoneLandscape = vw >= vh && vh <= 480 && vw <= 980;
+      if (isPhoneLandscape && !renderer._userZoomed) {
+        renderer.setZoom(1.14);
+      }
+    };
+    applyMobileLandscapeScale();
+    window.addEventListener("resize", applyMobileLandscapeScale);
+    const tryLockLandscape = () => {
+      if (window.Capacitor?.isNativePlatform?.() || window.matchMedia?.("(pointer: coarse)")?.matches) {
+        screen.orientation?.lock?.("landscape").catch(() => {
+        });
+      }
+    };
+    tryLockLandscape();
+    window.addEventListener("pointerdown", tryLockLandscape, { once: true, passive: true });
     loadManifestAssets(assets).catch((err) => {
       console.warn("[assets] Background sprite load warning:", err);
     });

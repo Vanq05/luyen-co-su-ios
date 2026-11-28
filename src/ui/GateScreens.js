@@ -105,13 +105,18 @@ export class GateScreens {
   _startBambooBackdrop() {
     const bg = this.root.querySelector("#gate-bg-canvas");
     if (!bg) return;
-    bg.width = GAME_WIDTH;
-    bg.height = GAME_HEIGHT;
+    const vw = window.innerWidth || GAME_WIDTH;
+    const vh = window.innerHeight || GAME_HEIGHT;
+    const aspect = vw / Math.max(1, vh);
+    const bgW = aspect >= 1 ? Math.max(720, Math.min(1440, Math.round(GAME_HEIGHT * aspect))) : GAME_WIDTH;
+    const bgH = aspect >= 1 ? GAME_HEIGHT : Math.max(540, Math.min(1800, Math.round(GAME_WIDTH / Math.max(0.4, aspect))));
+    bg.width = bgW;
+    bg.height = bgH;
     const ctx = bg.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     const fireflies = Array.from({ length: 34 }, (_, i) => ({
-      x: (i * 113) % GAME_WIDTH,
-      y: (i * 67) % GAME_HEIGHT,
+      x: (i * 113) % bgW,
+      y: (i * 67) % bgH,
       spd: 0.45 + (i % 5) * 0.22,
     }));
 
@@ -119,18 +124,18 @@ export class GateScreens {
       const t = now * 0.001;
       // Nền bầu trời hoàng hôn u tịch phân dải pixel (100% crisp pixel bands)
       const skyBands = [
-        [0, 120, "#05070d"],
-        [120, 110, "#090e18"],
-        [230, 120, "#0e1722"],
-        [350, 110, "#091119"],
-        [460, 80, "#04060a"],
+        [0, Math.round(bgH * 0.22), "#05070d"],
+        [Math.round(bgH * 0.22), Math.round(bgH * 0.2), "#090e18"],
+        [Math.round(bgH * 0.42), Math.round(bgH * 0.22), "#0e1722"],
+        [Math.round(bgH * 0.64), Math.round(bgH * 0.2), "#091119"],
+        [Math.round(bgH * 0.84), bgH - Math.round(bgH * 0.84), "#04060a"],
       ];
       for (const [sy, sh, col] of skyBands) {
-        plotRect(ctx, 0, sy, GAME_WIDTH, sh, col);
+        plotRect(ctx, 0, sy, bgW, sh, col);
       }
 
       // Vầng tàn nguyệt pixel 3 lớp (không dùng arc)
-      const mx = 768;
+      const mx = Math.round(bgW * 0.8);
       const my = 92;
       plotRect(ctx, mx - 44, my - 30, 88, 60, "#101b2a");
       plotRect(ctx, mx - 30, my - 42, 60, 84, "#101b2a");
@@ -139,20 +144,21 @@ export class GateScreens {
       plotRect(ctx, mx - 10, my - 18, 28, 32, "#0b1320");
 
       // Rặng núi xa pixel bậc thang
-      for (let rx = 0; rx < GAME_WIDTH; rx += 16) {
+      for (let rx = 0; rx < bgW; rx += 16) {
         const mh = 56 + Math.round((Math.sin(rx * 0.015) * 28 + Math.cos(rx * 0.032) * 18) / 4) * 4;
-        plotRect(ctx, rx, GAME_HEIGHT - 120 - mh, 16, mh + 120, "#070c13");
+        plotRect(ctx, rx, bgH - 120 - mh, 16, mh + 120, "#070c13");
       }
 
       // Thân trúc cổ phong phân đốt pixel đung đưa theo bước nhảy pixel
-      for (let i = 0; i < 20; i++) {
+      const cols = Math.ceil(bgW / 50) + 1;
+      for (let i = 0; i < cols; i++) {
         const bx = i * 50 + (i % 3) * 9;
         const sway = Math.round(Math.sin(t * 0.75 + i) * 3);
         const col = i % 2 === 0 ? "#0c1920" : "#071016";
         const hi = i % 2 === 0 ? "#18333a" : "#102229";
         const w = i % 3 === 0 ? 6 : 4;
-        for (let seg = 0; seg < 12; seg++) {
-          const sy = GAME_HEIGHT - seg * 46;
+        for (let seg = 0; seg < 14; seg++) {
+          const sy = bgH - seg * 46;
           const sx = bx + Math.round((sway * seg) / 11);
           plotRect(ctx, sx, sy - 46, w, 45, col);
           plotRect(ctx, sx, sy - 46, 1, 45, hi);
@@ -167,8 +173,8 @@ export class GateScreens {
       // Đom đóm u linh ngọc bích & tử tinh
       for (let i = 0; i < fireflies.length; i++) {
         const f = fireflies[i];
-        const fx = Math.round((f.x + Math.sin(t * f.spd + i) * 26 + GAME_WIDTH) % GAME_WIDTH);
-        const fy = Math.round((f.y - t * 11 * f.spd + GAME_HEIGHT * 10) % GAME_HEIGHT);
+        const fx = Math.round((f.x + Math.sin(t * f.spd + i) * 26 + bgW) % bgW);
+        const fy = Math.round((f.y - t * 11 * f.spd + bgH * 10) % bgH);
         plotRect(ctx, fx - 1, fy - 1, 4, 4, i % 3 === 0 ? "rgba(139, 92, 246, 0.35)" : "rgba(77, 224, 201, 0.35)");
         plotRect(ctx, fx, fy, 2, 2, i % 3 === 0 ? "#b88cff" : "#7fffdf");
       }

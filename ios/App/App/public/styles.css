@@ -2516,13 +2516,13 @@ body.is-mobile-landscape .ctl-bar-sta {
   height: 5px;
 }
 body.is-mobile-landscape .ctl-quest-parchment {
-  width: 204px;
+  width: 190px;
 }
 body.is-mobile-landscape .ctl-quest-hint {
   display: none;
 }
 body.is-mobile-landscape .ctl-quest-list {
-  max-height: 82px;
+  max-height: 70px;
   padding: 3px 5px 5px;
 }
 
@@ -3972,6 +3972,14 @@ body.is-mobile-landscape .ctl-pixel-skilldock {
   transform: translateX(-50%);
   bottom: max(5px, var(--safe-bottom));
   align-items: center;
+}
+body.is-mobile-landscape .ctl-pixel-topstrip {
+  padding: 2px 6px;
+  gap: 3px;
+}
+body.is-mobile-landscape .ctl-pixel-mainbar {
+  padding: 4px 6px;
+  gap: 3px;
 }
 body.is-mobile-landscape.is-skill-moba .ctl-pixel-skilldock {
   left: auto;

@@ -2267,8 +2267,8 @@ export class WorldSimulation {
     }
 
     // Camera bám theo nhân vật (căn giữa nếu map nhỏ hơn viewport)
-    const viewW = GAME_WIDTH / (renderer?.zoom || 1);
-    const viewH = GAME_HEIGHT / (renderer?.zoom || 1);
+    const viewW = (renderer?.width || GAME_WIDTH) / (renderer?.zoom || 1);
+    const viewH = (renderer?.height || GAME_HEIGHT) / (renderer?.zoom || 1);
     const maxCamX = mapDef.width - viewW;
     const maxCamY = mapDef.height - viewH;
     const targetCamX = maxCamX <= 0 ? maxCamX * 0.5 : Math.max(0, Math.min(maxCamX, this.player.x - viewW * 0.5));
@@ -2501,13 +2501,15 @@ export class WorldSimulation {
     renderer.clear("#0b0d0a");
 
     const z = renderer.zoom || 1;
+    const viewW = renderer.width || GAME_WIDTH;
+    const viewH = renderer.height || GAME_HEIGHT;
     const shakeX = this.shakeTimer > 0 ? Math.round((Math.random() * 2 - 1) * this.shakeAmp) : 0;
     const shakeY = this.shakeTimer > 0 ? Math.round((Math.random() * 2 - 1) * this.shakeAmp) : 0;
 
     ctx.save();
-    ctx.translate(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5);
+    ctx.translate(viewW * 0.5, viewH * 0.5);
     ctx.scale(z, z);
-    ctx.translate(-GAME_WIDTH * 0.5 - Math.round(this.camera.x) + shakeX, -GAME_HEIGHT * 0.5 - Math.round(this.camera.y) + shakeY);
+    ctx.translate(-viewW * 0.5 - Math.round(this.camera.x) + shakeX, -viewH * 0.5 - Math.round(this.camera.y) + shakeY);
 
     this.mapRenderer.renderMapBase(
       ctx,

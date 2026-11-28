@@ -51,11 +51,26 @@ export class PixelRenderer {
     const parent = this.canvas.parentElement;
     const vw = parent ? parent.clientWidth : window.innerWidth;
     const vh = parent ? parent.clientHeight : window.innerHeight;
-    const cssW = vw > 0 ? vw : this.width;
-    const cssH = vh > 0 ? vh : this.height;
-    if (this.canvas.width !== GAME_WIDTH || this.canvas.height !== GAME_HEIGHT) {
-      this.canvas.width = GAME_WIDTH;
-      this.canvas.height = GAME_HEIGHT;
+    const cssW = vw > 0 ? vw : GAME_WIDTH;
+    const cssH = vh > 0 ? vh : GAME_HEIGHT;
+    const aspect = cssW / Math.max(1, cssH);
+
+    let targetGameW = GAME_WIDTH;
+    let targetGameH = GAME_HEIGHT;
+    if (aspect >= 1) {
+      targetGameH = GAME_HEIGHT;
+      targetGameW = Math.max(720, Math.min(1440, Math.round(GAME_HEIGHT * aspect)));
+    } else {
+      targetGameW = GAME_WIDTH;
+      targetGameH = Math.max(540, Math.min(1800, Math.round(GAME_WIDTH / Math.max(0.4, aspect))));
+    }
+
+    if (this.canvas.width !== targetGameW || this.canvas.height !== targetGameH) {
+      this.canvas.width = targetGameW;
+      this.canvas.height = targetGameH;
+      this.width = targetGameW;
+      this.height = targetGameH;
+      this._vignetteCanvas = null;
     }
     if (this.labelCanvas && this.labelCtx) {
       const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -68,13 +83,13 @@ export class PixelRenderer {
       this.ctx.__labelOverlay = {
         ctx: this.labelCtx,
         dpr,
-        scaleX: targetW / GAME_WIDTH,
-        scaleY: targetH / GAME_HEIGHT,
+        scaleX: targetW / this.width,
+        scaleY: targetH / this.height,
       };
     }
-    const coverScale = Math.max(cssW / GAME_WIDTH, cssH / GAME_HEIGHT);
-    const offsetX = (cssW - GAME_WIDTH * coverScale) * 0.5;
-    const offsetY = (cssH - GAME_HEIGHT * coverScale) * 0.5;
+    const coverScale = Math.max(cssW / this.width, cssH / this.height);
+    const offsetX = (cssW - this.width * coverScale) * 0.5;
+    const offsetY = (cssH - this.height * coverScale) * 0.5;
     this._view = { cssW, cssH, coverScale, offsetX, offsetY };
     return this._view;
   }
@@ -98,8 +113,8 @@ export class PixelRenderer {
       return { x: this.width * 0.5, y: this.height * 0.5 };
     }
     return {
-      x: ((clientX - rect.left) / rect.width) * GAME_WIDTH,
-      y: ((clientY - rect.top) / rect.height) * GAME_HEIGHT,
+      x: ((clientX - rect.left) / rect.width) * this.width,
+      y: ((clientY - rect.top) / rect.height) * this.height,
     };
   }
 
@@ -122,8 +137,8 @@ export class PixelRenderer {
     const gx = (worldX - (camera?.x ?? 0) - cx) * z + cx;
     const gy = (worldY - (camera?.y ?? 0) - cy) * z + cy;
     return {
-      x: rect.left + (gx / GAME_WIDTH) * rect.width,
-      y: rect.top + (gy / GAME_HEIGHT) * rect.height,
+      x: rect.left + (gx / this.width) * rect.width,
+      y: rect.top + (gy / this.height) * rect.height,
       inBounds: gx >= -24 && gx <= this.width + 24 && gy >= -24 && gy <= this.height + 24,
     };
   }
@@ -184,17 +199,23 @@ export class PixelRenderer {
   }
 
   _getStaticVignetteCanvas() {
-    if (this._vignetteCanvas) return this._vignetteCanvas;
+    if (
+      this._vignetteCanvas &&
+      this._vignetteCanvas.width === this.width &&
+      this._vignetteCanvas.height === this.height
+    ) {
+      return this._vignetteCanvas;
+    }
     const c = document.createElement("canvas");
-    c.width = GAME_WIDTH;
-    c.height = GAME_HEIGHT;
+    c.width = this.width;
+    c.height = this.height;
     const vctx = c.getContext("2d");
     vctx.imageSmoothingEnabled = false;
     // Viền tối rừng sâu trầm ấm ~22% Bayer dithered ở vùng rìa để trung tâm nổi bật rõ nét
-    const cx = GAME_WIDTH * 0.5;
-    const cy = GAME_HEIGHT * 0.5;
-    for (let y = 0; y < GAME_HEIGHT; y += 4) {
-      for (let x = 0; x < GAME_WIDTH; x += 4) {
+    const cx = this.width * 0.5;
+    const cy = this.height * 0.5;
+    for (let y = 0; y < this.height; y += 4) {
+      for (let x = 0; x < this.width; x += 4) {
         const dx = (x - cx) / cx;
         const dy = (y - cy) / cy;
         const dist = Math.hypot(dx, dy);

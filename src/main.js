@@ -363,6 +363,7 @@ function initUI() {
         if (inGameplay) hud?.focusChatInput();
       },
       onZoom: (delta) => {
+        renderer._userZoomed = true;
         renderer.setZoom(renderer.zoom + delta);
       },
       onEscape: () => {
@@ -377,6 +378,26 @@ function initUI() {
 function boot() {
   initUI();
   gateScreens.openInitialScreen();
+
+  // Tự động khóa xoay ngang & đặt zoom mặc định vừa mắt trên màn hình điện thoại
+  const applyMobileLandscapeScale = () => {
+    const vw = window.innerWidth || 1280;
+    const vh = window.innerHeight || 720;
+    const isPhoneLandscape = vw >= vh && vh <= 480 && vw <= 980;
+    if (isPhoneLandscape && !renderer._userZoomed) {
+      renderer.setZoom(1.14);
+    }
+  };
+  applyMobileLandscapeScale();
+  window.addEventListener("resize", applyMobileLandscapeScale);
+
+  const tryLockLandscape = () => {
+    if (window.Capacitor?.isNativePlatform?.() || window.matchMedia?.("(pointer: coarse)")?.matches) {
+      screen.orientation?.lock?.("landscape").catch(() => {});
+    }
+  };
+  tryLockLandscape();
+  window.addEventListener("pointerdown", tryLockLandscape, { once: true, passive: true });
 
   loadManifestAssets(assets).catch((err) => {
     console.warn("[assets] Background sprite load warning:", err);

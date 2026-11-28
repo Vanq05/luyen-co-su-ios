@@ -182,9 +182,9 @@ function patchAndroidManifest() {
     xml = xml.replace("<application", `<application\n        android:usesCleartextTraffic="true"`);
   }
   if (xml.includes("android:screenOrientation")) {
-    xml = xml.replace(/android:screenOrientation="[^"]*"/, `android:screenOrientation="fullUser"`);
+    xml = xml.replace(/android:screenOrientation="[^"]*"/, `android:screenOrientation="sensorLandscape"`);
   } else {
-    xml = xml.replace(/<activity\b/, `<activity\n            android:screenOrientation="fullUser"`);
+    xml = xml.replace(/<activity\b/, `<activity\n            android:screenOrientation="sensorLandscape"`);
   }
   if (!xml.includes("android.permission.INTERNET")) {
     xml = xml.replace("</manifest>", `    <uses-permission android:name="android.permission.INTERNET" />\n</manifest>`);
