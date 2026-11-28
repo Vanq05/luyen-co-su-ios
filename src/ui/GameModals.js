@@ -1,4 +1,5 @@
 import { drawCustomCharacterPreview } from "../character/CharacterSpriteBuilder.js";
+import { COMBO_SYNERGY_RECIPES, resolveMultiGuKillerMove } from "../combat/SkillVfxAndCombos.js";
 import { RANK_ESSENCE_COLORS } from "../config/constants.js";
 import {
   APERTURE_WALL_NAMES,
@@ -65,6 +66,7 @@ export class GameModals {
     this.subTab = "main";
     this.questRankFilter = 1;
     this.selectedGuUid = null;
+    this.comboPickUids = [];
     this._apertureRaf = null;
     this.notice = "";
     this.noticeKind = "success";
@@ -122,9 +124,10 @@ export class GameModals {
       bodyHtml = this.subTab === "armor" ? this._buildArmorBody() : this._buildCharBody();
     } else if (this.panel === "gu") {
       iconKey = "gu";
-      title = "Cổ Trùng · Hợp Luyện · Lưu Phái (V)";
+      title = "Cổ Trùng · Tổ Hợp Sát Chiêu · Hợp Luyện (V)";
       tabsHtml = [
-        ["main", "Không Khiếu & Sát Chiêu"],
+        ["main", "Không Khiếu & Gán Ô"],
+        ["combo", "Tổ Hợp Sát Chiêu (2+ Cổ)"],
         ["feed", "Nuôi Cổ"],
         ["refine", "Hợp Luyện Cổ Phương"],
         ["paths", "16 Lưu Phái"],
@@ -132,13 +135,15 @@ export class GameModals {
         .map(([id, lbl]) => `<button type="button" class="tab-btn ${this.subTab === id ? "is-active" : ""}" data-subtab="${id}">${lbl}</button>`)
         .join("");
       bodyHtml =
-        this.subTab === "feed"
-          ? this._buildFeedBody()
-          : this.subTab === "refine"
-            ? this._buildCompoundBody()
-            : this.subTab === "paths"
-              ? this._buildPathsBody()
-              : this._buildGuLoadoutBody();
+        this.subTab === "combo"
+          ? this._buildComboBuilderBody()
+          : this.subTab === "feed"
+            ? this._buildFeedBody()
+            : this.subTab === "refine"
+              ? this._buildCompoundBody()
+              : this.subTab === "paths"
+                ? this._buildPathsBody()
+                : this._buildGuLoadoutBody();
     } else if (this.panel === "bag") {
       iconKey = "bag";
       title = "Túi Đồ · Đổ Thạch · Thương Hội (B)";
@@ -350,33 +355,129 @@ export class GameModals {
 
     const kmHtml = KILLER_MOVES.map((k) => {
       const idx = p.killerMoveIds.indexOf(k.id);
+      const customActive = Boolean(idx >= 0 && p.customKillerMoves?.[idx]?.guIds?.length >= 2);
       return `
-        <button type="button" class="ctl-list-card ${idx >= 0 ? "is-selected" : ""}" data-pick-km="${k.id}">
+        <button type="button" class="ctl-list-card ${idx >= 0 && !customActive ? "is-selected" : ""}" data-pick-km="${k.id}">
           <span class="ctl-icon-box">${getKillerMovePixelImgHtml(k)}</span>
           <div class="ctl-list-card-txt">
-            <strong>${k.name} ${idx === 0 ? "[Q]" : idx === 1 ? "[E]" : ""}</strong>
+            <strong>${k.name} ${idx === 0 && !customActive ? "[Q]" : idx === 1 && !customActive ? "[E]" : ""}</strong>
             <span>${k.desc}</span>
           </div>
         </button>
       `;
     }).join("");
 
+    const kmQ = p.getResolvedKillerMove(0);
+    const kmE = p.getResolvedKillerMove(1);
+
     return `
       <div class="ctl-aperture-sea" style="border-color:${stage.essenceColor}">
         <span><b>Không Khiếu Chân Nguyên Hải:</b> <span style="color:${stage.essenceColor}">${stage.essenceName}</span></span>
         <span>Dung lượng: ${Math.floor(p.mp)}/${p.maxMp} (${apt.name})</span>
       </div>
+      <div class="ctl-box" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="ctl-sub-txt">
+          <b>[Q]:</b> <span style="color:${kmQ?.color || "#fff"}">${kmQ?.name || "Trống"}</span> &nbsp;|&nbsp;
+          <b>[E]:</b> <span style="color:${kmE?.color || "#fff"}">${kmE?.name || "Trống"}</span>
+        </div>
+        <button type="button" class="ctl-btn-jade" data-subtab="combo">⚡ Ghép Sát Chiêu 2–3 Cổ (Q / E)</button>
+      </div>
       <div class="ctl-grid-2">
         <div>
           <div class="ctl-box-title">1. Cổ Nang (${p.guBag.length}/${p.getMaxGuCapacity()}) — Giới hạn chịu tải Không Khiếu</div>
           <div class="ctl-scroll-list">${bagHtml}</div>
-          <div class="ctl-box-title" style="margin-top:8px">Sát Chiêu (Bấm để gán Q)</div>
+          <div class="ctl-box-title" style="margin-top:8px">Sát Chiêu Cơ Bản (Bấm để gán Q)</div>
           <div class="ctl-scroll-list" style="max-height:110px">${kmHtml}</div>
         </div>
         <div>
           <div class="ctl-box-title">2. Ô Không Khiếu Đang Dùng</div>
           <div class="ctl-slots-stack">${slotsHtml}</div>
         </div>
+      </div>
+    `;
+  }
+
+  _buildComboBuilderBody() {
+    const p = this.player;
+    this.comboPickUids = (this.comboPickUids || []).filter((uid) => p.guBag.some((g) => g.uid === uid));
+    const pickedGu = this.comboPickUids.map((uid) => p.getGu(uid)).filter(Boolean);
+    const preview = pickedGu.length >= 2 ? resolveMultiGuKillerMove(pickedGu, p) : null;
+    const kmQ = p.getResolvedKillerMove(0);
+    const kmE = p.getResolvedKillerMove(1);
+
+    const bagHtml = p.guBag
+      .map((g) => {
+        const pickedIdx = this.comboPickUids.indexOf(g.uid);
+        return `
+          <button type="button" class="ctl-list-card ${pickedIdx >= 0 ? "is-selected" : ""}" data-toggle-combo-gu="${g.uid}" style="border-left:4px solid ${g.color}">
+            <span class="ctl-icon-box">${getGuIconSvg(g)}</span>
+            <div class="ctl-list-card-txt">
+              <strong>${g.name} (C${g.rank}) ${pickedIdx >= 0 ? `#${pickedIdx + 1}` : ""}</strong>
+              <span>No: ${Math.round(g.hunger ?? 100)}% · MP: ${g.mpCost ?? 0} · ${g.path}</span>
+            </div>
+          </button>
+        `;
+      })
+      .join("");
+
+    let previewHtml = `<div class="ctl-sub-txt">Chọn <b>2 hoặc 3 Cổ Trùng</b> bên trái để tự phối hợp thành Sát Chiêu mới, hoặc chọn công thức gợi ý bên dưới.</div>`;
+    if (preview) {
+      const stabCol = preview.stabilityPct >= 90 ? "#5fbf8a" : preview.stabilityPct >= 78 ? "#f2c14e" : "#ff6b78";
+      const warnHtml = (preview.stabilityWarnings || []).map((w) => `<div class="ctl-sub-txt" style="color:#ff9472">⚠ ${w}</div>`).join("");
+      previewHtml = `
+        <div style="border-left:4px solid ${preview.color};padding-left:8px">
+          <div style="font-weight:800;font-size:13px;color:${preview.color}">${preview.name}</div>
+          <div class="ctl-sub-txt" style="margin:3px 0">${preview.guNames.join(" + ")}</div>
+          <div style="font-size:11px;margin:4px 0">${preview.desc}</div>
+          <div class="ctl-stat-row"><span>Bội số Uy lực:</span><b>x${preview.damageMult}</b></div>
+          <div class="ctl-stat-row"><span>Tiêu hao Chân Nguyên:</span><b>${preview.mpCost} MP</b></div>
+          <div class="ctl-stat-row"><span>Hồi chiêu:</span><b>${preview.cooldown}s</b></div>
+          <div class="ctl-stat-row"><span>Độ Ổn Định (Tránh Phản Phệ):</span><b style="color:${stabCol}">${preview.stabilityPct}%</b></div>
+          ${warnHtml}
+          <div class="ctl-btn-row" style="justify-content:flex-start;flex-wrap:wrap">
+            <button type="button" class="ctl-btn-jade" data-bind-combo-slot="0">Gán Vào Ô [Q]</button>
+            <button type="button" class="ctl-btn-jade" data-bind-combo-slot="1">Gán Vào Ô [E]</button>
+            <button type="button" class="ctl-parch-btn" id="btn-clear-combo-picks">Bỏ Chọn</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const recipeHtml = COMBO_SYNERGY_RECIPES.slice(0, 8)
+      .map(
+        (r) => `
+      <div class="ctl-stat-row">
+        <div>
+          <strong style="color:${r.color}">${r.name}</strong>
+          <div class="ctl-sub-txt">${r.desc}</div>
+        </div>
+        <button type="button" class="ctl-parch-btn" data-quick-recipe="${r.id}">Thử Ghép</button>
+      </div>
+    `
+      )
+      .join("");
+
+    return `
+      <div class="ctl-box" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="ctl-sub-txt">
+          <b>Ô [Q]:</b> <span style="color:${kmQ?.color || "#fff"}">${kmQ?.name}</span> ${p.customKillerMoves?.[0] ? `<button type="button" class="ctl-parch-btn" data-clear-combo-slot="0">Gỡ Q</button>` : ""}
+          &nbsp;|&nbsp;
+          <b>Ô [E]:</b> <span style="color:${kmE?.color || "#fff"}">${kmE?.name}</span> ${p.customKillerMoves?.[1] ? `<button type="button" class="ctl-parch-btn" data-clear-combo-slot="1">Gỡ E</button>` : ""}
+        </div>
+      </div>
+      <div class="ctl-grid-2">
+        <div>
+          <div class="ctl-box-title">1. Chọn 2–3 Cổ Trùng Trong Cổ Nang (${this.comboPickUids.length}/3)</div>
+          <div class="ctl-scroll-list" style="max-height:220px">${bagHtml || "Chưa có Cổ Trùng."}</div>
+        </div>
+        <div class="ctl-box">
+          <div class="ctl-box-title">2. Dự Kiến Sát Chiêu Tổ Hợp</div>
+          ${previewHtml}
+        </div>
+      </div>
+      <div class="ctl-box" style="margin-top:8px">
+        <div class="ctl-box-title">Công Thức Sát Chiêu Cổ Chân Nhân Gợi Ý</div>
+        <div class="ctl-scroll-list" style="max-height:135px">${recipeHtml}</div>
       </div>
     `;
   }
@@ -1263,8 +1364,81 @@ export class GameModals {
         const prev1 = this.player.killerMoveIds[1];
         const nextE = prev0 !== id ? prev0 : prev1 !== id ? prev1 : KILLER_MOVES.find((k) => k.id !== id)?.id || id;
         this.player.killerMoveIds = [id, nextE];
+        if (!this.player.customKillerMoves) this.player.customKillerMoves = [null, null];
+        this.player.customKillerMoves[0] = null;
         this.onStateChanged?.();
-        this._flash("Đã đổi Sát Chiêu phím Q!");
+        this._flash("Đã đổi Sát Chiêu cơ bản phím Q!");
+      });
+    });
+
+    this.root.querySelectorAll("[data-toggle-combo-gu]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const uid = btn.dataset.toggleComboGu;
+        const idx = this.comboPickUids.indexOf(uid);
+        if (idx >= 0) {
+          this.comboPickUids.splice(idx, 1);
+        } else {
+          if (this.comboPickUids.length >= 3) this.comboPickUids.shift();
+          this.comboPickUids.push(uid);
+        }
+        this.render();
+      });
+    });
+
+    this.root.querySelector("#btn-clear-combo-picks")?.addEventListener("click", () => {
+      this.comboPickUids = [];
+      this.render();
+    });
+
+    this.root.querySelectorAll("[data-bind-combo-slot]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const slotIdx = Number(btn.dataset.bindComboSlot) === 1 ? 1 : 0;
+        const pickedGu = (this.comboPickUids || []).map((u) => this.player.getGu(u)).filter(Boolean);
+        if (pickedGu.length < 2) {
+          this._flash("Cần chọn ít nhất 2 Cổ Trùng!", "fail");
+          return;
+        }
+        const resolved = resolveMultiGuKillerMove(pickedGu, this.player);
+        if (!this.player.customKillerMoves) this.player.customKillerMoves = [null, null];
+        this.player.customKillerMoves[slotIdx] = {
+          guIds: pickedGu.map((g) => g.id),
+          customName: resolved.name,
+        };
+        this.sfx?.play("fusionSuccess");
+        this.onStateChanged?.();
+        this._flash(`Đã gán Sát Chiêu [${resolved.name}] vào phím ${slotIdx === 0 ? "Q" : "E"}!`);
+      });
+    });
+
+    this.root.querySelectorAll("[data-clear-combo-slot]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.clearComboSlot) === 1 ? 1 : 0;
+        if (this.player.customKillerMoves) this.player.customKillerMoves[idx] = null;
+        this.onStateChanged?.();
+        this._flash(`Đã trả phím ${idx === 0 ? "Q" : "E"} về Sát Chiêu mặc định!`);
+      });
+    });
+
+    this.root.querySelectorAll("[data-quick-recipe]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const r = COMBO_SYNERGY_RECIPES.find((x) => x.id === btn.dataset.quickRecipe);
+        if (!r) return;
+        const pool = [...this.player.guBag];
+        const matchedUids = [];
+        for (const fam of r.families) {
+          const i = pool.findIndex((g) => g.path?.startsWith(fam) || g.id.includes(fam) || (fam === "sinh_co" && (g.id === "tieu_sinh_co" || g.id === "quang_vu" || g.id === "cuu_diep_sinh_co")) || (fam === "thi" && (g.id === "hac_thi" || g.id === "bach_thi")) || (fam === "bi" && (g.id === "dong_bi" || g.id === "ngoc_bi" || g.id === "thu_bi" || g.id === "bach_ngoc")));
+          if (i >= 0) {
+            matchedUids.push(pool[i].uid);
+            pool.splice(i, 1);
+          }
+        }
+        if (matchedUids.length < r.families.length) {
+          this._flash(`Cổ Nang hiện chưa đủ đủ bộ Cổ cho [${r.name}]. Hãy tự phối các Cổ đang có!`, "fail");
+          return;
+        }
+        this.comboPickUids = matchedUids;
+        this.sfx?.play("pickup");
+        this.render();
       });
     });
 

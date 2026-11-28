@@ -5,6 +5,7 @@
  *   rủ liễu, bụi cỏ ẩn thân, Nguyên Tuyền & Ruộng Linh Thảo đều dựng bằng pixel từng điểm.
  */
 
+import { fillPixelEllipse, plotPixelEllipse } from "../engine/PixelSpriteBaker.js";
 import { getBanLongPropFrames } from "./BanLongAssets.js";
 
 const ATLAS_CACHE = new Map();
@@ -941,8 +942,8 @@ export function getPropSprite(kind) {
     paintGnarledSegment(ctx, 37, 50, 20, 48, 3, 2, pineBark, 2);
     paintGnarledSegment(ctx, 38, 39, 56, 37, 3, 2, pineBark, -2);
 
-    // 4 tầng tán lá kim dẹt đáy răng cưa sắc nét
-    const pineShades = ["#08150d", "#132e1e", "#214d31", "#387547", "#5ea366", "#8ed48c"];
+    // 4 tầng tán lá kim dẹt đáy răng cưa sắc nét rêu trầm cổ phong
+    const pineShades = ["#07120a", "#112817", "#1e4226", "#336638", "#508a4e", "#7bb571"];
     const lobes = [
       { cx: 22, cy: 49, rx: 14, ry: 7, seed: 1.2, bias: -0.03 },
       { cx: 54, cy: 50, rx: 14, ry: 7, seed: 2.5, bias: -0.06 },
@@ -976,7 +977,7 @@ export function getPropSprite(kind) {
     paintGnarledSegment(ctx, 46, 56, 49, 20, 8, 4, pineBark, -2);
     paintGnarledSegment(ctx, 47, 58, 23, 55, 4, 2, pineBark, 2);
     paintGnarledSegment(ctx, 48, 44, 73, 42, 4, 2, pineBark, -2);
-    const pineShades = ["#08150d", "#132e1e", "#214d31", "#387547", "#5ea366", "#8ed48c"];
+    const pineShades = ["#07120a", "#112817", "#1e4226", "#336638", "#508a4e", "#7bb571"];
     paintPixelCanopy(
       ctx,
       W,
@@ -1003,7 +1004,7 @@ export function getPropSprite(kind) {
     const { canvas, ctx } = makeCanvas(W, H);
     drawPixelShadow(ctx, 23, 47, 12, 4, 0.24);
     paintGnarledSegment(ctx, 23, 47, 23, 24, 5, 3, pineBark, 1);
-    const pineShades = ["#08150d", "#132e1e", "#214d31", "#387547", "#5ea366", "#8ed48c"];
+    const pineShades = ["#07120a", "#112817", "#1e4226", "#336638", "#508a4e", "#7bb571"];
     paintPixelCanopy(
       ctx,
       W,
@@ -1614,36 +1615,16 @@ export function getPropSprite(kind) {
     }
     result = { canvas, anchorX: 32, anchorY: 28, solidRadius: 0 };
   } else if (kind === "portal_pad") {
-    // Bàn Trận Pháp Dịch Chuyển Hắc Thạch Chạm Khắc Bát Quái (Ô tròn chuyển map)
+    // Bàn Trận Pháp Dịch Chuyển Hắc Thạch Chạm Khắc Bát Quái 100% Pixel (0 ctx.ellipse)
     const W = 68;
     const H = 44;
     const { canvas, ctx } = makeCanvas(W, H);
-    ctx.fillStyle = "rgba(6, 10, 14, 0.52)";
-    ctx.beginPath();
-    ctx.ellipse(34, 24, 32, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#161b20";
-    ctx.beginPath();
-    ctx.ellipse(34, 22, 30, 17, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#303840";
-    ctx.beginPath();
-    ctx.ellipse(34, 21, 27, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#102024";
-    ctx.beginPath();
-    ctx.ellipse(34, 21, 21, 11, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#48cfba";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(34, 21, 21, 11, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(156, 122, 62, 0.72)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(34, 21, 13, 6.5, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    fillPixelEllipse(ctx, 34, 24, 32, 18, "rgba(6, 10, 14, 0.52)", true);
+    fillPixelEllipse(ctx, 34, 22, 30, 17, "#161b20", false);
+    fillPixelEllipse(ctx, 34, 21, 27, 15, "#303840", false);
+    fillPixelEllipse(ctx, 34, 21, 21, 11, "#102024", false);
+    plotPixelEllipse(ctx, 34, 21, 21, 11, "#48cfba", 1, 0);
+    plotPixelEllipse(ctx, 34, 21, 13, 6, "#9c7a3e", 2, 0);
     // 8 trụ ngọc quanh vòng tròn trận pháp
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;

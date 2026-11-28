@@ -17,6 +17,7 @@ import {
 import { ARMOR_SETS, ITEMS_CATALOG, createArmorPiece } from "../data/EquipmentAndItems.js";
 import { GU_CATALOG, KILLER_MOVES, STARTER_VITAL_BUILDS, createGuWorm } from "../data/GuCatalog.js";
 import { CLAN_MISSION_POOL } from "../data/QuestsAndEvents.js";
+import { resolveMultiGuKillerMove } from "./SkillVfxAndCombos.js";
 
 /**
  * Trạng thái Cổ Sư hoàn chỉnh chuẩn Cổ Tiên Lộ (cotienlo.com):
@@ -74,8 +75,23 @@ export class PlayerController {
     this.activeUids = [null, null, null, null, null, null, null];
     this.passiveUid = null;
     this.killerMoveIds = ["km_nguyet_hoa", "km_van_thu"];
+    this.customKillerMoves = [null, null];
     this.quickItemIds = ["hoi_huyet_thao", "tu_nguyen_dan"];
     this.autoFeed = true;
+
+    this.hotTimer = 0;
+    this.hotRate = 0;
+    this.armorBuffTimer = 0;
+    this.armorBuffBonus = 0;
+    this.thornsBuffBonus = 0;
+    this.armorBuffColor = "#d49548";
+    this.refineBuffTimer = 0;
+    this.refineDmgBonus = 0;
+    this.refineCdBonus = 0;
+    this.refineMpSave = 0;
+    this.speedBuffTimer = 0;
+    this.speedBuffBonus = 0;
+    this.lastBacklashNotice = "";
 
     this.itemBag = {
       hoi_huyet_thao: 6,
@@ -520,6 +536,7 @@ export class PlayerController {
       activeUids: [...this.activeUids],
       passiveUid: this.passiveUid,
       killerMoveIds: [...this.killerMoveIds],
+      customKillerMoves: (this.customKillerMoves ?? [null, null]).map((c) => (c ? { ...c, guIds: [...(c.guIds || [])] } : null)),
       quickItemIds: [...this.quickItemIds],
       autoFeed: this.autoFeed,
       itemBag: { ...this.itemBag },
@@ -579,6 +596,12 @@ export class PlayerController {
     this.passiveUid = st.passiveUid ?? null;
     if (!Array.isArray(st.guBag)) this._initStarterLoadout("nguyet_quang");
     this.killerMoveIds = Array.isArray(st.killerMoveIds) ? st.killerMoveIds : ["km_nguyet_hoa", "km_van_thu"];
+    this.customKillerMoves = Array.isArray(st.customKillerMoves)
+      ? [0, 1].map((idx) => {
+          const c = st.customKillerMoves[idx];
+          return c && Array.isArray(c.guIds) && c.guIds.length >= 2 ? { guIds: c.guIds.slice(0, 3), customName: c.customName || null } : null;
+        })
+      : [null, null];
     this.quickItemIds = Array.isArray(st.quickItemIds) ? st.quickItemIds : ["hoi_huyet_thao", "tu_nguyen_dan"];
     this.autoFeed = st.autoFeed !== false;
     this.itemBag = { ...(st.itemBag ?? {}) };
@@ -660,6 +683,26 @@ export class PlayerController {
     return this.getGu(arr[slotIdx]);
   }
 
+  getResolvedKillerMove(slotIdx = 0) {
+    const custom = this.customKillerMoves?.[slotIdx];
+    if (custom && Array.isArray(custom.guIds) && custom.guIds.length >= 2) {
+      const pool = [...this.guBag];
+      const matched = [];
+      for (const id of custom.guIds) {
+        const idx = pool.findIndex((g) => g.id === id);
+        if (idx >= 0) {
+          matched.push(pool[idx]);
+          pool.splice(idx, 1);
+        }
+      }
+      if (matched.length >= 2) {
+        return resolveMultiGuKillerMove(matched, this, custom.customName);
+      }
+    }
+    const kmId = this.killerMoveIds[slotIdx === 1 ? 1 : 0];
+    return KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[slotIdx === 1 ? 1 : 0] ?? KILLER_MOVES[0];
+  }
+
   getEquippedGu(slotId) {
     if (slotId === "vital") return this.getVitalGu();
     if (slotId === "passive") return this.getPassiveGu();
@@ -669,12 +712,11 @@ export class PlayerController {
       return { aimType: "dash", range: moveGu?.range ?? 78, color: moveGu?.color ?? "#5ef2d6" };
     }
     if (slotId === "km1" || slotId === "km2") {
-      const kmId = this.killerMoveIds[slotId === "km1" ? 0 : 1];
-      const km = KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[0];
+      const km = this.getResolvedKillerMove(slotId === "km1" ? 0 : 1);
       return {
-        aimType: km.kind === "nova" ? "aoe" : "line",
+        aimType: km.kind === "combo_aura_nova" || km.kind === "nova" ? "aoe" : km.kind === "combo_shockwave" ? "arc" : "line",
         range: km.range ?? 150,
-        radius: km.kind === "nova" ? km.range : 16,
+        radius: km.kind === "nova" || km.kind === "combo_aura_nova" ? km.range : 18,
         color: km.color ?? "#ffd257",
       };
     }
@@ -777,7 +819,8 @@ export class PlayerController {
     for (const g of this.getAllEquipped()) {
       if (g.moveSpeedBonus) guSpeed += g.moveSpeedBonus;
     }
-    return this.baseSpeed * (1 + speedBonus + setSpeed + guSpeed);
+    const tempSpeed = this.speedBuffTimer > 0 ? this.speedBuffBonus : 0;
+    return this.baseSpeed * (1 + speedBonus + setSpeed + guSpeed + tempSpeed);
   }
 
   getThornsRatio() {
@@ -785,7 +828,8 @@ export class PlayerController {
     for (const g of this.getAllEquipped()) {
       if (g.thornsPct) thorns += g.thornsPct;
     }
-    return Math.min(0.45, thorns);
+    if (this.armorBuffTimer > 0) thorns += this.thornsBuffBonus;
+    return Math.min(0.6, thorns);
   }
 
   getArmorRatio() {
@@ -796,9 +840,10 @@ export class PlayerController {
     for (const g of this.getAllEquipped()) {
       if (g.armorBonus) armor += g.armorBonus;
     }
+    if (this.armorBuffTimer > 0) armor += this.armorBuffBonus;
     const sets = this.getSetCounts();
     if ((sets.thu_bi_bo ?? 0) >= 4) armor += 0.08;
-    return Math.min(0.65, armor);
+    return Math.min(0.72, armor);
   }
 
   getBasicAttackCooldown() {
@@ -850,6 +895,7 @@ export class PlayerController {
     const sets = this.getSetCounts();
     if ((sets.dien_lang_bo ?? 0) >= 4) mult += 0.16;
     if ((sets.chan_duong_bo ?? 0) >= 4) mult += 0.25;
+    if (this.refineBuffTimer > 0) mult += this.refineDmgBonus;
     return mult;
   }
 
@@ -858,7 +904,8 @@ export class PlayerController {
     let mod = sameCount >= 4 ? -0.1 : 0;
     const sets = this.getSetCounts();
     if ((sets.suong_truc_bo ?? 0) >= 2) mod -= 0.1;
-    return Math.max(0.65, 1 + mod);
+    if (this.refineBuffTimer > 0) mod -= this.refineCdBonus;
+    return Math.max(0.58, 1 + mod);
   }
 
   getItemCount(itemId) {
@@ -967,6 +1014,15 @@ export class PlayerController {
     if (this.attackAnimTimer > 0) this.attackAnimTimer = Math.max(0, this.attackAnimTimer - dt);
     if (this.basicAttackCd > 0) this.basicAttackCd = Math.max(0, this.basicAttackCd - dt);
     if (this.stealthBreakTimer > 0) this.stealthBreakTimer = Math.max(0, this.stealthBreakTimer - dt);
+    if (this.armorBuffTimer > 0) this.armorBuffTimer = Math.max(0, this.armorBuffTimer - dt);
+    if (this.refineBuffTimer > 0) this.refineBuffTimer = Math.max(0, this.refineBuffTimer - dt);
+    if (this.speedBuffTimer > 0) this.speedBuffTimer = Math.max(0, this.speedBuffTimer - dt);
+    if (this.hotTimer > 0) {
+      this.hotTimer = Math.max(0, this.hotTimer - dt);
+      if (!this.isDead && this.hotRate > 0) {
+        this.heal(this.hotRate * dt);
+      }
+    }
 
     for (const k of Object.keys(this.cooldowns)) {
       if (this.cooldowns[k] > 0) {

@@ -190,7 +190,7 @@ export class PixelRenderer {
     c.height = GAME_HEIGHT;
     const vctx = c.getContext("2d");
     vctx.imageSmoothingEnabled = false;
-    // Viền tối góc tĩnh ~18% dithered pixel 2x2 để giữ toàn bộ địa hình rõ 100%
+    // Viền tối rừng sâu trầm ấm ~22% Bayer dithered ở vùng rìa để trung tâm nổi bật rõ nét
     const cx = GAME_WIDTH * 0.5;
     const cy = GAME_HEIGHT * 0.5;
     for (let y = 0; y < GAME_HEIGHT; y += 4) {
@@ -198,10 +198,10 @@ export class PixelRenderer {
         const dx = (x - cx) / cx;
         const dy = (y - cy) / cy;
         const dist = Math.hypot(dx, dy);
-        if (dist < 0.72) continue;
-        const t = Math.min(1, (dist - 0.72) / 0.65);
-        if (bayerThreshold(x >> 2, y >> 2) < t * 0.75) {
-          vctx.fillStyle = "rgba(5, 7, 12, 0.22)";
+        if (dist < 0.68) continue;
+        const t = Math.min(1, (dist - 0.68) / 0.68);
+        if (bayerThreshold(x >> 2, y >> 2) < t * 0.78) {
+          vctx.fillStyle = "rgba(9, 7, 4, 0.24)";
           vctx.fillRect(x, y, 4, 4);
         }
       }
@@ -211,7 +211,7 @@ export class PixelRenderer {
   }
 
   /**
-   * Ánh sáng Tĩnh U Tịch (Static Moody Twilight) + Thời tiết pixel cố định.
+   * Ánh sáng Tĩnh Trầm Ấm Rừng Sâu (Static Warm-Moody Forest Lighting) + Thời tiết pixel cố định.
    * TUYỆT ĐỐI KHÔNG thay đổi sáng/tối theo chu kỳ ngày/đêm.
    */
   drawEnvironmentOverlay(time, { weather = "clear", biome = "grass" } = {}) {
@@ -219,8 +219,8 @@ export class PixelRenderer {
     ctx.save();
     ctx.imageSmoothingEnabled = false;
 
-    // 1. Tông màu u tịch trầm mặc cố định (~10% slate-blue wash, rõ nét 100% địa hình & quái vật)
-    ctx.fillStyle = "rgba(8, 12, 20, 0.10)";
+    // 1. Tông trầm ấm nhẹ cố định giúp rừng rêu, đường đất vàng nâu & hiệu ứng chiêu thức nổi bật rõ nét
+    ctx.fillStyle = "rgba(16, 12, 7, 0.08)";
     ctx.fillRect(0, 0, this.width, this.height);
 
     // 2. Thời tiết pixel sắc cạnh

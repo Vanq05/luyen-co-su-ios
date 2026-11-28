@@ -4,17 +4,16 @@ import { evaluateAwakeningSteps } from "../data/CultivationData.js";
 import { ITEMS_CATALOG } from "../data/EquipmentAndItems.js";
 import { GU_CATALOG, KILLER_MOVES, STARTER_VITAL_BUILDS } from "../data/GuCatalog.js";
 import { MAIN_QUESTS, SIDE_QUESTS, STARTER_GU_HABITATS, STORY_ACTS } from "../data/QuestsAndEvents.js";
-import { getUiFrameAssets } from "../engine/PixelSpriteBaker.js";
 import { SkillPad } from "../input/SkillPad.js";
 import { VirtualJoystick } from "../input/VirtualJoystick.js";
 import { getKillerMovePixelImgHtml } from "./PixelGuIcons.js";
 import { getGuIconSvg, getItemIconSvg, getUiIconSvg } from "./XianxiaIcons.js";
 
-const HUD_LAYOUT_STORAGE_KEY = "ctl_hud_layout_v1";
+const HUD_LAYOUT_STORAGE_KEY = "ctl_hud_layout_v2";
 
 function createDefaultHudLayout() {
   return {
-    skillStyle: "moba",
+    skillStyle: "bar",
     handedness: "right",
     alwaysShowJoystick: false,
     joystick: { xPct: null, yPct: null, scale: 1 },
@@ -111,6 +110,8 @@ export class CotienloHUD {
     this._armedQuestAt = 0;
     this._lastQuestTriggerAt = 0;
     this._currentSideItems = [];
+    this._dismissedNoticeKey = "";
+    this._lastNoticeKey = "";
     this.localChatFeed = [
       { kind: "sys", sender: "Hệ thống", text: "Chào mừng đến với Cổ Tiên Lộ! Ấn 2 lần vào nhiệm vụ để tự đi tới." },
     ];
@@ -160,11 +161,10 @@ export class CotienloHUD {
   }
 
   _buildMarkup() {
-    const uiFrames = getUiFrameAssets();
     const archSlots = [0, 1, 2, 3, 4, 5, 6]
       .map(
         (idx) => `
-      <button type="button" class="arch-gu-slot arch-gu-slot--${idx}" data-arch-slot="${idx}" style="background-image:url('${uiFrames.slot48Url}')">
+      <button type="button" class="arch-gu-slot arch-gu-slot--${idx}" data-arch-slot="${idx}">
         <span class="arch-icon"></span>
         <span class="ctl-cd-mask"></span>
         <span class="ctl-cd-num"></span>
@@ -189,12 +189,12 @@ export class CotienloHUD {
 
     return `
       <div class="ctl-health-notice">Chơi game quá 180 phút một ngày sẽ ảnh hưởng xấu đến sức khỏe</div>
-      <button type="button" id="hud-world-prompt" class="ctl-jade-prompt">
-        <img id="hud-prompt-token" class="ctl-pixel-icon ctl-prompt-token" src="${uiFrames.jadeTokenFUrl}" width="24" height="24" alt="F" />
-        <span id="hud-prompt-text" class="ctl-prompt-text">F · Tương tác</span>
-      </button>
+      <div id="hud-notice-banner" class="ctl-parch-notice" role="status">
+        <span id="hud-notice-text" class="ctl-parch-notice-txt"></span>
+        <button type="button" id="hud-notice-close" class="ctl-parch-notice-close" title="Đóng thông báo">×</button>
+      </div>
 
-      <!-- GÓC TRÊN-TRÁI -->
+      <!-- GÓC TRÊN-TRÁI: AVATAR TRÒN VIỀN ĐỒNG · MÁU / CHÂN NGUYÊN · CUỘN GIẤY NHIỆM VỤ -->
       <div class="ctl-top-left">
         <div class="ctl-profile-bar">
           <button type="button" id="hud-avatar-btn" class="ctl-avatar-ring" title="Mở Bảng Nhân Vật (C)">
@@ -227,6 +227,8 @@ export class CotienloHUD {
 
         <div id="hud-quest-box" class="ctl-quest-parchment">
           <div class="ctl-quest-ribbon"></div>
+          <span class="ctl-stud ctl-stud--bl" aria-hidden="true"></span>
+          <span class="ctl-stud ctl-stud--br" aria-hidden="true"></span>
           <div class="ctl-quest-tabs">
             <button type="button" class="ctl-qtab is-active" data-qtab="main">Chính (1/18)</button>
             <button type="button" class="ctl-qtab" data-qtab="side">Phụ (2)</button>
@@ -237,7 +239,7 @@ export class CotienloHUD {
         </div>
       </div>
 
-      <!-- CHÍNH GIỮA TRÊN -->
+      <!-- CHÍNH GIỮA TRÊN: THANH MỤC TIÊU (T) & SỰ KIỆN -->
       <div class="ctl-top-center">
         <div id="hud-target-bar" class="ctl-target-bar">
           <div class="ctl-target-badge">T</div>
@@ -256,7 +258,7 @@ export class CotienloHUD {
         </div>
       </div>
 
-      <!-- GÓC TRÊN-PHẢI -->
+      <!-- GÓC TRÊN-PHẢI: HÀNG HUY HIỆU CỔ PHONG & MINIMAP TRÒN VIỀN ĐỒNG GỖ -->
       <div class="ctl-top-right">
         <div class="ctl-quick-icons">
           <button type="button" class="ctl-round-btn" data-panel="world" title="Bản đồ thế giới (M)">${getUiIconSvg("map")}<em>Bản đồ</em></button>
@@ -270,17 +272,19 @@ export class CotienloHUD {
           </button>
         </div>
 
-        <div id="hud-minimap-wrap" class="ctl-minimap-box">
+        <div id="hud-minimap-wrap" class="ctl-minimap-box ctl-minimap-round">
           <div class="ctl-minimap-head">
             <span id="hud-map-label">Tạ Gia Trại</span>
-            <span id="hud-coord-label" class="ctl-coord-tag">360,368</span>
-            <button type="button" id="hud-minimap-toggle" class="ctl-mini-circle">&gt;</button>
+            <button type="button" id="hud-minimap-toggle" class="ctl-mini-circle" title="Thu gọn minimap">&gt;</button>
           </div>
-          <div class="ctl-minimap-frame">
-            <canvas id="hud-minimap-canvas" width="156" height="100" title="Bấm lên bản đồ nhỏ để tự đi tới"></canvas>
+          <div class="ctl-minimap-frame ctl-minimap-circle-frame">
+            <canvas id="hud-minimap-canvas" width="116" height="116" title="Bấm lên bản đồ nhỏ để tự đi tới"></canvas>
             <span class="ctl-compass-n">B</span>
           </div>
-          <div id="hud-weather-label" class="ctl-weather-sub">U Tịch · Thanh Tĩnh</div>
+          <div class="ctl-minimap-meta-row">
+            <span id="hud-weather-label" class="ctl-weather-sub">Thanh Tĩnh</span>
+            <span id="hud-coord-label" class="ctl-coord-tag">360,368</span>
+          </div>
         </div>
       </div>
 
@@ -301,7 +305,7 @@ export class CotienloHUD {
         </div>
       </div>
 
-      <!-- CHÍNH GIỮA DƯỚI: THANH KỸ NĂNG PIXEL FANTASY + TOOLTIP -->
+      <!-- CHÍNH GIỮA DƯỚI: CỤM CHIÊU THỨC KHUNG TRÒN CỔ PHONG & THẺ TƯƠNG TÁC TINH TẾ -->
       <div class="ctl-bottom-arch ctl-pixel-skilldock">
         <div id="hud-slot-tooltip" class="ctl-slot-tooltip">
           <div id="hud-tt-title" class="ctl-tt-title"></div>
@@ -327,18 +331,22 @@ export class CotienloHUD {
             <span class="ctl-cd-num"></span>
             <span id="hud-qcnt-1" class="ctl-sq-cnt">0</span>
           </button>
-          <button type="button" id="hud-basic-btn" class="ctl-basic-btn" title="Đánh thường (Chuột Trái)">
-            ${getUiIconSvg("attack")}
-            <span>Đánh<em class="ctl-kb-hint"> [LMB]</em></span>
-          </button>
           <button type="button" id="hud-absorb-pill" class="ctl-absorb-pill" title="Giữ R để Hấp Thu Nguyên Thạch">
             ${getUiIconSvg("absorb")}<span><em class="ctl-kb-hint">R · </em>Hấp thu</span>
+          </button>
+          <button type="button" id="hud-context-pill" class="ctl-context-pill" title="Phím F tương tác đối tượng gần">
+            <span id="hud-context-text">F · Ngữ cảnh</span>
           </button>
           <button type="button" id="hud-dash-btn" class="ctl-dash-pill" title="Lướt né (Space)"><span class="ctl-kb-hint">Space · </span>Lướt</button>
         </div>
 
         <div class="ctl-pixel-mainbar">
-          <button type="button" id="hud-vital-btn" class="ctl-vital-orb" title="Cổ Bản Mệnh (Chuột Phải)" style="background-image:url('${uiFrames.vital56Url}')">
+          <button type="button" id="hud-basic-btn" class="ctl-basic-btn ctl-basic-circle" title="Đánh thường (Chuột Trái)">
+            ${getUiIconSvg("attack")}
+            <span>Đánh</span>
+          </button>
+
+          <button type="button" id="hud-vital-btn" class="ctl-vital-orb" title="Cổ Bản Mệnh (Chuột Phải)">
             <span id="hud-vital-icon" style="width:32px;height:32px;display:grid;place-items:center"></span>
             <span class="ctl-cd-mask"></span>
             <span class="ctl-cd-num"></span>
@@ -350,14 +358,14 @@ export class CotienloHUD {
           </div>
 
           <div class="ctl-pixel-km-row">
-            <button type="button" id="hud-km-0" class="ctl-km-btn ctl-km-0" title="Sát chiêu Q" style="background-image:url('${uiFrames.slot48Url}')">
-              <span id="hud-km-icon-0" style="width:30px;height:30px;display:grid;place-items:center"></span>
+            <button type="button" id="hud-km-0" class="ctl-km-btn ctl-km-0" title="Sát chiêu / Tổ Hợp Q">
+              <span id="hud-km-icon-0" style="width:28px;height:28px;display:grid;place-items:center"></span>
               <span class="ctl-cd-mask"></span>
               <span class="ctl-cd-num"></span>
               <span class="arch-key">Q</span>
             </button>
-            <button type="button" id="hud-km-1" class="ctl-km-btn ctl-km-1" title="Sát chiêu E" style="background-image:url('${uiFrames.slot48Url}')">
-              <span id="hud-km-icon-1" style="width:30px;height:30px;display:grid;place-items:center"></span>
+            <button type="button" id="hud-km-1" class="ctl-km-btn ctl-km-1" title="Sát chiêu / Tổ Hợp E">
+              <span id="hud-km-icon-1" style="width:28px;height:28px;display:grid;place-items:center"></span>
               <span class="ctl-cd-mask"></span>
               <span class="ctl-cd-num"></span>
               <span class="arch-key">E</span>
@@ -431,14 +439,14 @@ export class CotienloHUD {
         <em id="hud-mobile-menu-lbl">Menu</em>
       </button>
       <div id="hud-util-drawer" class="ctl-bottom-right">
-        <button type="button" class="ctl-util-btn" data-panel="cultivate" title="Buồng Tĩnh Tọa Tu Luyện Không Khiếu (K)"><span class="ctl-svg-wrap">${getUiIconSvg("absorb")}</span><em>Tu Luyện</em></button>
-        <button type="button" class="ctl-util-btn" data-panel="quests" title="Gia Tộc Nhiệm Vụ Đường & Săn Cổ (J)"><span class="ctl-svg-wrap">${getUiIconSvg("map")}</span><em>N.Vụ (J)</em></button>
         <button type="button" class="ctl-util-btn" data-panel="bag" title="Túi Đồ & Đổ Thạch (B)"><span class="ctl-svg-wrap">${getUiIconSvg("bag")}</span><em>Túi (B)</em></button>
-        <button type="button" class="ctl-util-btn" data-panel="gu" title="Cổ Trùng & Lưu Phái (V)"><span class="ctl-svg-wrap">${getUiIconSvg("gu")}</span><em>Cổ (V)</em></button>
         <button type="button" class="ctl-util-btn" data-panel="char" title="Nhân Vật & Đột Phá (C)"><span class="ctl-svg-wrap">${getUiIconSvg("char")}</span><em>NV (C)</em></button>
-        <button type="button" id="hud-pvp-btn" class="ctl-util-btn" title="Cờ PvP"><span class="ctl-svg-wrap">${getUiIconSvg("flag")}</span><em id="hud-pvp-lbl">Hòa</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="gu" title="Cổ Trùng & Tổ Hợp 2+ Cổ (V)"><span class="ctl-svg-wrap">${getUiIconSvg("gu")}</span><em>Cổ (V)</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="gu" data-open-subtab="combo" title="Ghép Sát Chiêu 2–3 Cổ (Q/E)"><span class="ctl-svg-wrap">${getUiIconSvg("arena")}</span><em>S.Chiêu</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="quests" title="Nhiệm Vụ & Tầm Cổ (J)"><span class="ctl-svg-wrap">${getUiIconSvg("map")}</span><em>N.Vụ (J)</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="cultivate" title="Buồng Tĩnh Tọa Tu Luyện (K)"><span class="ctl-svg-wrap">${getUiIconSvg("absorb")}</span><em>Tu Luyện</em></button>
         <button type="button" class="ctl-util-btn" data-panel="mail" title="Thư & Quà Tân Thủ"><span class="ctl-svg-wrap">${getUiIconSvg("mail")}</span><em>Thư</em></button>
-        <button type="button" class="ctl-util-btn" data-panel="settings" title="Cài đặt & Tài khoản"><span class="ctl-svg-wrap">${getUiIconSvg("settings")}</span><em>Cài đặt</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="settings" title="Cài đặt & Điều khiển"><span class="ctl-svg-wrap">${getUiIconSvg("settings")}</span><em>Cài đặt</em></button>
       </div>
 
       <div id="joystick-zone" class="touch-only" data-hud-widget="joystick" aria-label="Joystick">
@@ -619,8 +627,11 @@ export class CotienloHUD {
     this.chatLines = this.hudRoot.querySelector("#hud-chat-lines");
     this.chatInput = this.hudRoot.querySelector("#hud-chat-input");
 
-    this.worldPrompt = this.hudRoot.querySelector("#hud-world-prompt");
-    this.worldPromptText = this.hudRoot.querySelector("#hud-prompt-text");
+    this.noticeBanner = this.hudRoot.querySelector("#hud-notice-banner");
+    this.noticeBannerText = this.hudRoot.querySelector("#hud-notice-text");
+    this.noticeBannerClose = this.hudRoot.querySelector("#hud-notice-close");
+    this.contextPill = this.hudRoot.querySelector("#hud-context-pill");
+    this.contextPillText = this.hudRoot.querySelector("#hud-context-text");
     this.stealthPill = this.hudRoot.querySelector("#hud-stealth-pill");
     this.autoBtn = this.hudRoot.querySelector("#hud-auto-btn");
     this.vitalBtn = this.hudRoot.querySelector("#hud-vital-btn");
@@ -883,8 +894,13 @@ export class CotienloHUD {
     this.hudRoot.querySelectorAll("[data-panel]").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (this.mobileMenuOpen) this.setMobileMenuOpen(false);
-        this.onOpenPanel?.(btn.dataset.panel);
+        this.onOpenPanel?.(btn.dataset.panel, btn.dataset.openSubtab || null);
       });
+    });
+    this.noticeBannerClose?.addEventListener("click", () => {
+      this._dismissedNoticeKey = this._lastNoticeKey;
+      if (this._lastPlayerRef) this._lastPlayerRef.lastBacklashNotice = "";
+      this.noticeBanner?.classList.remove("is-visible");
     });
     this.hudRoot.querySelectorAll("[data-event]").forEach((btn) => {
       btn.addEventListener("click", () => this.onStartEvent?.(btn.dataset.event));
@@ -942,7 +958,12 @@ export class CotienloHUD {
       const el = this.hudRoot.querySelector(`#hud-km-${idx}`);
       el?.addEventListener("mouseenter", () => {
         const km = this.lastKmData[idx];
-        if (km) this._showTooltip(`Sát Chiêu: ${km.name}`, `Cần ${km.thoughtCost} Thanh Niệm · ${km.mpCost} Chân nguyên`, km.desc);
+        if (km) {
+          const reqTxt = km.isMultiGu
+            ? `Tổ Hợp ${km.guNames?.length || 2} Cổ · ${km.mpCost} MP · Ổn định ${km.stabilityPct}%`
+            : `Cần ${km.thoughtCost} Thanh Niệm · ${km.mpCost} Chân nguyên`;
+          this._showTooltip(`Sát Chiêu: ${km.name}`, reqTxt, km.desc);
+        }
       });
       el?.addEventListener("mouseleave", () => this._hideTooltip());
     });
@@ -959,7 +980,7 @@ export class CotienloHUD {
       absBtn.addEventListener("pointerleave", () => this.onAbsorbEnd?.());
       absBtn.addEventListener("pointercancel", () => this.onAbsorbEnd?.());
     }
-    this.worldPrompt?.addEventListener("click", () => this.onInteract?.());
+    this.contextPill?.addEventListener("click", () => this.onInteract?.());
     this.autoBtn?.addEventListener("click", () => this.onToggleAutoCombat?.());
     this.hudRoot.querySelector("#hud-cer-close")?.addEventListener("click", () => {
       this.ceremonyBanner?.classList.remove("is-visible");
@@ -1490,7 +1511,7 @@ export class CotienloHUD {
     if (this.coordLabel) this.coordLabel.textContent = `${Math.round(player.x)},${Math.round(player.y)}`;
     if (this.weatherLabel) {
       const wLbl = { clear: "Thanh Tĩnh", rain: "Mưa Rơi", storm: "Giông Sét", fog: "Sương Mù", snow: "Tuyết Hàn" }[world.weather] || "Thanh Tĩnh";
-      this.weatherLabel.textContent = `U Tịch · ${wLbl}`;
+      this.weatherLabel.textContent = `Rừng Cổ · ${wLbl}`;
     }
     this._drawMinimap(player, world, mapDef);
 
@@ -1536,29 +1557,57 @@ export class CotienloHUD {
       }
     }
 
-    // Killer Moves Pixel Icons & Cooldowns (PC Bar + MOBA Pad)
+    // Killer Moves Pixel Icons & Cooldowns (hỗ trợ cả Sát Chiêu Tổ Hợp 2–3 Cổ)
     this.lastKmData = [
-      KILLER_MOVES.find((k) => k.id === player.killerMoveIds[0]),
-      KILLER_MOVES.find((k) => k.id === player.killerMoveIds[1]),
+      player.getResolvedKillerMove?.(0) ?? KILLER_MOVES.find((k) => k.id === player.killerMoveIds[0]),
+      player.getResolvedKillerMove?.(1) ?? KILLER_MOVES.find((k) => k.id === player.killerMoveIds[1]),
     ];
     for (let i = 0; i < 2; i++) {
       const km = this.lastKmData[i];
       const cd = player.getCooldownInfo(i === 0 ? "km1" : "km2");
-      const ready = Boolean(km && player.thoughtGauge >= km.thoughtCost && cd.rem <= 0);
-      const isOom = Boolean(km && (player.thoughtGauge < km.thoughtCost || player.mp < km.mpCost));
+      const reqT = km?.isMultiGu ? 0 : (km?.thoughtCost ?? 60);
+      const ready = Boolean(km && player.thoughtGauge >= reqT && cd.rem <= 0 && player.mp >= (km.mpCost ?? 0));
+      const isOom = Boolean(km && (player.thoughtGauge < reqT || player.mp < (km.mpCost ?? 0)));
       for (const [btnSel, iconSel] of [
         [`#hud-km-${i}`, `#hud-km-icon-${i}`],
         [`#moba-km-${i}`, `#moba-km-icon-${i}`],
       ]) {
         const btn = this.hudRoot.querySelector(btnSel);
         const iconHost = this.hudRoot.querySelector(iconSel);
-        if (iconHost && iconHost.dataset.key !== (km?.id || "none")) {
-          iconHost.dataset.key = km?.id || "none";
-          iconHost.innerHTML = getKillerMovePixelImgHtml(km);
+        const keySig = `${km?.id || "none"}_${km?.guIds?.join(",") || ""}`;
+        if (iconHost && iconHost.dataset.key !== keySig) {
+          iconHost.dataset.key = keySig;
+          if (km?.isMultiGu && km.guUids?.length) {
+            const leadGu = player.getGu(km.guUids[0]);
+            iconHost.innerHTML = leadGu ? getGuIconSvg(leadGu) : getKillerMovePixelImgHtml(km);
+          } else {
+            iconHost.innerHTML = getKillerMovePixelImgHtml(km);
+          }
         }
+        if (btn && km?.color) btn.style.borderColor = km.color;
         btn?.classList.toggle("is-ready", ready);
         this._updateSlotCooldownEl(btn, cd, isOom);
       }
+    }
+
+    // Banner Thông Báo Ngang Giấy Cổ (Cổ đói, Phản phệ, hoặc Mẹo Cổ Sư)
+    let noticeMsg = "";
+    let noticeKey = "";
+    if (player.lastBacklashNotice) {
+      noticeMsg = player.lastBacklashNotice;
+      noticeKey = `backlash:${player.lastBacklashNotice}`;
+    } else {
+      const hungryGu = player.getAllEquipped().find((g) => g.foodItemId && (g.hunger ?? 100) <= 35);
+      if (hungryGu) {
+        noticeMsg = `Cảnh báo: [${hungryGu.name}] sắp đói (${Math.round(hungryGu.hunger)}%), mở Cổ Trùng (V) → Nuôi Cổ bằng ${hungryGu.foodName}!`;
+        noticeKey = `hungry:${hungryGu.id}:${Math.floor((hungryGu.hunger ?? 0) / 10)}`;
+      }
+    }
+    this._lastNoticeKey = noticeKey;
+    if (this.noticeBanner && this.noticeBannerText) {
+      const showNotice = Boolean(noticeMsg && noticeKey !== this._dismissedNoticeKey);
+      this.noticeBanner.classList.toggle("is-visible", showNotice);
+      if (showNotice) this.noticeBannerText.textContent = noticeMsg;
     }
 
     // Quick items Z/G & Dash Cooldowns (PC Bar + Aux Pad)
@@ -1625,46 +1674,17 @@ export class CotienloHUD {
       }
     }
 
-    // Lệnh Ngọc Bài [F] treo gần cổng/NPC/tài nguyên, không bao giờ đè thanh kỹ năng hoặc R · Hấp thu
+    // Thẻ tương tác tinh tế [F] gắn gọn trên cụm chiêu dưới giữa (TUYỆT ĐỐI không dùng hộp nổi thô kệch che cổng/cầu!)
     const near = world.getNearbyInteractable();
-    if (this.worldPrompt && this.worldPromptText) {
+    if (this.contextPill && this.contextPillText) {
       const hasPrompt = (inRitual && (player.awakeningSteps ?? 0) >= 1) || Boolean(near);
-      this.worldPrompt.classList.toggle("is-visible", hasPrompt);
-      if (hasPrompt) {
-        const isPortal = !inRitual && near?.kind === "portal";
-        this.worldPrompt.classList.toggle("is-portal", isPortal);
-        if (inRitual && (player.awakeningSteps ?? 0) >= 1) {
-          this.worldPromptText.textContent = `F · Dừng Khai Khiếu (${player.awakeningSteps}/45)`;
-        } else {
-          this.worldPromptText.textContent = near.label;
-        }
-        const anchorData = !inRitual ? near?.data : null;
-        const pt = anchorData && this.worldToClient ? this.worldToClient(anchorData.x, anchorData.y, world.camera) : null;
-        const isMobile = document.body.classList.contains("is-mobile-ui");
-        const isPortrait = document.body.classList.contains("is-mobile-portrait");
-        const minXPad = isMobile ? 105 : 130;
-        const bottomReserve = isPortrait ? 132 : isMobile ? 116 : 180;
-        if (pt?.inBounds) {
-          const vw = window.innerWidth || 1280;
-          const vh = window.innerHeight || 720;
-          const cx = isPortal
-            ? Math.max(minXPad, Math.min(vw - minXPad, pt.x + (pt.x < 220 ? 58 : pt.x > vw - 220 ? -58 : 0)))
-            : Math.max(minXPad, Math.min(vw - minXPad, pt.x));
-          const cy = isPortal
-            ? pt.y + 42 <= vh - bottomReserve
-              ? Math.round(pt.y + 42)
-              : Math.max(52, Math.round(pt.y - 98))
-            : Math.max(52, Math.min(vh - bottomReserve, pt.y - 60));
-          this.worldPrompt.style.left = `${Math.round(cx)}px`;
-          this.worldPrompt.style.top = `${Math.round(cy)}px`;
-          this.worldPrompt.classList.add("is-anchored");
-        } else {
-          const vw = window.innerWidth || 1280;
-          const vh = window.innerHeight || 720;
-          this.worldPrompt.style.left = `${Math.round(vw * 0.5)}px`;
-          this.worldPrompt.style.top = `${Math.round(Math.max(64, vh - bottomReserve + 12))}px`;
-          this.worldPrompt.classList.remove("is-anchored");
-        }
+      this.contextPill.classList.toggle("is-active", hasPrompt);
+      if (inRitual && (player.awakeningSteps ?? 0) >= 1) {
+        this.contextPillText.textContent = `F · Khai Khiếu (${player.awakeningSteps}/45)`;
+      } else if (near?.label) {
+        this.contextPillText.textContent = near.label;
+      } else {
+        this.contextPillText.textContent = "F · Ngữ cảnh";
       }
     }
 

@@ -1104,7 +1104,6 @@
     return ARENA_ART_CACHE;
   }
   var UI_ICON_CACHE = /* @__PURE__ */ new Map();
-  var UI_FRAME_CACHE = null;
   function paintUiIcon24(ctx, name) {
     const g = "#d9b25f";
     const gl = "#fff0b8";
@@ -1374,46 +1373,6 @@
     const url = typeof canvas2.toDataURL === "function" ? canvas2.toDataURL("image/png") : "";
     UI_ICON_CACHE.set(name, url);
     return url;
-  }
-  function getUiFrameAssets() {
-    if (UI_FRAME_CACHE) return UI_FRAME_CACHE;
-    const makeSlot = (size, innerTint = "#0c1118", cornerCol = "#4de0c9") => {
-      const { canvas: canvas2, ctx } = createPixelCanvas(size, size, true);
-      if (ctx) {
-        plotRect(ctx, 0, 0, size, size, "#06080d");
-        plotRect(ctx, 1, 1, size - 2, size - 2, "#384659");
-        plotRect(ctx, 2, 2, size - 4, size - 4, "#9c7a44");
-        plotRect(ctx, 3, 3, size - 6, size - 6, "#1b2433");
-        plotRect(ctx, 4, 4, size - 8, size - 8, innerTint);
-        for (const [cx, cy] of [[1, 1], [size - 5, 1], [1, size - 5], [size - 5, size - 5]]) {
-          plotRect(ctx, cx, cy, 4, 4, "#594322");
-          plotRect(ctx, cx + 1, cy + 1, 2, 2, cornerCol);
-        }
-      }
-      return typeof canvas2.toDataURL === "function" ? canvas2.toDataURL("image/png") : "";
-    };
-    const makeJadeTokenF = () => {
-      const { canvas: canvas2, ctx } = createPixelCanvas(24, 24, true);
-      if (ctx) {
-        plotRect(ctx, 4, 1, 16, 22, "#060a0d");
-        plotRect(ctx, 5, 2, 14, 20, "#9c7a44");
-        plotRect(ctx, 6, 3, 12, 18, "#165c52");
-        plotRect(ctx, 7, 4, 10, 16, "#2bb598");
-        plotRect(ctx, 7, 4, 4, 16, "#4de0c9");
-        plotRect(ctx, 11, 3, 2, 2, "#ffd15c");
-        plotRect(ctx, 9, 7, 7, 11, "#091c19");
-        plotRect(ctx, 10, 8, 5, 2, "#fff9db");
-        plotRect(ctx, 10, 8, 2, 9, "#fff9db");
-        plotRect(ctx, 10, 12, 4, 2, "#fff9db");
-      }
-      return typeof canvas2.toDataURL === "function" ? canvas2.toDataURL("image/png") : "";
-    };
-    UI_FRAME_CACHE = {
-      slot48Url: makeSlot(48, "#0b1017", "#4de0c9"),
-      vital56Url: makeSlot(56, "#0d1f24", "#ffd15c"),
-      jadeTokenFUrl: makeJadeTokenF()
-    };
-    return UI_FRAME_CACHE;
   }
 
   // src/generated/embeddedAssets.js
@@ -3470,18 +3429,19 @@
       path: "nguyet_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "crescent_moon",
       mpCost: 12,
       cooldown: 1.2,
-      damage: 34,
-      range: 150,
-      radius: 12,
+      damage: 36,
+      range: 165,
+      radius: 13,
       pierce: 2,
       color: "#5ef2d6",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "thao_duoc",
       foodName: "C\xE1nh Hoa Nguy\u1EC7t Lan / Th\u1EA3o d\u01B0\u1EE3c",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: \u0110\xE1nh th\u01B0\u1EDDng ph\xF3ng tr\u0103ng nh\u1ECF t\u1EA7m xa; +10% uy l\u1EF1c Nguy\u1EC7t \u0110\u1EA1o.",
-      description: "Ph\xF3ng l\u01B0\u1EE1i li\u1EC1m \xE1nh tr\u0103ng xanh xuy\xEAn t\u1ED1i \u0111a 2 m\u1EE5c ti\xEAu."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: T\u1EE5 nguy\u1EC7t hoa ph\xF3ng tr\u0103ng khuy\u1EBFt t\u1EA7m xa; +10% uy l\u1EF1c Nguy\u1EC7t \u0110\u1EA1o.",
+      description: "T\u1EE5 nguy\u1EC7t hoa trong l\xF2ng b\xE0n tay ph\xF3ng l\u01B0\u1EE1i li\u1EC1m \xE1nh tr\u0103ng b\u1EA1c xanh s\u1EAFc b\xE9n t\u1EA7m xa, xuy\xEAn 2 \u0111\u1ECBch c\u1EA5u r\u1EC9a linh ho\u1EA1t."
     },
     tuu_trung: {
       id: "tuu_trung",
@@ -3491,10 +3451,15 @@
       path: "thuc_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "spirit_wine",
       mpCost: 8,
       cooldown: 5.5,
       damage: 0,
       mpRestore: 45,
+      refineBuffDuration: 6,
+      refineDmgBonus: 0.18,
+      refineCdBonus: 0.18,
+      refineMpSave: 0.2,
       moveSpeedBonus: 0.14,
       range: 40,
       radius: 26,
@@ -3502,8 +3467,8 @@
       vfxKey: "vfx/hit-spark",
       foodItemId: "ruou_trang",
       foodName: "R\u01B0\u1EE3u tr\u1EAFng",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Tinh luy\u1EC7n Ch\xE2n nguy\xEAn +25%, +14% t\u1ED1c ch\u1EA1y & n\u1EDBi r\u1ED9ng v\xF9ng xanh Xung K\xEDch!",
-      description: "U\u1ED1ng tinh t\xFAy r\u01B0\u1EE3u h\u1ED3i 45 Ch\xE2n nguy\xEAn, t\u0103ng nh\u1EB9 Tu vi & t\u1ED1c \u0111\u1ED9 tung chi\xEAu."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Tinh luy\u1EC7n Ch\xE2n nguy\xEAn l\xEAn n\u1EEDa ti\u1EC3u c\u1EA3nh gi\u1EDBi, gi\u1EA3m 20% ti\xEAu hao & 18% h\u1ED3i chi\xEAu.",
+      description: "U\u1ED1ng r\u01B0\u1EE3u tinh luy\u1EC7n Ch\xE2n nguy\xEAn h\u1ED3i 45 MP v\xE0 k\xEDch ho\u1EA1t tr\u1EA1ng th\xE1i Tinh Luy\u1EC7n 6s (+18% uy l\u1EF1c, -18% h\u1ED3i chi\xEAu)."
     },
     hac_thi: {
       id: "hac_thi",
@@ -3513,18 +3478,21 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 12,
-      cooldown: 1.5,
-      damage: 46,
-      range: 88,
-      arcSpread: 80 * Math.PI / 180,
+      cooldown: 1.4,
+      damage: 48,
+      range: 90,
+      arcSpread: 84 * Math.PI / 180,
       meleeDmgBonus: 0.25,
+      knockback: 22,
+      executePct: 0.22,
       color: "#c98a4b",
       vfxKey: "vfx/hit-spark",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Kh\u1EAFc \u1EA5n 1 H\u1EAFc Tr\u01B0 L\u1EF1c (+25% s\xE1t th\u01B0\u01A1ng c\u1EADn chi\u1EBFn & \u0111\xE1nh th\u01B0\u1EDDng).",
-      description: "T\u0103ng m\u1EA1nh L\u1EF1c \u0110\u1EA1o v\xE0 s\xE1t th\u01B0\u01A1ng \u0111\xF2n \u0111\xE1nh c\u1EADn chi\u1EBFn, \xE1p s\xE1t c\xE0n qu\xE9t \u0111\u1ECBch."
+      description: "B\u1ED9c ph\xE1t l\u1EF1c \u0111\u1EA1o H\u1EAFc Tr\u01B0 c\u1EADn chi\u1EBFn d\u1ED3n d\u1EADp, \u0111\u1EA5m v\u0103ng k\u1EBB \u0111\u1ECBch & d\u1EE9t \u0111i\u1EC3m m\u1EE5c ti\xEAu th\u1EA5p m\xE1u (+22%)."
     },
     bach_thi: {
       id: "bach_thi",
@@ -3534,18 +3502,21 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 14,
-      cooldown: 1.8,
-      damage: 50,
-      range: 92,
-      arcSpread: 80 * Math.PI / 180,
+      cooldown: 1.65,
+      damage: 54,
+      range: 94,
+      arcSpread: 86 * Math.PI / 180,
       meleeDmgBonus: 0.28,
-      color: "#e69b45",
+      knockback: 26,
+      executePct: 0.25,
+      color: "#f2dfc4",
       vfxKey: "vfx/hit-spark",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +28% s\xE1t th\u01B0\u01A1ng \u0111\xE1nh th\u01B0\u1EDDng & m\u1EDF kh\xF3a H\u01B0 \u1EA2nh L\u1EE3n R\u1EEBng.",
-      description: "V\u1EADn s\u1EE9c B\u1EA1ch Tr\u01B0 h\xFAc n\xE1t k\u1EBB \u0111\u1ECBch ph\xEDa tr\u01B0\u1EDBc, nh\u1EADn th\xEAm L\u1EF1c khi luy\u1EC7n th\xE2n."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Kh\u1EAFc \u1EA5n B\u1EA1ch Tr\u01B0 Chi L\u1EF1c (+28% \u0111\xE1nh th\u01B0\u1EDDng & m\u1EDF kh\xF3a H\u01B0 \u1EA2nh L\u1EE3n R\u1EEBng).",
+      description: "V\u1EADn c\u1EF1 l\u1EF1c B\u1EA1ch Tr\u01B0 oanh k\xEDch n\u1EB7ng n\u1EC1 tr\u01B0\u1EDBc m\u1EB7t, \u0111\u1EA9y l\xF9i \u0111\u1ECBch v\xE0 b\u1ED9c ph\xE1 s\xE1t th\u01B0\u01A1ng k\u1EBFt li\u1EC5u."
     },
     dong_bi: {
       id: "dong_bi",
@@ -3555,19 +3526,23 @@
       path: "tho_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 11,
       cooldown: 5.5,
       hpBonusPct: 0.25,
       armorBonus: 0.22,
       thornsPct: 0.3,
-      shieldAmount: 60,
+      shieldAmount: 65,
+      buffDuration: 5.5,
+      buffArmorBonus: 0.16,
+      buffThornsPct: 0.25,
       guardStance: true,
       color: "#d49548",
       vfxKey: "vfx/hit-spark",
       foodItemId: "mao_thach_so",
       foodName: "Th\u1ECBt th\xFA / B\u1ED9t \u0111\u1ED3ng nguy\xEAn th\u1EA1ch",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): +25% M\xE1u t\u1ED1i \u0111a, +22% Gi\xE1p, ph\u1EA3n 30% s\xE1t th\u01B0\u01A1ng!",
-      description: "C\u01B0\u1EDDng h\xF3a da th\u1ECBt th\xE0nh \u0111\u1ED3ng thau (+25% HP, +22% Gi\xE1p, khi\xEAn 60 HP & ph\u1EA3n \u0111\xF2n 30%)."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): +25% M\xE1u t\u1ED1i \u0111a, +22% Gi\xE1p, ph\u1EA3n 30% s\xE1t th\u01B0\u01A1ng c\u1EADn chi\u1EBFn!",
+      description: "Luy\u1EC7n da th\u1ECBt th\xE0nh l\u1EDBp gi\xE1p \u0111\u1ED3ng c\u1EE9ng c\xE1p (+22% Gi\xE1p, Khi\xEAn 65 HP) v\xE0 k\xEDch ho\u1EA1t v\xF2ng Gi\xE1p \u0110\u1ED3ng 5.5s ph\u1EA3n ch\u1EA5n \u0111\u1ECBch."
     },
     thu_bi: {
       id: "thu_bi",
@@ -3577,17 +3552,21 @@
       path: "tho_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 10,
       cooldown: 6,
       armorBonus: 0.16,
-      shieldAmount: 45,
+      shieldAmount: 48,
+      buffDuration: 5,
+      buffArmorBonus: 0.12,
+      buffThornsPct: 0.15,
       guardStance: true,
       color: "#c89d54",
       vfxKey: "vfx/hit-spark",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Khi b\u1ECB \u0111\xE1nh khi\xEAu kh\xEDch 4s, x2 ST \u0111\xE1nh th\u01B0\u1EDDng & Space g\xE2y cho\xE1ng 1s!",
-      description: "B\u1ECB \u0111\u1ED9ng t\u0103ng 16% Gi\xE1p & k\xEDch ho\u1EA1t H\u01B0\u1EDBng Th\u1EE7. B\u1EADt \u0111\u1EC3 nh\u1EADn Khi\xEAn 45 HP."
+      description: "C\u01B0\u1EDDng h\xF3a l\u1EDBp da d\xE0y d\u1EB7n (+16% Gi\xE1p & H\u01B0\u1EDBng Th\u1EE7). B\u1EADt \u0111\u1EC3 t\u1EA1o Khi\xEAn 48 HP & gi\u1EA3m s\xE1t th\u01B0\u01A1ng 5s."
     },
     tieu_sinh_co: {
       id: "tieu_sinh_co",
@@ -3597,16 +3576,19 @@
       path: "moc_dao",
       role: "heal",
       aimType: "aoe",
-      mpCost: 16,
-      cooldown: 4.2,
-      healAmount: 75,
+      projStyle: "vitality_ring",
+      mpCost: 15,
+      cooldown: 4.5,
+      healAmount: 55,
+      hotTotal: 60,
+      hotDuration: 5,
       combatRegenPct: 0.015,
       color: "#5fbf8a",
       vfxKey: "vfx/hit-spark",
       foodItemId: "thao_duoc",
       foodName: "Th\u1EA3o d\u01B0\u1EE3c",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: T\u1EF1 \u0111\u1ED9ng h\u1ED3i 1.5% HP/gi\xE2y li\xEAn t\u1EE5c & +20% hi\u1EC7u qu\u1EA3 tr\u1ECB th\u01B0\u01A1ng.",
-      description: "T\u1EF1 \u0111\u1ED9ng h\u1ED3i m\xE1u theo th\u1EDDi gian v\xE0 k\xEDch ho\u1EA1t ch\u1EEFa tr\u1ECB t\u1EE9c th\u1EDDi 75 HP."
+      description: "Kh\u1EDFi ph\xE1t m\u1EA7m sinh c\u01A1 t\u1EE9c th\xEC h\u1ED3i 55 HP v\xE0 duy tr\xEC v\xF2ng Sinh C\u01A1 h\u1ED3i th\xEAm 60 HP trong 5s."
     },
     thanh_phong_luan: {
       id: "thanh_phong_luan",
@@ -3616,18 +3598,21 @@
       path: "phong_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "wind_wheel",
       mpCost: 9,
       cooldown: 1.7,
-      damage: 28,
-      range: 92,
+      damage: 30,
+      range: 96,
       moveSpeedBonus: 0.24,
+      speedBuffBonus: 0.24,
+      speedBuffDuration: 2.5,
       dodgeBonus: 0.18,
       color: "#7effd4",
       vfxKey: "vfx/anh-bo",
       foodItemId: null,
       foodName: "H\xFAt gi\xF3 tr\u1EDDi (kh\xF4ng c\u1EA7n th\u1EE9c \u0103n)",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +24% t\u1ED1c \u0111\u1ED9 ch\u1EA1y, +18% n\xE9 tr\xE1nh & l\u01B0\u1EDBt n\xE9 si\xEAu nhanh.",
-      description: "Ng\u01B0ng k\u1EBFt hai v\xF2ng gi\xF3 xanh d\u01B0\u1EDBi ch\xE2n gi\xFAp c\u01A1 \u0111\u1ED9ng n\xE9 tr\xE1nh v\u01B0\u1EE3t tr\u1ED9i."
+      description: "Ng\u01B0ng k\u1EBFt hai b\xE1nh xe gi\xF3 xanh d\u01B0\u1EDBi ch\xE2n l\u01B0\u1EDBt n\xE9 t\u1EE9c th\xEC, t\u0103ng 24% t\u1ED1c ch\u1EA1y trong 2.5s & ch\xE9m gi\xF3 d\u1ECDc \u0111\u01B0\u1EDDng."
     },
     dan_khieu_hoa_than: {
       id: "dan_khieu_hoa_than",
@@ -3637,6 +3622,7 @@
       path: "viem_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "fire_orb",
       mpCost: 16,
       cooldown: 2.6,
       damage: 44,
@@ -3649,7 +3635,7 @@
       foodItemId: "thao_duoc",
       foodName: "Than c\u1EE7i / Th\u1EA3o d\u01B0\u1EE3c",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +2 gi\xE2y th\u1EDDi gian B\u1ECFng v\xE0 k\xEDch n\u1ED5 m\u1EE5c ti\xEAu \u0111ang tr\xFAng \u0110\u1ED9c.",
-      description: "N\xE9m c\u1EA7u h\u1ECFa th\xE1n n\u1ED5 lan g\xE2y B\u1ECFng trong 3s."
+      description: "N\xE9m c\u1EA7u h\u1ECFa th\xE1n n\u1ED5 lan g\xE2y B\u1ECFng trong 3s v\xE0 k\xEDch n\u1ED5 k\u1EBB \u0111\u1ECBch \u0111ang nhi\u1EC5m \u0110\u1ED9c."
     },
     thanh_doc: {
       id: "thanh_doc",
@@ -3659,6 +3645,7 @@
       path: "doc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "venom_glob",
       mpCost: 14,
       cooldown: 2.2,
       damage: 24,
@@ -3671,7 +3658,7 @@
       foodItemId: "thao_duoc",
       foodName: "Th\u1EA3o d\u01B0\u1EE3c",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: \u0110\u1ED9c r\xFAt s\xE2u th\xEAm 25% v\xE0 l\xE0m ch\u1EADm k\u1EBB \u0111\u1ECBch 35%.",
-      description: "Phun s\u01B0\u01A1ng \u0111\u1ED9c h\xECnh n\xF3n g\xE2y \u0110\u1ED9c & l\xE0m ch\u1EADm."
+      description: "Phun s\u01B0\u01A1ng \u0111\u1ED9c h\xECnh n\xF3n g\xE2y \u0110\u1ED9c r\xFAt m\xE1u & l\xE0m ch\u1EADm 35% t\u1ED1c \u0111\u1ED9 \u0111\u1ECBch."
     },
     thinh_phong: {
       id: "thinh_phong",
@@ -3681,17 +3668,20 @@
       path: "phong_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "wind_wheel",
       mpCost: 10,
       cooldown: 2,
-      damage: 22,
+      damage: 24,
       range: 84,
       dodgeBonus: 0.15,
+      speedBuffBonus: 0.18,
+      speedBuffDuration: 2,
       color: "#80ffd4",
       vfxKey: "vfx/anh-bo",
       foodItemId: null,
       foodName: "H\xFAt gi\xF3 tr\u1EDDi (kh\xF4ng c\u1EA7n th\u1EE9c \u0103n)",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +15% N\xE9 tr\xE1nh; \u0111\xE1nh th\u01B0\u1EDDng \u0111\xE1nh d\u1EA5u \u0111\u1ECBch ch\u1ECBu th\xEAm +15% s\xE1t th\u01B0\u01A1ng.",
-      description: "L\u01B0\u1EDBt theo lu\u1ED3ng gi\xF3 thanh phong t\u0103ng t\u1ED1c & \u0111\u1EC3 l\u1EA1i d\u1EA5u \u1EA5n gi\xF3."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +15% N\xE9 tr\xE1nh; t\u0103ng t\u1ED1c \u0111\u1ED9 n\u1EAFm b\u1EAFt qu\u1EF9 \u0111\u1EA1o chi\xEAu th\u1EE9c.",
+      description: "Thu\u1EADn theo thanh phong l\u01B0\u1EDBt nhanh n\xE9 \u0111\xF2n & t\u0103ng t\u1ED1c di chuy\u1EC3n ng\u1EAFn h\u1EA1n."
     },
     huyet_nha: {
       id: "huyet_nha",
@@ -3701,6 +3691,7 @@
       path: "huyet_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "blood_crescent",
       mpCost: 11,
       cooldown: 1.9,
       damage: 16,
@@ -3714,7 +3705,7 @@
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: H\xFAt m\xE1u +10% & kh\xF4ng ti\xEAu hao sinh l\u1EF1c khi ph\xF3ng Huy\u1EBFt Nha.",
-      description: "Ph\xF3ng 3 tia huy\u1EBFt nha t\u1EF1 \u0111u\u1ED5i m\u1EE5c ti\xEAu v\xE0 h\xFAt 30% s\xE1t th\u01B0\u01A1ng th\xE0nh HP."
+      description: "Ph\xF3ng 3 tia huy\u1EBFt nha t\u1EF1 truy \u0111u\u1ED5i m\u1EE5c ti\xEAu v\xE0 h\xFAt 30% s\xE1t th\u01B0\u01A1ng th\xE0nh HP."
     },
     ngu_lan: {
       id: "ngu_lan",
@@ -3724,16 +3715,19 @@
       path: "thuy_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "water_wave",
       mpCost: 12,
       cooldown: 5,
       armorBonus: 0.12,
-      shieldAmount: 38,
+      shieldAmount: 42,
+      buffDuration: 5,
+      buffArmorBonus: 0.12,
       color: "#3aa8e8",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "ca_linh",
       foodName: "C\xE1 linh",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: D\u01B0\u1EDBi n\u01B0\u1EDBc ho\u1EB7c tr\u1EDDi m\u01B0a h\u1ED3i +2 Ch\xE2n nguy\xEAn/gi\xE2y.",
-      description: "Ng\u01B0ng k\u1EBFt v\u1EA3y c\xE1 quanh th\xE2n ch\u1EB7n s\xE1t th\u01B0\u01A1ng."
+      description: "Ng\u01B0ng k\u1EBFt l\u1EDBp v\u1EA3y c\xE1 th\u1EE7y lam quanh th\xE2n t\u1EA1o Khi\xEAn 42 HP & t\u0103ng Gi\xE1p."
     },
     anh_bo: {
       id: "anh_bo",
@@ -3743,6 +3737,7 @@
       path: "anh_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "shadow_dagger",
       mpCost: 10,
       cooldown: 2.1,
       damage: 24,
@@ -3753,7 +3748,7 @@
       foodItemId: null,
       foodName: "H\xFAt b\xF3ng t\u1ED1i (kh\xF4ng c\u1EA7n th\u1EE9c \u0103n)",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: L\u01B0\u1EDBt t\u1EA1o ph\xE2n th\xE2n thu h\xFAt qu\xE1i v\xE0 ph\xE1t n\u1ED5 khi h\u1EBFt gi\u1EDD.",
-      description: "\u0110\u1ED9n \u1EA3nh l\u01B0\u1EDBt nhanh \u0111\u1EC3 l\u1EA1i ph\xE2n th\xE2n b\xF3ng m\u1EDD d\u1EE5 \u0111\u1ECBch."
+      description: "\u0110\u1ED9n \u1EA3nh l\u01B0\u1EDBt nhanh \u0111\u1EC3 l\u1EA1i ph\xE2n th\xE2n b\xF3ng m\u1EDD d\u1EE5 \u0111\u1ECBch r\u1ED3i ph\xE1t n\u1ED5."
     },
     // === NHỊ CHUYỂN ===
     nguyet_nghe: {
@@ -3764,18 +3759,19 @@
       path: "nguyet_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "crescent_moon",
       mpCost: 18,
       cooldown: 1.4,
-      damage: 64,
-      range: 175,
+      damage: 66,
+      range: 180,
       radius: 14,
       pierce: 4,
       color: "#6fffe9",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "thao_duoc_tram_nam",
       foodName: "Th\u1EA3o d\u01B0\u1EE3c tr\u0103m n\u0103m",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Nguy\u1EC7t nh\u1EADn xuy\xEAn 4 m\u1EE5c ti\xEAu v\xE0 n\u1ED5 \xE1nh tr\u0103ng \u1EDF \u0111i\u1EC3m cu\u1ED1i.",
-      description: "Nh\u1ECB Chuy\u1EC3n: Ch\xE9m v\u1EA7ng tr\u0103ng cong d\xE0i xuy\xEAn qua nhi\u1EC1u k\u1EBB \u0111\u1ECBch."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Nguy\u1EC7t nh\u1EADn xuy\xEAn 4 m\u1EE5c ti\xEAu v\xE0 k\xE9o d\xE0i qu\u1EF9 \u0111\u1EA1o \xE1nh tr\u0103ng.",
+      description: "Nh\u1ECB Chuy\u1EC3n: Ch\xE9m v\u1EA7ng tr\u0103ng cong d\xE0i s\u1EAFc l\u1EA1nh xuy\xEAn qua h\xE0ng lo\u1EA1t k\u1EBB \u0111\u1ECBch."
     },
     tu_vi_tuu_trung: {
       id: "tu_vi_tuu_trung",
@@ -3785,9 +3781,14 @@
       path: "thuc_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "spirit_wine",
       mpCost: 12,
       cooldown: 5,
-      mpRestore: 85,
+      mpRestore: 90,
+      refineBuffDuration: 7,
+      refineDmgBonus: 0.24,
+      refineCdBonus: 0.22,
+      refineMpSave: 0.25,
       range: 48,
       radius: 30,
       color: "#ffd15c",
@@ -3795,7 +3796,7 @@
       foodItemId: "ruou_trang",
       foodName: "R\u01B0\u1EE3u tr\u1EAFng",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: H\u1ED3i Ch\xE2n nguy\xEAn g\u1EA5p \u0111\xF4i khi B\u1EBF Quan & t\u0103ng t\u1EF7 l\u1EC7 \u0110\u1ED9t ph\xE1.",
-      description: "Nh\u1ECB Chuy\u1EC3n: Tinh luy\u1EC7n Ch\xE2n nguy\xEAn l\xEAn t\u1EA7ng b\u1EADc cao, h\u1ED3i 85 Ch\xE2n nguy\xEAn."
+      description: "Nh\u1ECB Chuy\u1EC3n: Tinh luy\u1EC7n Ch\xE2n nguy\xEAn l\xEAn t\u1EA7ng b\u1EADc cao, h\u1ED3i 90 MP & t\u0103ng 24% uy l\u1EF1c chi\xEAu th\u1EE9c 7s."
     },
     bach_ngoc: {
       id: "bach_ngoc",
@@ -3805,17 +3806,21 @@
       path: "tho_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 16,
       cooldown: 6,
       armorBonus: 0.24,
-      shieldAmount: 95,
+      shieldAmount: 98,
+      buffDuration: 5.5,
+      buffArmorBonus: 0.18,
+      buffThornsPct: 0.2,
       guardStance: true,
       color: "#e8f2ff",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "ngoc_vun",
       foodName: "Ng\u1ECDc v\u1EE5n",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Da h\xF3a b\u1EA1ch ng\u1ECDc +24% Gi\xE1p, x2 \u0111\xE1nh th\u01B0\u1EDDng & Space h\xFAc cho\xE1ng!",
-      description: "Nh\u1ECB Chuy\u1EC3n: Bi\u1EBFn th\xE2n b\u1EA1ch ng\u1ECDc mi\u1EC5n nhi\u1EC5m 95 s\xE1t th\u01B0\u01A1ng."
+      description: "Nh\u1ECB Chuy\u1EC3n: Da th\u1ECBt h\xF3a b\u1EA1ch ng\u1ECDc l\u1EA5p l\xE1nh, t\u1EA1o Khi\xEAn 98 HP & kh\xE1ng \u0111\xF2n 5.5s."
     },
     hung_luc: {
       id: "hung_luc",
@@ -3825,18 +3830,20 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 18,
       cooldown: 2.1,
-      damage: 74,
-      range: 96,
+      damage: 76,
+      range: 98,
       arcSpread: 90 * Math.PI / 180,
       stunDuration: 0.6,
+      knockback: 28,
       color: "#c97a3a",
       vfxKey: "vfx/hit-spark",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: M\u1EDF kh\xF3a H\u01B0 \u1EA2nh H\xF9ng Bi & +20% s\xE1t th\u01B0\u01A1ng c\u1EADn chi\u1EBFn.",
-      description: "Nh\u1ECB Chuy\u1EC3n: T\u1EE5 l\u1EF1c G\u1EA5u N\xE2u v\u1EA3 s\u1EA5m r\u1EC1n l\xE0m cho\xE1ng \u0111\u1ECBch 0.6s."
+      description: "Nh\u1ECB Chuy\u1EC3n: T\u1EE5 l\u1EF1c G\u1EA5u N\xE2u v\u1EA3 s\u1EA5m r\u1EC1n l\xE0m cho\xE1ng \u0111\u1ECBch 0.6s & \u0111\u1EA9y l\xF9i."
     },
     thuy_trao: {
       id: "thuy_trao",
@@ -3846,16 +3853,19 @@
       path: "thuy_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "water_wave",
       mpCost: 18,
       cooldown: 5.5,
       armorBonus: 0.15,
-      shieldAmount: 110,
+      shieldAmount: 115,
+      buffDuration: 5.5,
+      buffArmorBonus: 0.16,
       color: "#4db8ff",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "ca_linh",
       foodName: "C\xE1 linh",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Khi Th\u1EE7y Tr\xE1o v\u1EE1 \u0111\u1EA9y l\xF9i v\xE0 l\xE0m ch\u1EADm k\u1EBB \u0111\u1ECBch xung quanh.",
-      description: "Nh\u1ECB Chuy\u1EC3n: D\u1EF1ng l\u1ED3ng n\u01B0\u1EDBc h\u1ED9 th\u1EC3 ch\u1EB7n 110 s\xE1t th\u01B0\u01A1ng."
+      description: "Nh\u1ECB Chuy\u1EC3n: D\u1EF1ng m\xE0n n\u01B0\u1EDBc xoay tr\xF2n h\u1ED9 th\u1EC3 ch\u1EB7n 115 s\xE1t th\u01B0\u01A1ng."
     },
     huyet_nguyet: {
       id: "huyet_nguyet",
@@ -3865,10 +3875,11 @@
       path: "huyet_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "blood_crescent",
       mpCost: 22,
-      cooldown: 2.8,
-      damage: 82,
-      range: 128,
+      cooldown: 2.6,
+      damage: 84,
+      range: 130,
       arcSpread: 95 * Math.PI / 180,
       lifesteal: 0.28,
       color: "#ff3358",
@@ -3876,7 +3887,7 @@
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ch\xE9m tr\u0103ng \u0111\u1ECF h\xFAt 28% HP & g\xE2y Ch\u1EA3y m\xE1u.",
-      description: "Nh\u1ECB Chuy\u1EC3n: L\u01B0\u1EE1i li\u1EC1m huy\u1EBFt nguy\u1EC7t c\xE0n qu\xE9t di\u1EC7n r\u1ED9ng v\xE0 h\xFAt m\xE1u."
+      description: "Nh\u1ECB Chuy\u1EC3n: L\u01B0\u1EE1i li\u1EC1m huy\u1EBFt nguy\u1EC7t \u0111\u1ECF th\u1EABm ch\xE9m qu\xE9t di\u1EC7n r\u1ED9ng v\xE0 h\xFAt m\xE1u."
     },
     chuong_khi_boc: {
       id: "chuong_khi_boc",
@@ -3886,9 +3897,10 @@
       path: "doc_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "venom_glob",
       mpCost: 24,
       cooldown: 3.4,
-      damage: 66,
+      damage: 68,
       range: 125,
       radius: 44,
       poisonDps: 14,
@@ -3908,17 +3920,18 @@
       path: "cot_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "bone_spear",
       mpCost: 14,
       cooldown: 2.2,
-      damage: 48,
-      range: 76,
+      damage: 52,
+      range: 80,
       stunDuration: 0.85,
       color: "#e6dfe8",
       vfxKey: "vfx/bach-cot-don",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: L\u01B0\u1EDBt t\u1EA1o gai x\u01B0\u01A1ng l\xE0m cho\xE1ng k\u1EBB \u0111\u1ECBch ch\u1EA1m ph\u1EA3i.",
-      description: "Nh\u1ECB Chuy\u1EC3n: \u0110\u1ED9n th\u1ED5 x\u01B0\u01A1ng tr\u1EAFng \u0111\xE2m gai l\xE0m cho\xE1ng d\u1ECDc \u0111\u01B0\u1EDDng l\u01B0\u1EDBt."
+      description: "Nh\u1ECB Chuy\u1EC3n: \u0110\u1ED9n th\u1ED5 x\u01B0\u01A1ng tr\u1EAFng \u0111\xE2m gai l\xE0m cho\xE1ng 0.85s d\u1ECDc \u0111\u01B0\u1EDDng l\u01B0\u1EDBt."
     },
     dien_nhan: {
       id: "dien_nhan",
@@ -3928,11 +3941,12 @@
       path: "loi_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "thunder_bolt",
       mpCost: 18,
       cooldown: 1.9,
-      damage: 58,
-      range: 160,
-      radius: 11,
+      damage: 60,
+      range: 165,
+      radius: 12,
       chainCount: 3,
       color: "#ffe15c",
       vfxKey: "vfx/nguyet-quang",
@@ -3949,18 +3963,19 @@
       path: "kiem_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "sword_qi",
       mpCost: 17,
-      cooldown: 1.5,
-      damage: 62,
-      range: 165,
-      radius: 10,
+      cooldown: 1.45,
+      damage: 64,
+      range: 170,
+      radius: 11,
       pierce: 3,
       color: "#c7e8ff",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "ngoc_vun",
       foodName: "Ng\u1ECDc v\u1EE5n",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ki\u1EBFm kh\xED xuy\xEAn gi\xE1p 30%.",
-      description: "Nh\u1ECB Chuy\u1EC3n: Ph\xF3ng ki\u1EBFm \u1EA3nh s\u1EAFc b\xE9n xuy\xEAn th\u1EA5u h\xE0ng \u0111\u1ECBch."
+      description: "Nh\u1ECB Chuy\u1EC3n: Ph\xF3ng thanh phi ki\u1EBFm \xE1nh b\u1EA1c xuy\xEAn th\u1EA5u 3 k\u1EBB \u0111\u1ECBch."
     },
     han_bang_tien: {
       id: "han_bang_tien",
@@ -3970,18 +3985,19 @@
       path: "bang_tuyet_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "frost_lance",
       mpCost: 18,
       cooldown: 2,
-      damage: 56,
-      range: 165,
+      damage: 58,
+      range: 168,
       radius: 11,
       slowFactor: 0.45,
       color: "#78dcff",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "bang_tuyen_tinh",
       foodName: "B\u0103ng Tuy\u1EC1n Tinh",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: B\u1EAFn 3 m\u0169i b\u0103ng ti\u1EC5n l\xE0m ch\u1EADm 45% t\u1ED1c ch\u1EA1y \u0111\u1ECBch.",
-      description: "Nh\u1ECB Chuy\u1EC3n: M\u0169i t\xEAn b\u0103ng gi\xE1 \u0111\xF3ng s\u01B0\u01A1ng v\xE0 l\xE0m ch\u1EADm m\u1EE5c ti\xEAu."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: B\u1EAFn m\u0169i b\u0103ng ti\u1EC5n l\xE0m ch\u1EADm 45% t\u1ED1c ch\u1EA1y \u0111\u1ECBch.",
+      description: "Nh\u1ECB Chuy\u1EC3n: M\u0169i th\u01B0\u01A1ng b\u0103ng k\u1EBFt tinh ph\xF3ng \u0111i \u0111\xF3ng s\u01B0\u01A1ng & l\xE0m ch\u1EADm 45%."
     },
     ngoc_bi: {
       id: "ngoc_bi",
@@ -3991,19 +4007,23 @@
       path: "tho_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 16,
       cooldown: 5.5,
       hpBonusPct: 0.32,
       armorBonus: 0.28,
       thornsPct: 0.35,
-      shieldAmount: 125,
+      shieldAmount: 135,
+      buffDuration: 6,
+      buffArmorBonus: 0.22,
+      buffThornsPct: 0.3,
       guardStance: true,
       color: "#a8ffe2",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "ngoc_vun",
       foodName: "Ng\u1ECDc v\u1EE5n",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +32% HP t\u1ED1i \u0111a, +28% Gi\xE1p, ph\u1EA3n 35% s\xE1t th\u01B0\u01A1ng c\u1EADn chi\u1EBFn!",
-      description: "Nh\u1ECB Chuy\u1EC3n: Th\xE2n th\u1EC3 h\xF3a ng\u1ECDc b\xEDch c\u1EE9ng c\u1ECFi, t\u1EA1o khi\xEAn 125 HP & ph\u1EA3n ch\u1EA5n."
+      description: "Nh\u1ECB Chuy\u1EC3n: Th\xE2n th\u1EC3 h\xF3a ng\u1ECDc b\xEDch c\u1EE9ng c\u1ECFi (Khi\xEAn 135 HP, Gi\xE1p Ng\u1ECDc 6s & ph\u1EA3n ch\u1EA5n 30%)."
     },
     quang_vu: {
       id: "quang_vu",
@@ -4013,16 +4033,20 @@
       path: "moc_dao",
       role: "heal",
       aimType: "aoe",
+      projStyle: "light_feather",
       mpCost: 22,
       cooldown: 4.2,
-      healAmount: 150,
+      healAmount: 160,
+      hotTotal: 60,
+      hotDuration: 4,
+      cleanseSlow: true,
       combatRegenPct: 0.02,
       color: "#fff099",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "thao_duoc_tram_nam",
       foodName: "Th\u1EA3o d\u01B0\u1EE3c tr\u0103m n\u0103m",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: M\u01B0a \xE1nh s\xE1ng tr\u1ECB th\u01B0\u01A1ng t\u1EF1 h\u1ED3i 2% HP/gi\xE2y & thanh t\u1EA9y \u0111\u1ED9c t\u1ED1.",
-      description: "Nh\u1ECB Chuy\u1EC3n: R\u1EA3i m\u01B0a \xE1nh s\xE1ng th\xE1nh khi\u1EBFt h\u1ED3i ph\u1EE5c 150 HP t\u1EE9c th\u1EDDi."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: M\u01B0a quang mang tr\u1ECB th\u01B0\u01A1ng t\u1EF1 h\u1ED3i 2% HP/s & thanh t\u1EA9y b\u1EA5t l\u1EE3i.",
+      description: "Nh\u1ECB Chuy\u1EC3n: R\u1EA3i m\u01B0a l\xF4ng v\u0169 \xE1nh s\xE1ng ch\u1EEFa tr\u1ECB t\u1EE9c th\u1EDDi 160 HP, h\u1ED3i th\xEAm 60 HP & h\xF3a gi\u1EA3i l\xE0m ch\u1EADm."
     },
     an_lan: {
       id: "an_lan",
@@ -4032,6 +4056,7 @@
       path: "anh_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "shadow_dagger",
       mpCost: 14,
       cooldown: 2,
       damage: 54,
@@ -4042,7 +4067,7 @@
       foodItemId: "ca_linh",
       foodName: "C\xE1 linh",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: T\xE0ng h\xECnh l\u01B0\u1EDBt \u1EA3nh t\u1EA1o ph\xE2n th\xE2n thu h\xFAt to\xE0n b\u1ED9 qu\xE1i.",
-      description: "Nh\u1ECB Chuy\u1EC3n: H\xF3a v\u1EA3y \u1EA9n th\xE2n l\u01B0\u1EDBt \u0111i trong ch\u1EDBp m\u1EAFt."
+      description: "Nh\u1ECB Chuy\u1EC3n: H\xF3a v\u1EA3y \u1EA9n th\xE2n l\u01B0\u1EDBt \u0111i trong ch\u1EDBp m\u1EAFt \u0111\u1EC3 l\u1EA1i ph\xE2n th\xE2n d\u1EE5 \u0111\u1ECBch."
     },
     thiet_cot: {
       id: "thiet_cot",
@@ -4052,18 +4077,21 @@
       path: "cot_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 16,
       cooldown: 5.5,
       armorBonus: 0.22,
       meleeDmgBonus: 0.15,
-      shieldAmount: 105,
+      shieldAmount: 110,
+      buffDuration: 5.5,
+      buffArmorBonus: 0.18,
       guardStance: true,
       color: "#9fb3c8",
       vfxKey: "vfx/bach-cot-don",
       foodItemId: "mao_thach_so",
       foodName: "B\u1ED9t Mao Th\u1EA1ch / Th\u1ECBt th\xFA",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: X\u01B0\u01A1ng c\u1ED1t c\u1EE9ng nh\u01B0 th\xE9p (+22% Gi\xE1p, +15% C\u1EADn chi\u1EBFn, Khi\xEAn 105 HP).",
-      description: "Nh\u1ECB Chuy\u1EC3n: T\xF4i luy\u1EC7n x\u01B0\u01A1ng c\u1ED1t th\xE0nh huy\u1EC1n thi\u1EBFt, ch\u1EB7n 105 s\xE1t th\u01B0\u01A1ng."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: X\u01B0\u01A1ng c\u1ED1t c\u1EE9ng nh\u01B0 th\xE9p (+22% Gi\xE1p, +15% C\u1EADn chi\u1EBFn, Khi\xEAn 110 HP).",
+      description: "Nh\u1ECB Chuy\u1EC3n: T\xF4i luy\u1EC7n x\u01B0\u01A1ng c\u1ED1t th\xE0nh huy\u1EC1n thi\u1EBFt, ch\u1EB7n 110 s\xE1t th\u01B0\u01A1ng & gia c\u1ED1 gi\xE1p."
     },
     xoan_oc_cot_thuong: {
       id: "xoan_oc_cot_thuong",
@@ -4073,18 +4101,19 @@
       path: "cot_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "bone_spear",
       mpCost: 19,
       cooldown: 1.7,
-      damage: 68,
-      range: 170,
-      radius: 11,
+      damage: 70,
+      range: 175,
+      radius: 12,
       pierce: 3,
       color: "#ece4d8",
       vfxKey: "vfx/bach-cot-don",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: B\u1EAFn th\u01B0\u01A1ng x\u01B0\u01A1ng xo\u1EAFn xuy\xEAn 3 m\u1EE5c ti\xEAu c\u1EF1c m\u1EA1nh.",
-      description: "Nh\u1ECB Chuy\u1EC3n: Ng\u01B0ng t\u1EE5 c\u1ED1t th\u01B0\u01A1ng xo\xE1y tr\xF2n xuy\xEAn ph\xE1 h\u1ED9 gi\xE1p \u0111\u1ECBch."
+      description: "Nh\u1ECB Chuy\u1EC3n: Ng\u01B0ng t\u1EE5 c\u1ED1t th\u01B0\u01A1ng xo\xE1y tr\xF2n xuy\xEAn ph\xE1 h\u1ED9 gi\xE1p 3 m\u1EE5c ti\xEAu."
     },
     kho_luc: {
       id: "kho_luc",
@@ -4094,9 +4123,10 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 17,
       cooldown: 1.9,
-      damage: 72,
+      damage: 74,
       range: 98,
       arcSpread: 88 * Math.PI / 180,
       lowHpBerserk: 0.65,
@@ -4116,11 +4146,12 @@
       path: "doc_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "venom_glob",
       mpCost: 18,
       cooldown: 1.8,
-      damage: 52,
+      damage: 54,
       projectileCount: 2,
-      range: 160,
+      range: 165,
       radius: 10,
       poisonDps: 15,
       slowFactor: 0.35,
@@ -4140,10 +4171,11 @@
       path: "nguyet_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "crescent_moon",
       mpCost: 26,
       cooldown: 1.6,
-      damage: 112,
-      range: 195,
+      damage: 116,
+      range: 200,
       radius: 16,
       pierce: 5,
       color: "#ffd86e",
@@ -4151,7 +4183,7 @@
       foodItemId: "thao_duoc_tram_nam",
       foodName: "Th\u1EA3o d\u01B0\u1EE3c tr\u0103m n\u0103m",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: V\u1EA7ng tr\u0103ng ho\xE0ng kim xuy\xEAn 5 \u0111\u1ECBch v\u1EDBi uy l\u1EF1c c\u1EF1c \u0111\u1EA1i.",
-      description: "Tam Chuy\u1EC3n: Tinh hoa Nguy\u1EC7t \u0110\u1EA1o ch\xE9m v\u1EA7ng tr\u0103ng v\xE0ng r\u1EF1c."
+      description: "Tam Chuy\u1EC3n: Tinh hoa Nguy\u1EC7t \u0110\u1EA1o ch\xE9m v\u1EA7ng tr\u0103ng v\xE0ng r\u1EF1c s\u1EAFc l\u1EB9m."
     },
     toan_luc_ung_pho: {
       id: "toan_luc_ung_pho",
@@ -4161,18 +4193,20 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 28,
       cooldown: 2.8,
-      damage: 118,
-      range: 120,
+      damage: 120,
+      range: 122,
       arcSpread: 110 * Math.PI / 180,
       summonsPhantom: true,
+      knockback: 32,
       color: "#ffaa44",
       vfxKey: "vfx/hoa-than",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: M\u1ED7i \u0111\xF2n \u0111\xE1nh tri\u1EC7u h\u1ED3i Th\xFA L\u1EF1c H\u01B0 \u1EA2nh lao ra nghi\u1EC1n n\xE1t \u0111\u1ECBch!",
-      description: "Tam Chuy\u1EC3n: C\u1ED5 trung t\xE2m c\u1EE7a L\u1EF1c \u0110\u1EA1o, g\u1ECDi Th\xFA L\u1EF1c H\u01B0 \u1EA2nh h\u1EE3p k\xEDch."
+      description: "Tam Chuy\u1EC3n: C\u1ED5 trung t\xE2m c\u1EE7a L\u1EF1c \u0110\u1EA1o, g\u1ECDi Th\xFA L\u1EF1c H\u01B0 \u1EA2nh h\u1EE3p k\xEDch oanh t\u1EA1c."
     },
     thien_bong: {
       id: "thien_bong",
@@ -4182,19 +4216,23 @@
       path: "tho_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 24,
       cooldown: 6,
       hpBonusPct: 0.42,
       armorBonus: 0.36,
       thornsPct: 0.4,
-      shieldAmount: 240,
+      shieldAmount: 245,
+      buffDuration: 6.5,
+      buffArmorBonus: 0.25,
+      buffThornsPct: 0.35,
       guardStance: true,
       color: "#eef7ff",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): +42% HP, Gi\xE1p \xE1nh s\xE1ng tr\u1EAFng +36%, ch\u1EB7n 240 ST & ph\u1EA3n 40%!",
-      description: "Tam Chuy\u1EC3n: Gi\xE1p B\u1EA1ch B\u1ED3ng h\u1ED9 th\xE2n c\u1EF1c v\u1EEFng ch\xE3i."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): +42% HP, Gi\xE1p \xE1nh s\xE1ng tr\u1EAFng +36%, ch\u1EB7n 245 ST & ph\u1EA3n 40%!",
+      description: "Tam Chuy\u1EC3n: Kho\xE1c kh\xF4i gi\xE1p B\u1EA1ch B\u1ED3ng h\u1ED9 th\xE2n c\u1EF1c v\u1EEFng ch\xE3i & ph\u1EA3n ch\u1EA5n m\u1EA1nh."
     },
     cuu_diep_sinh_co: {
       id: "cuu_diep_sinh_co",
@@ -4204,16 +4242,19 @@
       path: "moc_dao",
       role: "heal",
       aimType: "aoe",
+      projStyle: "vitality_ring",
       mpCost: 26,
       cooldown: 4.5,
-      healAmount: 290,
+      healAmount: 295,
+      hotTotal: 150,
+      hotDuration: 5,
       combatRegenPct: 0.028,
       color: "#6bff9c",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "suong_truc_linh_lo",
       foodName: "S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: H\u1ED3i 2.8% HP/gi\xE2y b\u1EA5t t\u1EED trong giao tranh k\xE9o d\xE0i.",
-      description: "Tam Chuy\u1EC3n: Ch\xEDn l\xE1 sinh c\u01A1 d\xE0o d\u1EA1t h\u1ED3i ph\u1EE5c t\u1EE9c th\u1EDDi 290 HP."
+      description: "Tam Chuy\u1EC3n: Ch\xEDn l\xE1 sinh c\u01A1 d\xE0o d\u1EA1t h\u1ED3i ph\u1EE5c 295 HP t\u1EE9c th\u1EDDi + 150 HP duy tr\xEC."
     },
     loi_duc: {
       id: "loi_duc",
@@ -4223,17 +4264,20 @@
       path: "loi_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "thunder_bolt",
       mpCost: 22,
       cooldown: 1.9,
-      damage: 115,
+      damage: 118,
       range: 115,
       moveSpeedBonus: 0.3,
+      speedBuffBonus: 0.3,
+      speedBuffDuration: 2.6,
       color: "#ffe45e",
       vfxKey: "vfx/hoa-than",
       foodItemId: "bom_hao_dien_lang",
       foodName: "B\u1EDDm H\xE0o \u0110i\u1EC7n Lang",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +30% T\u1ED1c ch\u1EA1y & ph\xF3ng \u0111\xF4i c\xE1nh l\xF4i \u0111i\u1EC7n c\xE0n l\u01B0\u1EDBt.",
-      description: "Tam Chuy\u1EC3n: \u0110\xF4i c\xE1nh s\u1EA5m s\xE9t gi\xFAp d\u1ECBch chuy\u1EC3n t\u1EE9c th\u1EDDi & g\xE2y cho\xE1ng nh\u1EB9."
+      description: "Tam Chuy\u1EC3n: \u0110\xF4i c\xE1nh s\u1EA5m s\xE9t gi\xFAp d\u1ECBch chuy\u1EC3n t\u1EE9c th\u1EDDi & gi\u1EADt cho\xE1ng nh\u1EB9."
     },
     cot_thuong: {
       id: "cot_thuong",
@@ -4243,10 +4287,11 @@
       path: "cot_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "bone_spear",
       mpCost: 24,
       cooldown: 1.8,
-      damage: 105,
-      range: 180,
+      damage: 108,
+      range: 185,
       radius: 12,
       pierce: 3,
       stunDuration: 0.5,
@@ -4255,7 +4300,7 @@
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Gi\xE1o x\u01B0\u01A1ng xo\u1EAFn \u1ED1c \u0111\xE2m xuy\xEAn v\xE0 ghim cho\xE1ng 0.5s.",
-      description: "Tam Chuy\u1EC3n: Ph\xF3ng th\u01B0\u01A1ng b\u1EA1ch c\u1ED1t xo\xE1y xuy\xEAn m\u1EE5c ti\xEAu."
+      description: "Tam Chuy\u1EC3n: Ph\xF3ng th\u01B0\u01A1ng b\u1EA1ch c\u1ED1t xo\xE1y xuy\xEAn 3 m\u1EE5c ti\xEAu & g\xE2y cho\xE1ng."
     },
     loi_khieu: {
       id: "loi_khieu",
@@ -4265,9 +4310,10 @@
       path: "loi_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "thunder_bolt",
       mpCost: 28,
       cooldown: 3,
-      damage: 118,
+      damage: 120,
       range: 145,
       radius: 46,
       stunDuration: 0.7,
@@ -4276,7 +4322,7 @@
       foodItemId: "bom_hao_dien_lang",
       foodName: "B\u1EDDm H\xE0o \u0110i\u1EC7n Lang",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: S\u1EA5m n\u1ED5 l\xE0m cho\xE1ng di\u1EC7n r\u1ED9ng & t\u0103ng 20% ST khi tr\u1EDDi m\u01B0a b\xE3o.",
-      description: "Tam Chuy\u1EC3n: G\u1ECDi c\u1ED9t s\xE9t gi\xE1ng xu\u1ED1ng v\xF9ng ch\u1EC9 \u0111\u1ECBnh."
+      description: "Tam Chuy\u1EC3n: G\u1ECDi c\u1ED9t s\xE9t gi\xE1ng xu\u1ED1ng v\xF9ng ch\u1EC9 \u0111\u1ECBnh l\xE0m cho\xE1ng 0.7s."
     },
     thien_thanh_lien: {
       id: "thien_thanh_lien",
@@ -4286,16 +4332,17 @@
       path: "moc_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "vitality_ring",
       mpCost: 0,
       cooldown: 7,
-      mpRestore: 140,
-      healAmount: 85,
+      mpRestore: 145,
+      healAmount: 90,
       color: "#5fbf8a",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "suong_truc_linh_lo",
       foodName: "S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: T\u1EF1 \u0111\u1ED9ng sinh Ch\xE2n nguy\xEAn li\xEAn t\u1EE5c (+8 MP/s).",
-      description: "Tam Chuy\u1EC3n (Nguy\xEAn B\u1EA3o Li\xEAn): M\u1EDF hoa sen xanh h\u1ED3i 140 Ch\xE2n nguy\xEAn & 85 HP."
+      description: "Tam Chuy\u1EC3n (Nguy\xEAn B\u1EA3o Li\xEAn): M\u1EDF hoa sen xanh h\u1ED3i 145 Ch\xE2n nguy\xEAn & 90 HP."
     },
     suong_truc_kiem: {
       id: "suong_truc_kiem",
@@ -4305,10 +4352,11 @@
       path: "kiem_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "sword_qi",
       mpCost: 24,
       cooldown: 1.5,
-      damage: 108,
-      range: 190,
+      damage: 112,
+      range: 195,
       radius: 13,
       pierce: 4,
       slowFactor: 0.35,
@@ -4317,7 +4365,7 @@
       foodItemId: "suong_truc_linh_lo",
       foodName: "S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ki\u1EBFm tr\xFAc b\u0103ng thanh xuy\xEAn gi\xE1p & l\xE0m ch\u1EADm.",
-      description: "Tam Chuy\u1EC3n: Ph\xF3ng 3 lu\u1ED3ng ki\u1EBFm kh\xED S\u01B0\u01A1ng Tr\xFAc c\u1EF1c nhanh."
+      description: "Tam Chuy\u1EC3n: Ph\xF3ng lu\u1ED3ng ki\u1EBFm kh\xED S\u01B0\u01A1ng Tr\xFAc xuy\xEAn 4 \u0111\u1ECBch & l\xE0m ch\u1EADm 35%."
     },
     xich_viem_long_tuc: {
       id: "xich_viem_long_tuc",
@@ -4327,9 +4375,10 @@
       path: "viem_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "fire_orb",
       mpCost: 28,
       cooldown: 2.8,
-      damage: 115,
+      damage: 118,
       range: 135,
       arcSpread: 85 * Math.PI / 180,
       burnDps: 18,
@@ -4339,7 +4388,7 @@
       foodItemId: "xich_nham_hoa_tuy",
       foodName: "X\xEDch Nham H\u1ECFa T\u1EE7y",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Th\u1EDF h\u01A1i l\u1EEDa h\xECnh qu\u1EA1t thi\xEAu r\u1EE5i m\u1ECDi k\u1EBB \u0111\u1ECBch tr\u01B0\u1EDBc m\u1EB7t.",
-      description: "Tam Chuy\u1EC3n: Phun lu\u1ED3ng X\xEDch Vi\xEAm n\xF3ng ch\u1EA3y g\xE2y B\u1ECFng n\u1EB7ng."
+      description: "Tam Chuy\u1EC3n: Phun lu\u1ED3ng X\xEDch Vi\xEAm n\xF3ng ch\u1EA3y g\xE2y B\u1ECFng 18 DPS."
     },
     ngan_trung_nguyet: {
       id: "ngan_trung_nguyet",
@@ -4349,10 +4398,11 @@
       path: "nguyet_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "crescent_moon",
       mpCost: 26,
       cooldown: 2.5,
-      damage: 116,
-      range: 160,
+      damage: 118,
+      range: 165,
       radius: 44,
       slowFactor: 0.4,
       color: "#dff6ff",
@@ -4370,9 +4420,10 @@
       path: "huyet_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "blood_crescent",
       mpCost: 25,
       cooldown: 2.4,
-      damage: 124,
+      damage: 126,
       range: 125,
       arcSpread: 98 * Math.PI / 180,
       lifesteal: 0.34,
@@ -4392,10 +4443,15 @@
       path: "thuc_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "spirit_wine",
       mpCost: 10,
       cooldown: 6,
-      mpRestore: 155,
-      healAmount: 70,
+      mpRestore: 160,
+      healAmount: 75,
+      refineBuffDuration: 7.5,
+      refineDmgBonus: 0.28,
+      refineCdBonus: 0.25,
+      refineMpSave: 0.28,
       moveSpeedBonus: 0.16,
       range: 48,
       radius: 30,
@@ -4403,8 +4459,8 @@
       vfxKey: "vfx/hit-spark",
       foodItemId: "ruou_trang",
       foodName: "R\u01B0\u1EE3u tr\u1EAFng",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Tinh l\u1ECDc Ch\xE2n Nguy\xEAn c\u1EF1c ph\u1EA9m (+16% t\u1ED1c ch\u1EA1y & h\u1ED3i 155 MP).",
-      description: "Tam Chuy\u1EC3n: Tinh t\xFAy Th\u1EF1c \u0110\u1EA1o b\u1ED5 sung t\u1EE9c th\u1EDDi 155 Ch\xE2n nguy\xEAn & 70 HP."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Tinh l\u1ECDc Ch\xE2n Nguy\xEAn c\u1EF1c ph\u1EA9m (+16% t\u1ED1c ch\u1EA1y & h\u1ED3i 160 MP).",
+      description: "Tam Chuy\u1EC3n: Tinh t\xFAy Th\u1EF1c \u0110\u1EA1o b\u1ED5 sung 160 MP, 75 HP & tinh luy\u1EC7n chi\xEAu th\u1EE9c 7.5s."
     },
     bang_co: {
       id: "bang_co",
@@ -4414,19 +4470,22 @@
       path: "bang_tuyet_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "frost_lance",
       mpCost: 24,
       cooldown: 5.8,
       hpBonusPct: 0.36,
       armorBonus: 0.34,
-      shieldAmount: 225,
+      shieldAmount: 230,
+      buffDuration: 6,
+      buffArmorBonus: 0.22,
       thornsPct: 0.32,
       guardStance: true,
       color: "#9eeeff",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "bang_tuyen_tinh",
       foodName: "B\u0103ng Tuy\u1EC1n Tinh",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Da th\u1ECBt h\xF3a b\u0103ng ng\u1ECDc (+36% HP, +34% Gi\xE1p, Khi\xEAn 225 HP).",
-      description: "Tam Chuy\u1EC3n: Tuy\u1EC7t k\u1EF9 ph\xF2ng ng\u1EF1 c\u1EE7a B\u0103ng Tuy\u1EBFt \u0110\u1EA1o, ph\u1EA3n s\u01B0\u01A1ng k\u1EBB t\u1EA5n c\xF4ng."
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Da th\u1ECBt h\xF3a b\u0103ng ng\u1ECDc (+36% HP, +34% Gi\xE1p, Khi\xEAn 230 HP).",
+      description: "Tam Chuy\u1EC3n: Tuy\u1EC7t k\u1EF9 ph\xF2ng ng\u1EF1 B\u0103ng Tuy\u1EBFt \u0110\u1EA1o, ph\u1EA3n s\u01B0\u01A1ng k\u1EBB t\u1EA5n c\xF4ng."
     },
     truy_phong: {
       id: "truy_phong",
@@ -4436,11 +4495,14 @@
       path: "phong_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "wind_wheel",
       mpCost: 20,
       cooldown: 1.7,
-      damage: 98,
-      range: 122,
+      damage: 100,
+      range: 124,
       moveSpeedBonus: 0.32,
+      speedBuffBonus: 0.32,
+      speedBuffDuration: 2.8,
       dodgeBonus: 0.22,
       color: "#72ffd8",
       vfxKey: "vfx/anh-bo",
@@ -4457,9 +4519,10 @@
       path: "doc_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "venom_glob",
       mpCost: 28,
       cooldown: 3.2,
-      damage: 110,
+      damage: 112,
       range: 135,
       radius: 48,
       poisonDps: 22,
@@ -4480,11 +4543,12 @@
       path: "huyet_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "blood_crescent",
       mpCost: 30,
       cooldown: 6.5,
-      damage: 140,
-      range: 110,
-      radius: 45,
+      damage: 145,
+      range: 115,
+      radius: 46,
       lifesteal: 0.4,
       color: "#d02042",
       vfxKey: "vfx/huyet-nguyet",
@@ -4501,9 +4565,10 @@
       path: "bang_tuyet_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "frost_lance",
       mpCost: 34,
       cooldown: 3.2,
-      damage: 165,
+      damage: 168,
       range: 150,
       radius: 52,
       slowFactor: 0.55,
@@ -4523,16 +4588,19 @@
       path: "cot_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 30,
       cooldown: 6.5,
       armorBonus: 0.4,
-      shieldAmount: 320,
+      shieldAmount: 325,
+      buffDuration: 6.5,
+      buffArmorBonus: 0.28,
       guardStance: true,
       color: "#dfd7cc",
       vfxKey: "vfx/bach-cot-don",
       foodItemId: "thit_thu",
       foodName: "Th\u1ECBt th\xFA",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): +40% Gi\xE1p, Khi\xEAn 320 HP & ph\u1EA3n s\xE1t th\u01B0\u01A1ng.",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): +40% Gi\xE1p, Khi\xEAn 325 HP & ph\u1EA3n s\xE1t th\u01B0\u01A1ng.",
       description: "T\u1EE9 Chuy\u1EC3n: Kho\xE1c chi\u1EBFn gi\xE1p x\u01B0\u01A1ng huy\u1EC1n thi\u1EBFt b\u1EA5t ho\u1EA1i."
     },
     van_kiem_quy_tong: {
@@ -4543,9 +4611,10 @@
       path: "kiem_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "sword_qi",
       mpCost: 32,
       cooldown: 2.2,
-      damage: 155,
+      damage: 158,
       projectileCount: 3,
       range: 205,
       radius: 14,
@@ -4565,6 +4634,7 @@
       path: "moc_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "vitality_ring",
       mpCost: 0,
       cooldown: 7.5,
       mpRestore: 235,
@@ -4585,12 +4655,14 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 34,
       cooldown: 2.7,
-      damage: 178,
+      damage: 180,
       range: 132,
       arcSpread: 108 * Math.PI / 180,
       stunDuration: 1,
+      knockback: 36,
       summonsPhantom: true,
       color: "#ffb347",
       vfxKey: "vfx/hoa-than",
@@ -4607,9 +4679,10 @@
       path: "huyet_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "blood_crescent",
       mpCost: 30,
       cooldown: 2.4,
-      damage: 158,
+      damage: 160,
       range: 128,
       lifesteal: 0.38,
       color: "#ff2e4c",
@@ -4627,9 +4700,10 @@
       path: "anh_dao",
       role: "move",
       aimType: "dash",
+      projStyle: "shadow_dagger",
       mpCost: 28,
       cooldown: 2.2,
-      damage: 148,
+      damage: 150,
       range: 124,
       decoyDuration: 4,
       dodgeBonus: 0.26,
@@ -4648,18 +4722,22 @@
       path: "tho_dao",
       role: "defense",
       aimType: "aoe",
+      projStyle: "armor_shell",
       mpCost: 32,
       cooldown: 6.2,
       hpBonusPct: 0.48,
       armorBonus: 0.44,
       thornsPct: 0.45,
-      shieldAmount: 380,
+      shieldAmount: 385,
+      buffDuration: 7,
+      buffArmorBonus: 0.3,
+      buffThornsPct: 0.4,
       guardStance: true,
       color: "#ffd257",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "hoang_tho_tinh_sa",
       foodName: "Ho\xE0ng Th\u1ED5 Tinh Sa",
-      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Chu\xF4ng v\xE0ng b\u1EA5t ho\u1EA1i +48% HP, +44% Gi\xE1p, Khi\xEAn 380 HP!",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Chu\xF4ng v\xE0ng b\u1EA5t ho\u1EA1i +48% HP, +44% Gi\xE1p, Khi\xEAn 385 HP!",
       description: "T\u1EE9 Chuy\u1EC3n: K\u1EBFt t\u1EE5 \u0111\u1EA1i h\u1ED3ng chung kim s\u1EAFc h\u1ED9 th\u1EC3 & ph\u1EA3n 45% s\xE1t th\u01B0\u01A1ng."
     },
     liet_diem_phan_thanh: {
@@ -4670,9 +4748,10 @@
       path: "viem_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "fire_orb",
       mpCost: 35,
       cooldown: 3.1,
-      damage: 172,
+      damage: 175,
       range: 155,
       radius: 54,
       burnDps: 26,
@@ -4693,10 +4772,13 @@
       path: "nhan_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "spirit_wine",
       mpCost: 40,
       cooldown: 10,
-      mpRestore: 220,
-      healAmount: 180,
+      mpRestore: 225,
+      healAmount: 185,
+      refineBuffDuration: 8,
+      refineDmgBonus: 0.25,
       color: "#d9b25f",
       vfxKey: "vfx/nguyet-quang",
       foodItemId: "bang_tuyen_tinh",
@@ -4712,12 +4794,14 @@
       path: "luc_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "boar_cleave",
       mpCost: 42,
       cooldown: 3,
-      damage: 245,
+      damage: 250,
       range: 145,
       arcSpread: 125 * Math.PI / 180,
       summonsPhantom: true,
+      knockback: 40,
       color: "#f2c14e",
       vfxKey: "vfx/hoa-than",
       foodItemId: "thit_thu",
@@ -4733,6 +4817,7 @@
       path: "loi_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "thunder_bolt",
       mpCost: 45,
       cooldown: 3.5,
       damage: 255,
@@ -4754,6 +4839,7 @@
       path: "viem_dao",
       role: "attack",
       aimType: "arc",
+      projStyle: "fire_orb",
       mpCost: 44,
       cooldown: 3.2,
       damage: 250,
@@ -4776,6 +4862,7 @@
       path: "nhan_dao",
       role: "support",
       aimType: "aoe",
+      projStyle: "time_ripple",
       mpCost: 35,
       cooldown: 14,
       healAmount: 420,
@@ -4798,9 +4885,10 @@
       path: "huyet_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "blood_crescent",
       mpCost: 44,
       cooldown: 2.8,
-      damage: 112,
+      damage: 115,
       projectileCount: 5,
       homing: true,
       lifesteal: 0.45,
@@ -4821,12 +4909,14 @@
       path: "luc_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "boar_cleave",
       mpCost: 46,
       cooldown: 3.4,
       damage: 268,
       range: 140,
       radius: 60,
       stunDuration: 1.3,
+      knockback: 42,
       summonsPhantom: true,
       color: "#ffaa33",
       vfxKey: "vfx/hoa-than",
@@ -4843,6 +4933,7 @@
       path: "bang_tuyet_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "frost_lance",
       mpCost: 45,
       cooldown: 3.5,
       damage: 255,
@@ -4865,6 +4956,7 @@
       path: "doc_dao",
       role: "attack",
       aimType: "aoe",
+      projStyle: "venom_glob",
       mpCost: 44,
       cooldown: 3.2,
       damage: 235,
@@ -4887,9 +4979,10 @@
       path: "kiem_dao",
       role: "attack",
       aimType: "line",
+      projStyle: "sword_qi",
       mpCost: 42,
       cooldown: 2.3,
-      damage: 128,
+      damage: 132,
       projectileCount: 5,
       pierce: 6,
       range: 225,
@@ -5987,6 +6080,860 @@
     { id: "dung_soi_tuyet", name: "Huy\u1EC7t Tuy\u1EBFt Lang", recRank: "Ng\u0169 chuy\u1EC3n", mapId: "vuong_dinh", bossName: "Tuy\u1EBFt Lang V\u01B0\u01A1ng", bossType: "soi_tuyet_vuong", rewardMat: "bang_tuyen_tinh", setDrop: "chan_duong_bo", stones: 1500 }
   ];
 
+  // src/combat/SkillVfxAndCombos.js
+  var PROJ_SHEET_CACHE = /* @__PURE__ */ new Map();
+  var OPPOSING_PATH_PAIRS = [
+    ["viem_dao", "thuy_dao"],
+    ["viem_dao", "bang_tuyet_dao"],
+    ["quang_dao", "anh_dao"],
+    ["quang_dao", "huyet_dao"],
+    ["doc_dao", "moc_dao"]
+  ];
+  function samePathPair(a, b, p1, p2) {
+    return a === p1 && b === p2 || a === p2 && b === p1;
+  }
+  var GU_FAMILY_ALIAS = {
+    tieu_sinh_co: "sinh_co",
+    cuu_diep_sinh_co: "sinh_co",
+    quang_vu: "quang_vu",
+    nguyet_quang: "nguyet",
+    nguyet_nghe: "nguyet",
+    ngan_trung_nguyet: "nguyet",
+    hoang_kim_nguyet: "nguyet",
+    thanh_phong_luan: "phong",
+    thinh_phong: "phong",
+    truy_phong: "phong",
+    tuu_trung: "tuu",
+    tu_vi_tuu_trung: "tuu",
+    thuc_tinh: "tuu",
+    hac_thi: "thi",
+    bach_thi: "thi",
+    hung_luc: "luc",
+    toan_luc_ung_pho: "luc",
+    long_tuong_luc: "luc",
+    bat_son: "luc",
+    van_nga_huyen_anh: "luc",
+    dong_bi: "bi",
+    thu_bi: "bi",
+    ngoc_bi: "bi",
+    bach_ngoc: "bi",
+    thien_bong: "bi",
+    kim_chung_trao: "bi",
+    thiet_cot: "bi",
+    huyen_cot_giap: "bi",
+    huyet_nha: "huyet",
+    huyet_nguyet: "huyet",
+    huyet_cuong: "huyet",
+    huyet_ha_xa: "huyet",
+    huyet_lo: "huyet",
+    huyet_tich_tu: "huyet",
+    kiem_anh: "kiem",
+    suong_truc_kiem: "kiem",
+    van_kiem_quy_tong: "kiem",
+    thien_kiem_tuyet_anh: "kiem",
+    dan_khieu_hoa_than: "viem",
+    xich_viem_long_tuc: "viem",
+    liet_diem_phan_thanh: "viem",
+    thai_co_long_tuc: "viem",
+    han_bang_tien: "bang",
+    bang_co: "bang",
+    bang_phach_tuyet_hoa: "bang",
+    bang_phong_thien_ly: "bang",
+    dien_nhan: "loi",
+    loi_khieu: "loi",
+    loi_duc: "loi",
+    cuu_tieu_loi_nguc: "loi",
+    thanh_doc: "doc",
+    chuong_khi_boc: "doc",
+    doc_hat: "doc",
+    phe_hon_thiem: "doc",
+    van_doc_vuong: "doc",
+    bach_cot_don: "cot",
+    xoan_oc_cot_thuong: "cot",
+    cot_thuong: "cot"
+  };
+  function matchesRecipeFamilies(guList, famReq) {
+    const fams = guList.map((g) => GU_FAMILY_ALIAS[g.id] || g.path || g.id);
+    const pool = [...fams];
+    for (const req of famReq) {
+      const idx = pool.findIndex((f) => f === req || req === "luc" && f === "thi" || req === "bi" && f === "bang");
+      if (idx < 0) return false;
+      pool.splice(idx, 1);
+    }
+    return true;
+  }
+  var COMBO_SYNERGY_RECIPES = [
+    {
+      id: "combo_tam_tuyet_phong_nguyet",
+      families: ["nguyet", "phong", "tuu"],
+      name: "Tam Tuy\u1EC7t Phong Nguy\u1EC7t Ph\xE1",
+      path: "nguyet_dao",
+      color: "#7effeb",
+      secondaryColor: "#ffd15c",
+      tertiaryColor: "#80ffd4",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_wind_moon",
+      count: 3,
+      pierce: 5,
+      damageMult: 3.15,
+      mpCostMult: 1.45,
+      cooldown: 9.5,
+      range: 205,
+      dashBackOrSide: 42,
+      speedBuffBonus: 0.28,
+      speedBuffDuration: 2.5,
+      refineDmgBonus: 0.2,
+      refineBuffDuration: 5,
+      desc: "Nguy\u1EC7t \u0110\u1EA1o + Phong \u0110\u1EA1o + T\u1EEDu Tr\xF9ng: L\u01B0\u1EDBt nh\u1EB9 xoay m\xECnh tung 3 l\u01B0\u1EE1i li\u1EC1m tr\u0103ng xo\xE1y gi\xF3 & tinh luy\u1EC7n ch\xE2n nguy\xEAn."
+    },
+    {
+      id: "combo_tam_luc_kim_than",
+      families: ["thi", "thi", "bi"],
+      name: "Tam L\u1EF1c Kim Th\xE2n B\xE1 K\xEDch",
+      path: "luc_dao",
+      color: "#f2c14e",
+      secondaryColor: "#d49548",
+      tertiaryColor: "#fff0b8",
+      kind: "combo_shockwave",
+      projStyle: "combo_armor_shockwave",
+      damageMult: 3.25,
+      mpCostMult: 1.4,
+      cooldown: 10,
+      range: 120,
+      shieldAmount: 145,
+      buffDuration: 5.5,
+      buffArmorBonus: 0.2,
+      stunDuration: 1.1,
+      knockback: 38,
+      desc: "Song Th\u1EC9 L\u1EF1c + Gi\xE1p B\xEC C\u1ED5: T\u1EE5 gi\xE1p \u0111\u1ED3ng h\u1ED9 th\u1EC3 x\xF4ng l\xEAn n\u1EC7n ch\u1EA5n \u0111\u1ED9ng m\u1EB7t \u0111\u1EA5t l\xE0m cho\xE1ng 1.1s & v\u1EE1 m\u1EA3nh gi\xE1p!"
+    },
+    {
+      id: "combo_phong_nguyet_toan_tram",
+      families: ["nguyet", "phong"],
+      name: "Phong Nguy\u1EC7t To\xE0n Tr\u1EA3m",
+      path: "nguyet_dao",
+      color: "#6fffe9",
+      secondaryColor: "#98ffda",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_wind_moon",
+      count: 2,
+      pierce: 4,
+      damageMult: 2.45,
+      mpCostMult: 1.35,
+      cooldown: 7.5,
+      range: 195,
+      dashForward: 54,
+      speedBuffBonus: 0.22,
+      speedBuffDuration: 2.2,
+      desc: "Nguy\u1EC7t Quang + Thanh Phong Lu\xE2n: L\u01B0\u1EDBt n\xE9 \u0111\u1ED3ng th\u1EDDi ch\xE9m \u0111\xF4i tr\u0103ng khuy\u1EBFt qu\u1EA5n l\u1ED1c xo\xE1y gi\xF3 xanh."
+    },
+    {
+      id: "combo_tinh_nguyet_lien_kich",
+      families: ["nguyet", "tuu"],
+      name: "Tinh Nguy\u1EC7t Li\xEAn K\xEDch",
+      path: "nguyet_dao",
+      color: "#ffd86e",
+      secondaryColor: "#5ef2d6",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_triple_moon",
+      count: 5,
+      pierce: 4,
+      damageMult: 2.6,
+      mpCostMult: 1.3,
+      cooldown: 8,
+      range: 190,
+      refineDmgBonus: 0.18,
+      refineBuffDuration: 5,
+      desc: "Nguy\u1EC7t Quang + T\u1EEDu Tr\xF9ng: T\u1EEDu kh\xED tinh luy\u1EC7n h\xF3a th\xE0nh 5 l\u01B0\u1EE1i li\u1EC1m ng\xE2n nguy\u1EC7t vi\u1EC1n v\xE0ng bay t\u1ECFa qu\u1EA1t."
+    },
+    {
+      id: "combo_nguyet_hoa_sinh_linh",
+      families: ["nguyet", "sinh_co"],
+      name: "Nguy\u1EC7t Hoa Sinh Linh Kh\xFAc",
+      path: "nguyet_dao",
+      color: "#7effc2",
+      secondaryColor: "#5ef2d6",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_spirit_ring",
+      count: 3,
+      pierce: 3,
+      damageMult: 2.15,
+      mpCostMult: 1.35,
+      cooldown: 8.5,
+      range: 185,
+      healAmount: 85,
+      hotTotal: 65,
+      hotDuration: 4.5,
+      desc: "Nguy\u1EC7t Quang + Sinh C\u01A1 Th\u1EA3o: V\u1EEBa ph\xF3ng 3 tr\u0103ng ng\u1ECDc v\u1EEBa n\u1EDF v\xF2ng linh kh\xED h\u1ED3i sinh l\u1EF1c quanh th\xE2n."
+    },
+    {
+      id: "combo_nguyet_quang_vu",
+      families: ["nguyet", "quang_vu"],
+      name: "Minh Nguy\u1EC7t Quang V\u0169 Tr\u1EADn",
+      path: "nguyet_dao",
+      color: "#fff099",
+      secondaryColor: "#5ef2d6",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_spirit_ring",
+      count: 4,
+      pierce: 4,
+      damageMult: 2.4,
+      mpCostMult: 1.35,
+      cooldown: 8.5,
+      range: 195,
+      healAmount: 140,
+      cleanseSlow: true,
+      desc: "Nguy\u1EC7t \u0110\u1EA1o + Quang V\u0169 C\u1ED5: Ph\xF3ng m\u01B0a tr\u0103ng s\xE1ng r\u1EF1c \u0111\u1ED3ng th\u1EDDi ch\u1EEFa tr\u1ECB t\u1EE9c th\u1EDDi & gi\u1EA3i l\xE0m ch\u1EADm."
+    },
+    {
+      id: "combo_thiet_giap_bao_tru",
+      families: ["thi", "bi"],
+      name: "Thi\u1EBFt Gi\xE1p B\u1EA1o Tr\u01B0 Xung",
+      path: "luc_dao",
+      color: "#e69b45",
+      secondaryColor: "#d49548",
+      kind: "combo_shockwave",
+      projStyle: "combo_armor_shockwave",
+      damageMult: 2.65,
+      mpCostMult: 1.35,
+      cooldown: 8.5,
+      range: 112,
+      dashForward: 68,
+      shieldAmount: 115,
+      buffDuration: 5,
+      buffArmorBonus: 0.16,
+      stunDuration: 0.9,
+      knockback: 34,
+      desc: "H\u1EAFc/B\u1EA1ch Th\u1EC9 + \u0110\u1ED3ng/Ng\u1ECDc B\xEC: B\u1EADt gi\xE1p \u0111\u1ED3ng thau lao h\xFAc c\u1EADn chi\u1EBFn n\u1ED5 s\xF3ng xung k\xEDch h\u1EA5t tung \u0111\u1ECBch!"
+    },
+    {
+      id: "combo_song_thi_hop_luc",
+      families: ["thi", "thi"],
+      name: "Song Th\u1EC9 B\xE1 L\u1EF1c Oanh",
+      path: "luc_dao",
+      color: "#ffaa44",
+      secondaryColor: "#f2dfc4",
+      kind: "combo_shockwave",
+      projStyle: "combo_armor_shockwave",
+      damageMult: 2.8,
+      mpCostMult: 1.38,
+      cooldown: 8.5,
+      range: 118,
+      stunDuration: 1,
+      knockback: 42,
+      desc: "H\u1EAFc Th\u1EC9 + B\u1EA1ch Th\u1EC9: Song tr\u01B0 h\u1EE3p l\u1EF1c n\u1EC7n \u0111\xF4i n\u1EAFm \u0111\u1EA5m ng\xE0n c\xE2n l\xE0m cho\xE1ng & \u0111\u1EA9y l\xF9i to\xE0n v\xF9ng tr\u01B0\u1EDBc m\u1EB7t."
+    },
+    {
+      id: "combo_cuong_tru_tinh_nguyen",
+      families: ["thi", "tuu"],
+      name: "Cu\u1ED3ng Tr\u01B0 Tinh Nguy\xEAn Ph\xE1",
+      path: "luc_dao",
+      color: "#ffbe5c",
+      secondaryColor: "#e69b45",
+      kind: "combo_shockwave",
+      projStyle: "combo_armor_shockwave",
+      damageMult: 2.75,
+      mpCostMult: 1.3,
+      cooldown: 8,
+      range: 115,
+      refineDmgBonus: 0.22,
+      refineBuffDuration: 5.5,
+      knockback: 30,
+      desc: "L\u1EF1c \u0110\u1EA1o + T\u1EEDu Tr\xF9ng: R\u01B0\u1EE3u k\xEDch cu\u1ED3ng l\u1EF1c b\u1ED9c ph\xE1t s\xF3ng oanh k\xEDch n\u1EB7ng n\u1EC1 & t\u0103ng 22% uy l\u1EF1c chi\xEAu sau."
+    },
+    {
+      id: "combo_kim_ngoc_sinh_sinh",
+      families: ["bi", "sinh_co"],
+      name: "Kim Ng\u1ECDc Sinh Sinh Tr\u1EADn",
+      path: "tho_dao",
+      color: "#a8ffe2",
+      secondaryColor: "#5fbf8a",
+      kind: "combo_aura_nova",
+      projStyle: "combo_spirit_ring",
+      damageMult: 1.75,
+      mpCostMult: 1.32,
+      cooldown: 9,
+      range: 110,
+      shieldAmount: 140,
+      healAmount: 105,
+      hotTotal: 80,
+      hotDuration: 5,
+      buffDuration: 6,
+      buffArmorBonus: 0.22,
+      buffThornsPct: 0.3,
+      desc: "Gi\xE1p B\xEC + Sinh C\u01A1/Quang V\u0169: V\xF2ng tr\u1EADn \u0111\u1ED3ng ng\u1ECDc h\u1ED9 th\u1EC3 + h\u1ED3i m\xE1u li\xEAn t\u1EE5c & ph\u1EA3n ch\u1EA5n k\u1EBB \u0111\u1ECBch xung quanh."
+    },
+    {
+      id: "combo_van_kiem_loi_duc",
+      families: ["kiem", "loi"],
+      name: "L\xF4i \u0110\xECnh V\u1EA1n Ki\u1EBFm Tr\u1EA3m",
+      path: "kiem_dao",
+      color: "#ffe15c",
+      secondaryColor: "#c7e8ff",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_dual_element",
+      count: 6,
+      pierce: 4,
+      damageMult: 2.85,
+      mpCostMult: 1.4,
+      cooldown: 9,
+      range: 205,
+      stunDuration: 0.75,
+      desc: "Ki\u1EBFm \u0110\u1EA1o + L\xF4i \u0110\u1EA1o: Ph\xF3ng 6 thanh phi ki\u1EBFm qu\u1EA5n s\u1EA5m s\xE9t gi\u1EADt t\xEA li\u1EC7t & xuy\xEAn gi\xE1p \u0111\u1ECBch."
+    },
+    {
+      id: "combo_bang_viem_nghich_loan",
+      families: ["viem", "bang"],
+      name: "B\u0103ng Vi\xEAm Ngh\u1ECBch Lo\u1EA1n Ph\xE1",
+      path: "viem_dao",
+      color: "#ff7b39",
+      secondaryColor: "#78dcff",
+      kind: "combo_aura_nova",
+      projStyle: "combo_dual_element",
+      damageMult: 3.1,
+      mpCostMult: 1.5,
+      cooldown: 10.5,
+      range: 138,
+      burnDps: 20,
+      slowFactor: 0.5,
+      desc: "Vi\xEAm \u0110\u1EA1o + B\u0103ng \u0110\u1EA1o (Ngh\u1ECBch Xung): S\xE1t th\u01B0\u01A1ng c\u1EF1c \u0111\u1EA1i g\xE2y B\u1ECFng & \u0110\xF3ng B\u0103ng, nh\u01B0ng r\u1EA5t d\u1EC5 g\xE2y ph\u1EA3n ph\u1EC7!"
+    },
+    {
+      id: "combo_huyet_cot_ma_thuong",
+      families: ["huyet", "cot"],
+      name: "Huy\u1EBFt C\u1ED1t Ma Th\u01B0\u01A1ng",
+      path: "huyet_dao",
+      color: "#ff3358",
+      secondaryColor: "#ede6da",
+      kind: "combo_projectile_wave",
+      projStyle: "combo_dual_element",
+      count: 4,
+      pierce: 4,
+      damageMult: 2.65,
+      mpCostMult: 1.38,
+      cooldown: 8.5,
+      range: 190,
+      lifesteal: 0.34,
+      stunDuration: 0.5,
+      desc: "Huy\u1EBFt \u0110\u1EA1o + C\u1ED1t \u0110\u1EA1o: Ph\xF3ng 4 th\u01B0\u01A1ng c\u1ED1t t\u1EA9m m\xE1u xuy\xEAn \u0111\u1ECBch, l\xE0m cho\xE1ng & h\xFAt 34% sinh l\u1EF1c."
+    },
+    {
+      id: "combo_doc_hoa_lieu_nguyen",
+      families: ["doc", "viem"],
+      name: "\u0110\u1ED9c H\u1ECFa Li\xEAu Nguy\xEAn B\u1ED9c",
+      path: "doc_dao",
+      color: "#a8ff52",
+      secondaryColor: "#ff7b39",
+      kind: "combo_aura_nova",
+      projStyle: "combo_dual_element",
+      damageMult: 2.75,
+      mpCostMult: 1.4,
+      cooldown: 9,
+      range: 135,
+      poisonDps: 18,
+      burnDps: 16,
+      ignitesPoison: true,
+      desc: "\u0110\u1ED9c \u0110\u1EA1o + Vi\xEAm \u0110\u1EA1o: K\xEDch n\u1ED5 m\xE2y \u0111\u1ED9c th\xE0nh bi\u1EC3n l\u1EEDa xanh thi\xEAu \u0111\u1ED1t d\u1EEF d\u1ED9i!"
+    }
+  ];
+  function evaluateComboStability(guList, player2 = null) {
+    if (!Array.isArray(guList) || guList.length < 2) {
+      return { stabilityPct: 0, warnings: ["C\u1EA7n \xEDt nh\u1EA5t 2 C\u1ED5 Tr\xF9ng \u0111\u1EC3 k\u1EBFt h\u1EE3p S\xE1t Chi\xEAu."], harmonious: false };
+    }
+    const stageRank = player2?.getStage?.()?.rank ?? 1;
+    const warnings = [];
+    let stability = 98 - (guList.length - 2) * 4;
+    const hasWine = guList.some((g) => GU_FAMILY_ALIAS[g.id] === "tuu" || g.path === "thuc_dao");
+    const samePathCount = guList.filter((g) => g.path === guList[0].path).length;
+    if (samePathCount === guList.length) stability += 4;
+    if (hasWine) stability += 6;
+    let hasConflict = false;
+    for (let i = 0; i < guList.length; i++) {
+      for (let j = i + 1; j < guList.length; j++) {
+        for (const [p1, p2] of OPPOSING_PATH_PAIRS) {
+          if (samePathPair(guList[i].path, guList[j].path, p1, p2)) {
+            hasConflict = true;
+          }
+        }
+      }
+    }
+    if (hasConflict) {
+      const penalty = hasWine ? 10 : 22;
+      stability -= penalty;
+      warnings.push(
+        hasWine ? "C\xF3 \u0111\u1EA1o xung kh\u1EAFc nh\u01B0ng \u0111\u01B0\u1EE3c T\u1EEDu Tr\xF9ng \u0111i\u1EC1u h\xF2a b\u1EDBt r\u1EE7i ro." : "\u0110\u1EA1o ng\xE2n xung kh\u1EAFc (Th\u1EE7y/B\u0103ng-Vi\xEAm ho\u1EB7c \u0110\u1ED9c-M\u1ED9c)! D\u1EC5 ph\u1EA3n ph\u1EC7 nh\u1EB9 khi thi tri\u1EC3n."
+      );
+    }
+    for (const g of guList) {
+      if ((g.hunger ?? 100) <= 0) {
+        stability -= 32;
+        warnings.push(`${g.shortLabel || g.name} \u0111ang \u0111\xF3i ki\u1EC7t (0%)!`);
+      } else if ((g.hunger ?? 100) < 35) {
+        stability -= 14;
+        warnings.push(`${g.shortLabel || g.name} s\u1EAFp \u0111\xF3i (${Math.round(g.hunger)}%).`);
+      }
+      if ((g.rank ?? 1) > stageRank) {
+        stability -= 14;
+        warnings.push(`${g.shortLabel || g.name} (Chuy\u1EC3n ${g.rank}) v\u01B0\u1EE3t c\u1EA3nh gi\u1EDBi hi\u1EC7n t\u1EA1i.`);
+      }
+    }
+    if ((player2?.thoughtGauge ?? 45) >= 60) {
+      stability += 6;
+    }
+    const clamped = Math.max(48, Math.min(100, Math.round(stability)));
+    return {
+      stabilityPct: clamped,
+      warnings,
+      harmonious: !hasConflict && clamped >= 92
+    };
+  }
+  function resolveMultiGuKillerMove(guList, player2 = null, customName = null) {
+    if (!Array.isArray(guList) || guList.length < 2) return null;
+    const rank = player2?.getStage?.()?.rank ?? 1;
+    const stab = evaluateComboStability(guList, player2);
+    const sortedRecipes = [...COMBO_SYNERGY_RECIPES].sort((a, b) => b.families.length - a.families.length);
+    const matched = sortedRecipes.find(
+      (r) => guList.length >= r.families.length && matchesRecipeFamilies(guList, r.families)
+    );
+    const sumMp = guList.reduce((acc, g) => acc + Math.max(8, g.mpCost ?? 12), 0);
+    const avgCd = guList.reduce((acc, g) => acc + Math.max(1.5, g.cooldown ?? 2.5), 0) / guList.length;
+    const c1 = guList[0]?.color || "#5ef2d6";
+    const c2 = guList[1]?.color || "#ffd257";
+    const c3 = guList[2]?.color || c2;
+    if (matched) {
+      return {
+        id: `custom_${matched.id}`,
+        isMultiGu: true,
+        guIds: guList.map((g) => g.id),
+        guUids: guList.map((g) => g.uid).filter(Boolean),
+        guNames: guList.map((g) => g.shortLabel || g.name),
+        name: customName || matched.name,
+        path: matched.path || guList[0].path,
+        color: matched.color || c1,
+        secondaryColor: matched.secondaryColor || c2,
+        tertiaryColor: matched.tertiaryColor || c3,
+        thoughtCost: 0,
+        mpCost: Math.max(20, Math.round(sumMp * (matched.mpCostMult ?? 1.35))),
+        cooldown: matched.cooldown ?? 8.5,
+        damageMult: Number(((matched.damageMult ?? 2.4) + (guList.length - matched.families.length) * 0.45).toFixed(2)),
+        range: matched.range ?? 165,
+        kind: matched.kind,
+        projStyle: matched.projStyle,
+        count: matched.count ?? 3,
+        pierce: matched.pierce ?? 3,
+        dashForward: matched.dashForward ?? 0,
+        dashBackOrSide: matched.dashBackOrSide ?? 0,
+        shieldAmount: matched.shieldAmount ?? 0,
+        healAmount: matched.healAmount ?? 0,
+        hotTotal: matched.hotTotal ?? 0,
+        hotDuration: matched.hotDuration ?? 0,
+        cleanseSlow: Boolean(matched.cleanseSlow),
+        buffDuration: matched.buffDuration ?? 0,
+        buffArmorBonus: matched.buffArmorBonus ?? 0,
+        buffThornsPct: matched.buffThornsPct ?? 0,
+        speedBuffBonus: matched.speedBuffBonus ?? 0,
+        speedBuffDuration: matched.speedBuffDuration ?? 0,
+        refineDmgBonus: matched.refineDmgBonus ?? 0,
+        refineBuffDuration: matched.refineBuffDuration ?? 0,
+        stunDuration: matched.stunDuration ?? 0,
+        slowFactor: matched.slowFactor ?? 0,
+        burnDps: matched.burnDps ?? 0,
+        poisonDps: matched.poisonDps ?? 0,
+        lifesteal: matched.lifesteal ?? 0,
+        knockback: matched.knockback ?? 0,
+        ignitesPoison: Boolean(matched.ignitesPoison),
+        stabilityPct: stab.stabilityPct,
+        stabilityWarnings: stab.warnings,
+        desc: `${matched.desc} [\u0110\u1ED9 \u1ED5n \u0111\u1ECBnh: ${stab.stabilityPct}%]`
+      };
+    }
+    const hasLine = guList.some((g) => g.aimType === "line");
+    const hasArcOrMelee = guList.some((g) => g.aimType === "arc" || g.path === "luc_dao");
+    const hasHeal = guList.some((g) => g.role === "heal" || g.healAmount);
+    const hasDef = guList.some((g) => g.role === "defense" || g.shieldAmount);
+    const hasMove = guList.some((g) => g.role === "move" || g.aimType === "dash");
+    const hasSupport = guList.some((g) => g.mpRestore || g.refineBuffDuration);
+    const count = guList.length;
+    const namePrefix = guList.map((g) => (g.shortLabel || g.name).split(" ")[0]).slice(0, 3).join("-");
+    const style = hasLine && hasMove ? "combo_wind_moon" : hasArcOrMelee && hasDef ? "combo_armor_shockwave" : (hasHeal || hasDef) && !hasLine ? "combo_spirit_ring" : "combo_dual_element";
+    const kind = hasLine ? "combo_projectile_wave" : hasArcOrMelee ? "combo_shockwave" : "combo_aura_nova";
+    return {
+      id: `custom_dyn_${guList.map((g) => g.id).join("_")}`,
+      isMultiGu: true,
+      guIds: guList.map((g) => g.id),
+      guUids: guList.map((g) => g.uid).filter(Boolean),
+      guNames: guList.map((g) => g.shortLabel || g.name),
+      name: customName || `H\u1EE3p K\xEDch \xB7 ${namePrefix} (${count} C\u1ED5)`,
+      path: guList[0].path,
+      color: c1,
+      secondaryColor: c2,
+      tertiaryColor: c3,
+      thoughtCost: 0,
+      mpCost: Math.max(18, Math.round(sumMp * 1.35 + (rank - 1) * 4)),
+      cooldown: Number(Math.max(7, Math.min(12.5, avgCd * 1.65 + (count - 2) * 1.4)).toFixed(1)),
+      damageMult: Number((1.95 + (count - 2) * 0.65).toFixed(2)),
+      range: hasLine ? 185 : 125,
+      kind,
+      projStyle: style,
+      count: count + 1,
+      pierce: hasLine ? 3 : 2,
+      dashForward: hasMove ? 56 : 0,
+      shieldAmount: guList.reduce((acc, g) => acc + Math.round((g.shieldAmount ?? 0) * 0.9), 0),
+      healAmount: guList.reduce((acc, g) => acc + Math.round((g.healAmount ?? 0) * 0.85), 0),
+      hotTotal: guList.reduce((acc, g) => acc + (g.hotTotal ?? 0), 0),
+      hotDuration: guList.some((g) => g.hotDuration) ? 4.5 : 0,
+      buffDuration: hasDef ? 5 : 0,
+      buffArmorBonus: hasDef ? 0.16 : 0,
+      buffThornsPct: hasDef ? 0.2 : 0,
+      speedBuffBonus: hasMove ? 0.2 : 0,
+      speedBuffDuration: hasMove ? 2.2 : 0,
+      refineDmgBonus: hasSupport ? 0.18 : 0,
+      refineBuffDuration: hasSupport ? 5 : 0,
+      stunDuration: Math.max(...guList.map((g) => g.stunDuration ?? 0), hasArcOrMelee ? 0.65 : 0),
+      slowFactor: Math.max(...guList.map((g) => g.slowFactor ?? 0)),
+      burnDps: Math.max(...guList.map((g) => g.burnDps ?? 0)),
+      poisonDps: Math.max(...guList.map((g) => g.poisonDps ?? 0)),
+      lifesteal: Math.max(...guList.map((g) => g.lifesteal ?? 0)),
+      knockback: hasArcOrMelee ? 28 : 0,
+      ignitesPoison: guList.some((g) => g.ignitesPoison),
+      stabilityPct: stab.stabilityPct,
+      stabilityWarnings: stab.warnings,
+      desc: `T\u1ED5 h\u1EE3p t\u1EF1 s\xE1ng t\u1EA1o (${guList.map((g) => g.shortLabel).join(" + ")}). [\u0110\u1ED9 \u1ED5n \u0111\u1ECBnh: ${stab.stabilityPct}%]`
+    };
+  }
+  function paintCrescentBlade(ctx, cx, cy, col, coreCol, frame, scale = 1) {
+    const dark = shadeHex(col, 0.42);
+    const bright = shadeHex(col, 1.38);
+    const pulse = frame % 2 === 0 ? 1 : 0;
+    for (let dy = -9; dy <= 9; dy++) {
+      const t = Math.abs(dy) / 9;
+      const xFront = Math.round((1 - t * t) * 7 * scale) + pulse;
+      const thickness = Math.max(1, Math.round((1 - t * 0.72) * 4.2 * scale));
+      const xBack = xFront - thickness;
+      for (let px = xBack; px <= xFront; px++) {
+        const rel = (px - xBack) / Math.max(1, thickness);
+        const pxColor = rel >= 0.78 ? coreCol : rel >= 0.45 ? bright : rel >= 0.18 ? col : dark;
+        plotRect(ctx, cx + px, cy + dy * scale, 1, Math.max(1, Math.round(scale)), pxColor);
+      }
+    }
+  }
+  function paintSpriteFrameForStyle(ctx, w, h, style, col, c2, c3, f) {
+    const cx = Math.floor(w * 0.5);
+    const cy = Math.floor(h * 0.5);
+    const dark = shadeHex(col, 0.38);
+    const bright = shadeHex(col, 1.38);
+    if (style === "crescent_moon" || style === "combo_triple_moon") {
+      paintCrescentBlade(ctx, cx + 1, cy, col, "#ffffff", f, style === "combo_triple_moon" ? 1.2 : 1);
+      const tx = cx - 8 - f % 2 * 2;
+      plotRect(ctx, tx, cy - 3, 2, 2, bright);
+      plotRect(ctx, tx - 3, cy + 2, 2, 1, c2 || col);
+      if (style === "combo_triple_moon") {
+        plotRect(ctx, cx - 5, cy - 7, 3, 2, c2);
+        plotRect(ctx, cx - 5, cy + 6, 3, 2, c2);
+      }
+      applySelectiveOutline(ctx, w, h, dark, "#06080d");
+      return;
+    }
+    if (style === "combo_wind_moon") {
+      paintCrescentBlade(ctx, cx + 3, cy, col, "#ffffff", f, 1.25);
+      const spin = f / 4 * Math.PI * 2;
+      for (let k = 0; k < 10; k++) {
+        const a = spin + k * 0.62;
+        const r = 10 + k % 3 * 3;
+        const gx = Math.round(cx + Math.cos(a) * r);
+        const gy = Math.round(cy + Math.sin(a) * (r * 0.75));
+        plotRect(ctx, gx - 1, gy - 1, 3, 2, k % 2 === 0 ? c2 : bright);
+        if (k % 3 === 0) plotPixel(ctx, gx, gy, "#ffffff");
+      }
+      applySelectiveOutline(ctx, w, h, "#0a2a24", "#06080d");
+      return;
+    }
+    if (style === "combo_dual_element") {
+      const rot = f / 4 * Math.PI * 2;
+      fillPixelEllipse(ctx, cx, cy, 11, 11, dark, false);
+      fillPixelEllipse(ctx, cx, cy, 8, 8, col, false);
+      fillPixelEllipse(ctx, cx, cy, 4, 4, "#ffffff", false);
+      for (let arm = 0; arm < 4; arm++) {
+        const a = rot + arm * Math.PI / 2;
+        const armCol = arm % 2 === 0 ? c2 : c3;
+        for (let s = 5; s <= 18; s += 2) {
+          const px = Math.round(cx + Math.cos(a + s * 0.06) * s);
+          const py = Math.round(cy + Math.sin(a + s * 0.06) * s);
+          plotRect(ctx, px - 1, py - 1, 3, 3, armCol);
+        }
+      }
+      applySelectiveOutline(ctx, w, h, dark, "#06080d");
+      return;
+    }
+    if (style === "sword_qi") {
+      const ox = f % 2 * 1;
+      plotRect(ctx, cx - 10, cy - 1, 16, 3, bright);
+      plotRect(ctx, cx - 8, cy, 17, 1, "#ffffff");
+      plotRect(ctx, cx + 6, cy - 2, 5, 5, col);
+      plotRect(ctx, cx + 9, cy - 1, 4, 3, bright);
+      plotRect(ctx, cx + 12, cy, 2, 1, "#ffffff");
+      plotRect(ctx, cx - 11, cy - 4, 2, 9, "#d4a64a");
+      plotRect(ctx, cx - 14 - ox, cy - 2, 3, 1, col);
+      plotRect(ctx, cx - 14 - ox, cy + 2, 3, 1, col);
+      applySelectiveOutline(ctx, w, h, "#162d3d", "#06080d");
+      return;
+    }
+    if (style === "bone_spear") {
+      const sw = f % 2 === 0 ? 1 : -1;
+      plotRect(ctx, cx - 11, cy - 1, 18, 3, "#c4baab");
+      plotRect(ctx, cx - 9, cy - 1, 17, 1, "#fff8eb");
+      for (let x = -8; x <= 6; x += 4) {
+        plotRect(ctx, cx + x, cy + sw * (x / 4 % 2 === 0 ? 2 : -2), 2, 2, "#8f8374");
+      }
+      plotRect(ctx, cx + 6, cy - 3, 5, 7, "#ece4d8");
+      plotRect(ctx, cx + 10, cy - 1, 4, 3, "#ffffff");
+      applySelectiveOutline(ctx, w, h, "#2e2721", "#06080d");
+      return;
+    }
+    if (style === "fire_orb") {
+      fillPixelEllipse(ctx, cx + 2, cy, 7, 6, "#b82d0f", false);
+      fillPixelEllipse(ctx, cx + 3, cy, 5, 4, "#ff7b39", false);
+      plotRect(ctx, cx + 3, cy - 2, 4, 4, "#ffe66d");
+      plotRect(ctx, cx + 4, cy - 1, 2, 2, "#ffffff");
+      const wy = f % 2 === 0 ? -2 : 2;
+      plotRect(ctx, cx - 7, cy - 3 + wy, 5, 3, "#ff5c2b");
+      plotRect(ctx, cx - 11, cy - 1 - wy, 5, 2, "#ffd15c");
+      applySelectiveOutline(ctx, w, h, "#451006", "#06080d");
+      return;
+    }
+    if (style === "frost_lance") {
+      plotRect(ctx, cx - 10, cy - 2, 16, 4, "#3ba4d9");
+      plotRect(ctx, cx - 8, cy - 1, 18, 2, "#b8f7ff");
+      plotRect(ctx, cx + 6, cy - 3, 4, 6, "#78dcff");
+      plotRect(ctx, cx + 9, cy - 1, 5, 2, "#ffffff");
+      plotRect(ctx, cx - 12, cy - 4 + f % 2, 2, 2, "#e0fbff");
+      plotRect(ctx, cx - 12, cy + 3 - f % 2, 2, 2, "#78dcff");
+      applySelectiveOutline(ctx, w, h, "#0e3147", "#06080d");
+      return;
+    }
+    if (style === "thunder_bolt") {
+      const j = f % 2 === 0 ? -2 : 2;
+      plotPixelLine(ctx, cx - 12, cy + j, cx - 3, cy - 4, col, 3);
+      plotPixelLine(ctx, cx - 3, cy - 4, cx + 3, cy + 4, "#ffffff", 3);
+      plotPixelLine(ctx, cx + 3, cy + 4, cx + 12, cy - j, col, 3);
+      plotPixelLine(ctx, cx - 3, cy - 4, cx + 3, cy + 4, "#ffffff", 1);
+      applySelectiveOutline(ctx, w, h, "#5e4908", "#06080d");
+      return;
+    }
+    if (style === "venom_glob") {
+      fillPixelEllipse(ctx, cx + 1, cy, 6, 5, "#2b6e1c", false);
+      fillPixelEllipse(ctx, cx + 2, cy - 1, 4, 3, col, false);
+      plotRect(ctx, cx + 2, cy - 2, 2, 2, "#ebff9c");
+      plotRect(ctx, cx - 8, cy + (f % 2 ? 2 : -2), 3, 2, col);
+      plotRect(ctx, cx - 5, cy - 4, 2, 2, "#a8ff52");
+      applySelectiveOutline(ctx, w, h, "#102e0b", "#06080d");
+      return;
+    }
+    if (style === "blood_crescent") {
+      paintCrescentBlade(ctx, cx + 1, cy, "#eb2646", "#ffd6de", f, 1);
+      plotRect(ctx, cx - 9, cy - 3 + f % 2, 3, 2, "#ff3358");
+      plotRect(ctx, cx - 11, cy + 2 - f % 2, 3, 2, "#9e142b");
+      applySelectiveOutline(ctx, w, h, "#3d0811", "#06080d");
+      return;
+    }
+    if (style === "boar_cleave" || style === "boss_claw_wave") {
+      const isBoss = style === "boss_claw_wave";
+      for (const offY of [-7, 0, 7]) {
+        plotPixelLine(ctx, cx - 6, cy + offY - 2, cx + 6, cy + offY, col, isBoss ? 3 : 2);
+        plotPixelLine(ctx, cx + 2, cy + offY, cx + 9, cy + offY + 1, "#fff6d6", 2);
+      }
+      applySelectiveOutline(ctx, w, h, shadeHex(col, 0.35), "#06080d");
+      return;
+    }
+    if (style === "boss_tidal_wave") {
+      for (let y = 8; y < h - 6; y++) {
+        const t = (y - 8) / (h - 14);
+        const crest = Math.round(Math.sin(t * Math.PI) * 14) + f % 2 * 2;
+        const xStart = Math.max(8, cx - 10 + crest - Math.round(t * 8));
+        const xEnd = Math.min(w - 8, cx + 14 + crest);
+        plotRect(ctx, xStart, y, xEnd - xStart, 1, t < 0.35 ? "#5ef2d6" : t < 0.7 ? "#208c99" : "#0e4d61");
+        plotRect(ctx, xEnd - 4, y, 4, 1, "#e6fffb");
+      }
+      for (let k = 0; k < 5; k++) {
+        const fx = cx + 12 + (k + f) % 3 * 3;
+        const fy = 10 + k * 8;
+        plotRect(ctx, fx, fy, 4, 3, "#ffffff");
+      }
+      applySelectiveOutline(ctx, w, h, "#082936", "#05070b");
+      return;
+    }
+    if (style === "boss_scale_lance") {
+      plotRect(ctx, cx - 9, cy - 2, 16, 4, "#24a8a2");
+      plotRect(ctx, cx - 7, cy - 1, 17, 2, "#87ffeb");
+      plotRect(ctx, cx + 5, cy - 3, 5, 6, "#ffe15c");
+      plotRect(ctx, cx + 9, cy - 1, 4, 2, "#ffffff");
+      applySelectiveOutline(ctx, w, h, "#0a3338", "#05070b");
+      return;
+    }
+    plotRect(ctx, cx - 8, cy - 2, 14, 4, col);
+    plotRect(ctx, cx + 4, cy - 3, 4, 6, bright);
+    plotRect(ctx, cx + 7, cy - 1, 3, 2, "#ffffff");
+    applySelectiveOutline(ctx, w, h, dark, "#06080d");
+  }
+  function getProjectileFrames(style = "crescent_moon", color = "#5ef2d6", secondaryColor = "#ffffff", tertiaryColor = "#ffd257") {
+    const dims = style === "boss_tidal_wave" ? [72, 52] : style === "combo_wind_moon" ? [44, 44] : style === "combo_dual_element" || style === "combo_triple_moon" || style === "boss_claw_wave" ? [38, 38] : [32, 32];
+    const key = `${style}_${color}_${secondaryColor}_${tertiaryColor}`;
+    if (PROJ_SHEET_CACHE.has(key)) return PROJ_SHEET_CACHE.get(key);
+    const frames = [];
+    for (let f = 0; f < 4; f++) {
+      const { canvas: canvas2, ctx } = createPixelCanvas(dims[0], dims[1], true);
+      if (ctx) paintSpriteFrameForStyle(ctx, dims[0], dims[1], style, color, secondaryColor, tertiaryColor, f);
+      frames.push(canvas2);
+    }
+    if (PROJ_SHEET_CACHE.size > 90) PROJ_SHEET_CACHE.delete(PROJ_SHEET_CACHE.keys().next().value);
+    PROJ_SHEET_CACHE.set(key, frames);
+    return frames;
+  }
+  function drawPixelProjectile(ctx, pr, time = 0) {
+    const style = pr.projStyle || pr.gu?.projStyle || "crescent_moon";
+    const color = pr.color || pr.gu?.color || "#5ef2d6";
+    const c2 = pr.secondaryColor || "#ffffff";
+    const c3 = pr.tertiaryColor || "#ffd257";
+    const frames = getProjectileFrames(style, color, c2, c3);
+    const fi = Math.floor(time * 12 + (pr.animOffset || 0)) % frames.length;
+    const frm = frames[fi] ?? frames[0];
+    const ang = Math.atan2(pr.vy || 0, pr.vx || 1);
+    if (Array.isArray(pr.trail) && pr.trail.length > 0) {
+      for (let i = 0; i < pr.trail.length; i++) {
+        const tr = pr.trail[i];
+        const alpha = (i + 1) / (pr.trail.length + 1) * 0.34;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.globalAlpha = alpha;
+        ctx.translate(Math.round(tr.x), Math.round(tr.y));
+        ctx.rotate(ang);
+        ctx.drawImage(frm, -Math.round(frm.width * 0.5), -Math.round(frm.height * 0.5));
+        ctx.restore();
+      }
+    }
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(Math.round(pr.x), Math.round(pr.y));
+    ctx.rotate(ang);
+    ctx.drawImage(frm, -Math.round(frm.width * 0.5), -Math.round(frm.height * 0.5));
+    ctx.restore();
+  }
+  function drawPlayerActiveBuffAuras(ctx, player2, time = 0) {
+    const px = Math.round(player2.x);
+    const py = Math.round(player2.y);
+    if ((player2.armorBuffTimer ?? 0) > 0 || (player2.shield ?? 0) > 0) {
+      const isJade = player2.armorBuffColor === "#a8ffe2" || (player2.getAllEquipped?.() ?? []).some((g) => g.id === "ngoc_bi" || g.id === "bach_ngoc");
+      const cMain = isJade ? "#9effdf" : "#d49548";
+      const cDark = isJade ? "#166b58" : "#5c3b16";
+      plotPixelEllipse(ctx, px, py - 8, 17, 13, cDark, 2, 0);
+      plotPixelEllipse(ctx, px, py - 8, 16, 12, cMain, 3, Math.floor(time * 5));
+      for (let i = 0; i < 4; i++) {
+        const a = time * 2.4 + i * Math.PI / 2;
+        const sx = Math.round(px + Math.cos(a) * 16);
+        const sy = Math.round(py - 12 + Math.sin(a) * 8);
+        plotRect(ctx, sx - 2, sy - 2, 5, 5, "#080b10");
+        plotRect(ctx, sx - 1, sy - 1, 3, 3, cMain);
+        plotPixel(ctx, sx, sy, "#ffffff");
+      }
+    }
+    if ((player2.hotTimer ?? 0) > 0) {
+      for (let i = 0; i < 5; i++) {
+        const a = -time * 2.8 + i * 1.25;
+        const lx = Math.round(px + Math.cos(a) * 15);
+        const ly = Math.round(py - 10 + Math.sin(a) * 7 - (time * 16 + i * 5) % 12);
+        plotRect(ctx, lx - 1, ly - 1, 3, 3, "#143d24");
+        plotRect(ctx, lx, ly, 2, 2, "#7affad");
+      }
+    }
+    if ((player2.refineBuffTimer ?? 0) > 0) {
+      for (let i = 0; i < 4; i++) {
+        const ly = Math.round(py - 6 - (time * 24 + i * 11) % 34);
+        const lx = Math.round(px + Math.sin(time * 4 + i * 1.9) * 12);
+        plotRect(ctx, lx - 1, ly - 1, 3, 3, "#6b470c");
+        plotRect(ctx, lx, ly, 2, 2, "#ffe169");
+      }
+    }
+  }
+  function renderBossTelegraphPixel(ctx, tg, time = 0) {
+    const pct = Math.max(0, Math.min(1, tg.t / Math.max(0.05, tg.dur)));
+    const col = tg.color || "#ff4757";
+    const warnCol = Math.floor(time * 10) % 2 === 0 ? "#ffd257" : "#ffffff";
+    ctx.save();
+    if (tg.shape === "wave_rect") {
+      const ang = tg.angle ?? 0;
+      const len = tg.length ?? 160;
+      const hw = Math.round((tg.width ?? 44) * 0.5);
+      ctx.translate(Math.round(tg.x), Math.round(tg.y));
+      ctx.rotate(ang);
+      ctx.globalAlpha = 0.24 + pct * 0.24;
+      plotRect(ctx, 0, -hw, len, hw * 2, col);
+      ctx.globalAlpha = 0.42;
+      plotRect(ctx, 0, -hw + 2, Math.round(len * pct), Math.max(2, hw * 2 - 4), warnCol);
+      ctx.globalAlpha = 0.94;
+      for (let x = 0; x < len; x += 6) {
+        plotRect(ctx, x, -hw, 4, 2, warnCol);
+        plotRect(ctx, x, hw - 2, 4, 2, warnCol);
+      }
+      plotRect(ctx, len - 2, -hw, 2, hw * 2, col);
+    } else if (tg.shape === "cone") {
+      const ang = tg.angle ?? 0;
+      const spread = tg.spread ?? Math.PI * 0.5;
+      const r = tg.r ?? 120;
+      const a0 = ang - spread * 0.5;
+      const a1 = ang + spread * 0.5;
+      ctx.globalAlpha = 0.26 + pct * 0.22;
+      for (let step = 0; step <= 8; step++) {
+        const a = a0 + (a1 - a0) * (step / 8);
+        plotPixelLine(ctx, tg.x, tg.y, tg.x + Math.cos(a) * r, tg.y + Math.sin(a) * r, col, 3);
+      }
+      ctx.globalAlpha = 0.95;
+      plotPixelLine(ctx, tg.x, tg.y, tg.x + Math.cos(a0) * r, tg.y + Math.sin(a0) * r, warnCol, 2);
+      plotPixelLine(ctx, tg.x, tg.y, tg.x + Math.cos(a1) * r, tg.y + Math.sin(a1) * r, warnCol, 2);
+      const progR = Math.round(r * pct);
+      for (let i = 0; i <= 14; i++) {
+        const a = a0 + (a1 - a0) * (i / 14);
+        plotRect(ctx, Math.round(tg.x + Math.cos(a) * r - 1), Math.round(tg.y + Math.sin(a) * r - 1), 3, 3, col);
+        plotRect(ctx, Math.round(tg.x + Math.cos(a) * progR - 1), Math.round(tg.y + Math.sin(a) * progR - 1), 2, 2, warnCol);
+      }
+    } else {
+      const rx = tg.r ?? 36;
+      const ry = Math.round(rx * 0.68);
+      ctx.globalAlpha = 0.22 + pct * 0.26;
+      fillPixelEllipse(ctx, tg.x, tg.y, rx, ry, col, true);
+      ctx.globalAlpha = 0.92;
+      plotPixelEllipse(ctx, tg.x, tg.y, rx, ry, col, 3, 0);
+      plotPixelEllipse(ctx, tg.x, tg.y, Math.max(4, Math.round(rx * pct)), Math.max(3, Math.round(ry * pct)), warnCol);
+    }
+    ctx.restore();
+  }
+  function createHitSparks(x, y, color = "#ffd257", count = 8, kind = "spark") {
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      const a = i / count * Math.PI * 2 + (Math.random() - 0.5) * 0.45;
+      const spd = kind === "shatter" ? 45 + Math.random() * 65 : 35 + Math.random() * 55;
+      list.push({
+        x: Math.round(x),
+        y: Math.round(y),
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd - 12,
+        life: 0.24 + Math.random() * 0.16,
+        maxLife: 0.4,
+        size: kind === "shatter" ? 3 : 2,
+        color: i % 3 === 0 ? "#ffffff" : color,
+        darkColor: shadeHex(color, 0.35)
+      });
+    }
+    return list;
+  }
+  function renderHitSparks(ctx, sparks) {
+    for (const s of sparks) {
+      const sx = Math.round(s.x);
+      const sy = Math.round(s.y);
+      plotRect(ctx, sx - 1, sy - 1, s.size + 2, s.size + 2, s.darkColor);
+      plotRect(ctx, sx, sy, s.size, s.size, s.color);
+    }
+  }
+
   // src/combat/PlayerController.js
   var PlayerController = class {
     constructor(charData = null) {
@@ -6031,8 +6978,22 @@
       this.activeUids = [null, null, null, null, null, null, null];
       this.passiveUid = null;
       this.killerMoveIds = ["km_nguyet_hoa", "km_van_thu"];
+      this.customKillerMoves = [null, null];
       this.quickItemIds = ["hoi_huyet_thao", "tu_nguyen_dan"];
       this.autoFeed = true;
+      this.hotTimer = 0;
+      this.hotRate = 0;
+      this.armorBuffTimer = 0;
+      this.armorBuffBonus = 0;
+      this.thornsBuffBonus = 0;
+      this.armorBuffColor = "#d49548";
+      this.refineBuffTimer = 0;
+      this.refineDmgBonus = 0;
+      this.refineCdBonus = 0;
+      this.refineMpSave = 0;
+      this.speedBuffTimer = 0;
+      this.speedBuffBonus = 0;
+      this.lastBacklashNotice = "";
       this.itemBag = {
         hoi_huyet_thao: 6,
         tu_nguyen_dan: 3,
@@ -6434,6 +7395,7 @@
         activeUids: [...this.activeUids],
         passiveUid: this.passiveUid,
         killerMoveIds: [...this.killerMoveIds],
+        customKillerMoves: (this.customKillerMoves ?? [null, null]).map((c) => c ? { ...c, guIds: [...c.guIds || []] } : null),
         quickItemIds: [...this.quickItemIds],
         autoFeed: this.autoFeed,
         itemBag: { ...this.itemBag },
@@ -6492,6 +7454,10 @@
       this.passiveUid = st.passiveUid ?? null;
       if (!Array.isArray(st.guBag)) this._initStarterLoadout("nguyet_quang");
       this.killerMoveIds = Array.isArray(st.killerMoveIds) ? st.killerMoveIds : ["km_nguyet_hoa", "km_van_thu"];
+      this.customKillerMoves = Array.isArray(st.customKillerMoves) ? [0, 1].map((idx) => {
+        const c = st.customKillerMoves[idx];
+        return c && Array.isArray(c.guIds) && c.guIds.length >= 2 ? { guIds: c.guIds.slice(0, 3), customName: c.customName || null } : null;
+      }) : [null, null];
       this.quickItemIds = Array.isArray(st.quickItemIds) ? st.quickItemIds : ["hoi_huyet_thao", "tu_nguyen_dan"];
       this.autoFeed = st.autoFeed !== false;
       this.itemBag = { ...st.itemBag ?? {} };
@@ -6565,6 +7531,25 @@
       const arr = this.activeAperture === 1 ? this.secondAperture.activeUids : this.activeUids;
       return this.getGu(arr[slotIdx]);
     }
+    getResolvedKillerMove(slotIdx = 0) {
+      const custom = this.customKillerMoves?.[slotIdx];
+      if (custom && Array.isArray(custom.guIds) && custom.guIds.length >= 2) {
+        const pool = [...this.guBag];
+        const matched = [];
+        for (const id of custom.guIds) {
+          const idx = pool.findIndex((g) => g.id === id);
+          if (idx >= 0) {
+            matched.push(pool[idx]);
+            pool.splice(idx, 1);
+          }
+        }
+        if (matched.length >= 2) {
+          return resolveMultiGuKillerMove(matched, this, custom.customName);
+        }
+      }
+      const kmId = this.killerMoveIds[slotIdx === 1 ? 1 : 0];
+      return KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[slotIdx === 1 ? 1 : 0] ?? KILLER_MOVES[0];
+    }
     getEquippedGu(slotId) {
       if (slotId === "vital") return this.getVitalGu();
       if (slotId === "passive") return this.getPassiveGu();
@@ -6574,12 +7559,11 @@
         return { aimType: "dash", range: moveGu?.range ?? 78, color: moveGu?.color ?? "#5ef2d6" };
       }
       if (slotId === "km1" || slotId === "km2") {
-        const kmId = this.killerMoveIds[slotId === "km1" ? 0 : 1];
-        const km = KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[0];
+        const km = this.getResolvedKillerMove(slotId === "km1" ? 0 : 1);
         return {
-          aimType: km.kind === "nova" ? "aoe" : "line",
+          aimType: km.kind === "combo_aura_nova" || km.kind === "nova" ? "aoe" : km.kind === "combo_shockwave" ? "arc" : "line",
           range: km.range ?? 150,
-          radius: km.kind === "nova" ? km.range : 16,
+          radius: km.kind === "nova" || km.kind === "combo_aura_nova" ? km.range : 18,
           color: km.color ?? "#ffd257"
         };
       }
@@ -6666,14 +7650,16 @@
       for (const g of this.getAllEquipped()) {
         if (g.moveSpeedBonus) guSpeed += g.moveSpeedBonus;
       }
-      return this.baseSpeed * (1 + speedBonus + setSpeed + guSpeed);
+      const tempSpeed = this.speedBuffTimer > 0 ? this.speedBuffBonus : 0;
+      return this.baseSpeed * (1 + speedBonus + setSpeed + guSpeed + tempSpeed);
     }
     getThornsRatio() {
       let thorns = 0;
       for (const g of this.getAllEquipped()) {
         if (g.thornsPct) thorns += g.thornsPct;
       }
-      return Math.min(0.45, thorns);
+      if (this.armorBuffTimer > 0) thorns += this.thornsBuffBonus;
+      return Math.min(0.6, thorns);
     }
     getArmorRatio() {
       let armor = 0;
@@ -6683,9 +7669,10 @@
       for (const g of this.getAllEquipped()) {
         if (g.armorBonus) armor += g.armorBonus;
       }
+      if (this.armorBuffTimer > 0) armor += this.armorBuffBonus;
       const sets = this.getSetCounts();
       if ((sets.thu_bi_bo ?? 0) >= 4) armor += 0.08;
-      return Math.min(0.65, armor);
+      return Math.min(0.72, armor);
     }
     getBasicAttackCooldown() {
       return this.chosenPath === "kiem_dao" ? 0.29 : 0.36;
@@ -6733,6 +7720,7 @@
       const sets = this.getSetCounts();
       if ((sets.dien_lang_bo ?? 0) >= 4) mult += 0.16;
       if ((sets.chan_duong_bo ?? 0) >= 4) mult += 0.25;
+      if (this.refineBuffTimer > 0) mult += this.refineDmgBonus;
       return mult;
     }
     getCooldownMult() {
@@ -6740,7 +7728,8 @@
       let mod = sameCount >= 4 ? -0.1 : 0;
       const sets = this.getSetCounts();
       if ((sets.suong_truc_bo ?? 0) >= 2) mod -= 0.1;
-      return Math.max(0.65, 1 + mod);
+      if (this.refineBuffTimer > 0) mod -= this.refineCdBonus;
+      return Math.max(0.58, 1 + mod);
     }
     getItemCount(itemId) {
       return this.itemBag[itemId] ?? 0;
@@ -6834,6 +7823,15 @@
       if (this.attackAnimTimer > 0) this.attackAnimTimer = Math.max(0, this.attackAnimTimer - dt);
       if (this.basicAttackCd > 0) this.basicAttackCd = Math.max(0, this.basicAttackCd - dt);
       if (this.stealthBreakTimer > 0) this.stealthBreakTimer = Math.max(0, this.stealthBreakTimer - dt);
+      if (this.armorBuffTimer > 0) this.armorBuffTimer = Math.max(0, this.armorBuffTimer - dt);
+      if (this.refineBuffTimer > 0) this.refineBuffTimer = Math.max(0, this.refineBuffTimer - dt);
+      if (this.speedBuffTimer > 0) this.speedBuffTimer = Math.max(0, this.speedBuffTimer - dt);
+      if (this.hotTimer > 0) {
+        this.hotTimer = Math.max(0, this.hotTimer - dt);
+        if (!this.isDead && this.hotRate > 0) {
+          this.heal(this.hotRate * dt);
+        }
+      }
       for (const k of Object.keys(this.cooldowns)) {
         if (this.cooldowns[k] > 0) {
           this.cooldowns[k] = Math.max(0, this.cooldowns[k] - dt);
@@ -9497,7 +10495,7 @@
       paintGnarledSegment(ctx, v2 ? 41 : 35, 48, 38, 20, 6, 3, pineBark, v2 ? 2 : -2);
       paintGnarledSegment(ctx, 37, 50, 20, 48, 3, 2, pineBark, 2);
       paintGnarledSegment(ctx, 38, 39, 56, 37, 3, 2, pineBark, -2);
-      const pineShades = ["#08150d", "#132e1e", "#214d31", "#387547", "#5ea366", "#8ed48c"];
+      const pineShades = ["#07120a", "#112817", "#1e4226", "#336638", "#508a4e", "#7bb571"];
       const lobes = [
         { cx: 22, cy: 49, rx: 14, ry: 7, seed: 1.2, bias: -0.03 },
         { cx: 54, cy: 50, rx: 14, ry: 7, seed: 2.5, bias: -0.06 },
@@ -9530,7 +10528,7 @@
       paintGnarledSegment(ctx, 46, 56, 49, 20, 8, 4, pineBark, -2);
       paintGnarledSegment(ctx, 47, 58, 23, 55, 4, 2, pineBark, 2);
       paintGnarledSegment(ctx, 48, 44, 73, 42, 4, 2, pineBark, -2);
-      const pineShades = ["#08150d", "#132e1e", "#214d31", "#387547", "#5ea366", "#8ed48c"];
+      const pineShades = ["#07120a", "#112817", "#1e4226", "#336638", "#508a4e", "#7bb571"];
       paintPixelCanopy(
         ctx,
         W,
@@ -9557,7 +10555,7 @@
       const { canvas: canvas2, ctx } = makeCanvas(W, H);
       drawPixelShadow(ctx, 23, 47, 12, 4, 0.24);
       paintGnarledSegment(ctx, 23, 47, 23, 24, 5, 3, pineBark, 1);
-      const pineShades = ["#08150d", "#132e1e", "#214d31", "#387547", "#5ea366", "#8ed48c"];
+      const pineShades = ["#07120a", "#112817", "#1e4226", "#336638", "#508a4e", "#7bb571"];
       paintPixelCanopy(
         ctx,
         W,
@@ -10147,32 +11145,12 @@
       const W = 68;
       const H = 44;
       const { canvas: canvas2, ctx } = makeCanvas(W, H);
-      ctx.fillStyle = "rgba(6, 10, 14, 0.52)";
-      ctx.beginPath();
-      ctx.ellipse(34, 24, 32, 18, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#161b20";
-      ctx.beginPath();
-      ctx.ellipse(34, 22, 30, 17, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#303840";
-      ctx.beginPath();
-      ctx.ellipse(34, 21, 27, 15, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#102024";
-      ctx.beginPath();
-      ctx.ellipse(34, 21, 21, 11, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#48cfba";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(34, 21, 21, 11, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(156, 122, 62, 0.72)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.ellipse(34, 21, 13, 6.5, 0, 0, Math.PI * 2);
-      ctx.stroke();
+      fillPixelEllipse(ctx, 34, 24, 32, 18, "rgba(6, 10, 14, 0.52)", true);
+      fillPixelEllipse(ctx, 34, 22, 30, 17, "#161b20", false);
+      fillPixelEllipse(ctx, 34, 21, 27, 15, "#303840", false);
+      fillPixelEllipse(ctx, 34, 21, 21, 11, "#102024", false);
+      plotPixelEllipse(ctx, 34, 21, 21, 11, "#48cfba", 1, 0);
+      plotPixelEllipse(ctx, 34, 21, 13, 6, "#9c7a3e", 2, 0);
       for (let i = 0; i < 8; i++) {
         const a = i / 8 * Math.PI * 2;
         const px = Math.round(34 + Math.cos(a) * 25);
@@ -12241,74 +13219,74 @@
   // src/world/MapRenderer.js
   var BIOME_PALETTES = {
     village: {
-      grass1: "#253b1f",
-      grass2: "#1c2d17",
-      grass3: "#2f4a27",
-      grassDark: "#0f1c0c",
-      grassShort: "#2c4524",
-      grassDeep: "#142611",
-      dirt1: "#574a38",
-      dirt2: "#3d3326",
-      moss1: "#182e18",
-      moss2: "#0e1c0e",
-      path: "#594e3c",
-      pathEdge: "#383024"
+      grass1: "#243b1e",
+      grass2: "#1a2b15",
+      grass3: "#2f4d26",
+      grassDark: "#0e1a0b",
+      grassShort: "#2b4523",
+      grassDeep: "#142610",
+      dirt1: "#7d603a",
+      dirt2: "#5e4629",
+      moss1: "#192e17",
+      moss2: "#0e1c0d",
+      path: "#917045",
+      pathEdge: "#45321c"
     },
     lakeside: {
-      grass1: "#243d20",
-      grass2: "#1a2e17",
-      grass3: "#2f4d29",
-      grassDark: "#0f1f0e",
-      grassShort: "#2a4525",
-      grassDeep: "#142913",
-      dirt1: "#594d3b",
-      dirt2: "#3d3427",
-      moss1: "#163017",
-      moss2: "#0e1f0e",
-      path: "#5c503e",
-      pathEdge: "#3a3226"
+      grass1: "#233c1e",
+      grass2: "#182c15",
+      grass3: "#2e4d27",
+      grassDark: "#0e1d0d",
+      grassShort: "#294423",
+      grassDeep: "#132711",
+      dirt1: "#80633c",
+      dirt2: "#5e4729",
+      moss1: "#172f16",
+      moss2: "#0e1e0d",
+      path: "#947348",
+      pathEdge: "#45331d"
     },
     forest: {
-      grass1: "#1d3018",
+      grass1: "#1d3217",
       grass2: "#142410",
-      grass3: "#26401f",
-      grassDark: "#0a1708",
-      grassShort: "#22381c",
+      grass3: "#27421e",
+      grassDark: "#0b1708",
+      grassShort: "#22391b",
       grassDeep: "#10210c",
-      dirt1: "#473a29",
-      dirt2: "#2e2418",
-      moss1: "#112413",
-      moss2: "#08140a",
-      path: "#4a3d2b",
-      pathEdge: "#2e2519"
+      dirt1: "#785c37",
+      dirt2: "#574124",
+      moss1: "#122612",
+      moss2: "#091509",
+      path: "#8c6b41",
+      pathEdge: "#3e2c18"
     },
     port_arena: {
-      grass1: "#23381d",
+      grass1: "#23381c",
       grass2: "#192914",
-      grass3: "#2d4726",
-      grassDark: "#0f1e0c",
-      grassShort: "#294022",
-      grassDeep: "#152611",
-      dirt1: "#544836",
-      dirt2: "#383022",
-      moss1: "#162b16",
-      moss2: "#0d1a0d",
-      path: "#574b39",
-      pathEdge: "#362e22"
+      grass3: "#2d4725",
+      grassDark: "#0e1c0b",
+      grassShort: "#294021",
+      grassDeep: "#142510",
+      dirt1: "#7d603a",
+      dirt2: "#5c4528",
+      moss1: "#162b15",
+      moss2: "#0d1a0c",
+      path: "#8f6f44",
+      pathEdge: "#42301b"
     },
     highland: {
-      grass1: "#384026",
-      grass2: "#2b331d",
-      grass3: "#444f2e",
-      grassDark: "#1b2110",
-      grassShort: "#404a2b",
-      grassDeep: "#222914",
-      dirt1: "#594b36",
-      dirt2: "#3d3222",
-      moss1: "#222b16",
-      moss2: "#161c0e",
-      path: "#594c37",
-      pathEdge: "#3b3122"
+      grass1: "#333d22",
+      grass2: "#262e19",
+      grass3: "#404d2a",
+      grassDark: "#171d0e",
+      grassShort: "#3b4627",
+      grassDeep: "#1e2612",
+      dirt1: "#7a5e39",
+      dirt2: "#594326",
+      moss1: "#202914",
+      moss2: "#141a0c",
+      path: "#8c6d42",
+      pathEdge: "#402f1b"
     },
     swamp: {
       grass1: "#1d2e24",
@@ -16063,6 +17041,7 @@
       this.decoys = [];
       this.phantoms = [];
       this.vfxEffects = [];
+      this.hitSparks = [];
       this.floatingTexts = [];
       this.dieuHoi = { active: false, timer: 420, score: 0 };
       this.banLongPillars = [];
@@ -16097,6 +17076,7 @@
       this.decoys = [];
       this.phantoms = [];
       this.vfxEffects = [];
+      this.hitSparks = [];
       this.selectedTargetId = null;
       this.banLongPillars = [];
       if (mapDef.id !== "khe_coc") {
@@ -16926,14 +17906,17 @@
         this.playerProjectiles.push({
           x: this.player.x + Math.cos(ang) * 10,
           y: this.player.y - 8 + Math.sin(ang) * 10,
-          vx: Math.cos(ang) * 230,
-          vy: Math.sin(ang) * 230,
-          radius: 10,
+          vx: Math.cos(ang) * 235,
+          vy: Math.sin(ang) * 235,
+          radius: 12,
           damage: dmg,
           pierceLeft: 1,
           hitIds: /* @__PURE__ */ new Set(),
-          life: 0.65,
+          trail: [],
+          life: 0.68,
+          projStyle: vital.projStyle || "crescent_moon",
           color: vital.color || "#5ef2d6",
+          secondaryColor: "#ffffff",
           gu: { ...vital, lifesteal: vital.lifesteal ?? basicLifesteal }
         });
         this.spawnVfx("vfx/nguyet-quang", this.player.x + Math.cos(ang) * 18, this.player.y - 8 + Math.sin(ang) * 18, { angle: ang, scale: 0.45 });
@@ -16942,6 +17925,7 @@
           ...vital ?? { path: "luc_dao" },
           lifesteal: vital?.lifesteal ?? basicLifesteal
         });
+        this.hitSparks.push(...createHitSparks(this.player.x + Math.cos(ang) * 24, this.player.y - 8 + Math.sin(ang) * 24, vital?.color || "#ffe082", 6, "spark"));
         this.spawnVfx("vfx/hit-spark", this.player.x + Math.cos(ang) * 24, this.player.y - 6 + Math.sin(ang) * 24, { scale: 0.5 });
       }
       this.player.thoughtGauge = Math.min(100, this.player.thoughtGauge + 10);
@@ -16985,36 +17969,104 @@
         return true;
       }
       if (slotId === "km1" || slotId === "km2") {
-        const kmId = this.player.killerMoveIds[slotId === "km1" ? 0 : 1];
-        const km = KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[0];
-        if (this.player.thoughtGauge < km.thoughtCost || this.player.mp < km.mpCost) {
-          this.addFloatingText(this.player.x, this.player.y - 26, "Ch\u01B0a \u0111\u1EE7 Thanh Ni\u1EC7m / Ch\xE2n Nguy\xEAn!", "#d9b25f");
+        const slotIdx = slotId === "km1" ? 0 : 1;
+        const km = this.player.getResolvedKillerMove(slotIdx);
+        const mpSaveMult = this.player.refineBuffTimer > 0 ? Math.max(0.6, 1 - (this.player.refineMpSave ?? 0.2)) : 1;
+        const effectiveMp = Math.round((km.mpCost ?? 24) * mpSaveMult);
+        const reqThought = km.isMultiGu ? 0 : km.thoughtCost ?? 60;
+        if (this.player.thoughtGauge < reqThought || this.player.mp < effectiveMp) {
+          this.addFloatingText(this.player.x, this.player.y - 26, `C\u1EA7n ${effectiveMp} Ch\xE2n Nguy\xEAn! (Gi\u1EEF R H\u1EA5p thu)`, "#d9b25f");
           return false;
         }
-        this.player.thoughtGauge -= km.thoughtCost;
-        this.player.mp -= km.mpCost;
+        if (km.isMultiGu) {
+          const effStab = Math.min(100, (km.stabilityPct ?? 90) + (this.player.thoughtGauge >= 60 ? 8 : 0));
+          if (Math.random() * 100 > effStab) {
+            this.player.mp = Math.max(0, this.player.mp - Math.round(effectiveMp * 0.45));
+            const backlashDmg = Math.max(4, Math.round(this.player.maxHp * 0.06));
+            this.player.hp = Math.max(1, this.player.hp - backlashDmg);
+            this.player.startCooldown(slotId, 2.5);
+            this.player.lastBacklashNotice = `Ph\u1EA3n Ph\u1EC7 S\xE1t Chi\xEAu [${km.name}]: \u0110\u1EA1o ng\xE2n xung kh\u1EAFc ho\u1EB7c C\u1ED5 \u0111\xF3i g\xE2y h\u1EE5t chi\xEAu (-${backlashDmg} HP)!`;
+            this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 14, "#ff4d5a", 12, "shatter"));
+            this.triggerShake(0.18, 2.5);
+            this.sfx?.play("fusionFail");
+            this.addFloatingText(this.player.x, this.player.y - 34, `Ph\u1EA3n Ph\u1EC7! H\u1EE5t [${km.name}] (-${backlashDmg} HP)`, "#ff6b78");
+            this.onStateChange?.(this);
+            return false;
+          }
+        }
+        const thoughtBonus = this.player.thoughtGauge >= 60 ? 1.15 : 1;
+        this.player.thoughtGauge = Math.max(0, this.player.thoughtGauge - (km.isMultiGu ? Math.min(35, this.player.thoughtGauge) : reqThought));
+        this.player.mp -= effectiveMp;
         this.player.isStealthed = false;
         this.player.stealthBreakTimer = 1.2;
         this.player.startCooldown(slotId, (km.cooldown ?? 8) * this.player.getCooldownMult());
         const target2 = this.getSelectedTarget();
         const ang2 = angle ?? (target2 ? Math.atan2(target2.y - this.player.y, target2.x - this.player.x) : this.player.facing);
-        const baseDmg = Math.round(this.player.getBasicAttackDamage() * km.damageMult * this.player.getDamageMultiplier({ path: km.path }));
-        if (km.kind === "burst_projectiles") {
-          const cnt = km.count ?? 7;
+        this.player.facing = ang2;
+        const baseDmg = Math.round(this.player.getBasicAttackDamage() * (km.damageMult ?? 2.4) * this.player.getDamageMultiplier({ path: km.path }) * thoughtBonus);
+        if (km.dashForward > 0) {
+          const dur = 0.14;
+          this.player.dashTimer = dur;
+          this.player.dashVx = Math.cos(ang2) * km.dashForward / dur;
+          this.player.dashVy = Math.sin(ang2) * km.dashForward / dur;
+        }
+        if (km.shieldAmount > 0) {
+          this.player.shield += km.shieldAmount;
+          this.addFloatingText(this.player.x, this.player.y - 42, `H\u1ED9 Thu\u1EABn +${km.shieldAmount}`, km.secondaryColor || "#dce8ff");
+        }
+        if (km.healAmount > 0) {
+          const h = this.player.heal(km.healAmount);
+          if (h > 0) this.addFloatingText(this.player.x, this.player.y - 36, `+${h} Sinh l\u1EF1c`, "#6bff9c");
+        }
+        if (km.hotTotal > 0 && km.hotDuration > 0) {
+          this.player.hotTimer = km.hotDuration;
+          this.player.hotRate = km.hotTotal / km.hotDuration;
+        }
+        if (km.buffDuration > 0) {
+          this.player.armorBuffTimer = km.buffDuration;
+          this.player.armorBuffBonus = km.buffArmorBonus ?? 0.18;
+          this.player.thornsBuffBonus = km.buffThornsPct ?? 0.22;
+          this.player.armorBuffColor = km.secondaryColor || km.color;
+        }
+        if (km.speedBuffDuration > 0) {
+          this.player.speedBuffTimer = km.speedBuffDuration;
+          this.player.speedBuffBonus = km.speedBuffBonus ?? 0.24;
+        }
+        if (km.refineBuffDuration > 0) {
+          this.player.refineBuffTimer = km.refineBuffDuration;
+          this.player.refineDmgBonus = km.refineDmgBonus ?? 0.2;
+          this.player.refineCdBonus = 0.18;
+          this.player.refineMpSave = 0.2;
+        }
+        if (km.kind === "burst_projectiles" || km.kind === "combo_projectile_wave") {
+          const cnt = km.count ?? 5;
+          const spreadStep = cnt <= 3 ? 0.2 : 0.14;
           for (let i = 0; i < cnt; i++) {
-            const a = ang2 + (i - (cnt - 1) / 2) * 0.16;
+            const a = ang2 + (i - (cnt - 1) / 2) * spreadStep;
             this.playerProjectiles.push({
-              x: this.player.x,
-              y: this.player.y - 8,
-              vx: Math.cos(a) * 235,
-              vy: Math.sin(a) * 235,
-              radius: 13,
-              damage: Math.round(baseDmg * 0.52),
-              pierceLeft: 3,
+              x: this.player.x + Math.cos(a) * 12,
+              y: this.player.y - 8 + Math.sin(a) * 12,
+              vx: Math.cos(a) * 245,
+              vy: Math.sin(a) * 245,
+              radius: 15,
+              damage: Math.round(baseDmg * (cnt >= 5 ? 0.54 : 0.72)),
+              pierceLeft: km.pierce ?? 3,
               hitIds: /* @__PURE__ */ new Set(),
-              life: 0.9,
+              trail: [],
+              life: (km.range ?? 190) / 245 + 0.12,
+              projStyle: km.projStyle || "combo_wind_moon",
               color: km.color,
-              gu: { path: km.path }
+              secondaryColor: km.secondaryColor || "#ffffff",
+              tertiaryColor: km.tertiaryColor || "#ffd257",
+              gu: {
+                path: km.path,
+                stunDuration: km.stunDuration,
+                slowFactor: km.slowFactor,
+                burnDps: km.burnDps,
+                poisonDps: km.poisonDps,
+                lifesteal: km.lifesteal,
+                ignitesPoison: km.ignitesPoison
+              }
             });
           }
         } else if (km.kind === "phantom_stampede") {
@@ -17024,24 +18076,40 @@
             this.phantoms.push({
               x: this.player.x,
               y: this.player.y,
-              vx: Math.cos(a) * 190,
-              vy: Math.sin(a) * 190,
+              vx: Math.cos(a) * 195,
+              vy: Math.sin(a) * 195,
               life: 0.9,
-              damage: Math.round(baseDmg * 0.7),
+              damage: Math.round(baseDmg * 0.72),
               color: ph.color,
               name: ph.name,
               hitIds: /* @__PURE__ */ new Set()
             });
           }
+        } else if (km.kind === "combo_shockwave") {
+          const cx = this.player.x + Math.cos(ang2) * 28;
+          const cy = this.player.y - 6 + Math.sin(ang2) * 28;
+          this.spawnVfx("vfx/hoa-than", cx, cy, { scale: 0.95 });
+          this.hitSparks.push(...createHitSparks(cx, cy, km.color, 14, "shatter"));
+          this._damageInCone(this.player.x, this.player.y - 6, ang2, Math.PI * 0.85, km.range ?? 118, baseDmg, {
+            path: km.path,
+            stunDuration: km.stunDuration,
+            knockback: km.knockback ?? 32,
+            lifesteal: km.lifesteal
+          });
         } else {
-          this.spawnVfx("vfx/huyet-nguyet", this.player.x, this.player.y - 6, { scale: 1 });
+          this.spawnVfx("vfx/huyet-nguyet", this.player.x, this.player.y - 6, { scale: 1.05 });
+          this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 10, km.color, 14, "shatter"));
           this._damageInCircle(this.player.x, this.player.y, km.range ?? 125, baseDmg, {
             path: km.path,
             stunDuration: km.stunDuration,
+            slowFactor: km.slowFactor,
+            burnDps: km.burnDps,
+            poisonDps: km.poisonDps,
+            ignitesPoison: km.ignitesPoison,
             lifesteal: km.lifesteal
           });
         }
-        this.triggerShake(0.22, 4);
+        this.triggerShake(0.2, 3.5);
         this.sfx?.play("ult");
         this.addFloatingText(this.player.x, this.player.y - 34, `S\xE1t Chi\xEAu: ${km.name}!`, km.color);
         this.onStateChange?.(this);
@@ -17054,7 +18122,8 @@
         return false;
       }
       const stageRank = this.player.getStage().rank;
-      const effectiveMpCost = Math.round((gu.mpCost ?? 0) * ((gu.rank ?? 1) > stageRank ? 1.5 : 1));
+      const mpSave = this.player.refineBuffTimer > 0 ? Math.max(0.65, 1 - (this.player.refineMpSave ?? 0.2)) : 1;
+      const effectiveMpCost = Math.round((gu.mpCost ?? 0) * ((gu.rank ?? 1) > stageRank ? 1.5 : 1) * mpSave);
       if (this.player.mp < effectiveMpCost) {
         this.addFloatingText(this.player.x, this.player.y - 26, "Ch\xE2n nguy\xEAn kh\xF4ng \u0111\u1EE7! (Gi\u1EEF R H\u1EA5p thu)", "#5ef2d6");
         return false;
@@ -17075,9 +18144,31 @@
         const h = this.player.heal(gu.healAmount);
         this.addFloatingText(this.player.x, this.player.y - 26, `+${h} Sinh l\u1EF1c`, "#5fbf8a");
       }
+      if (gu.hotTotal && gu.hotDuration) {
+        this.player.hotTimer = gu.hotDuration;
+        this.player.hotRate = gu.hotTotal / gu.hotDuration;
+        this.addFloatingText(this.player.x, this.player.y - 38, `Sinh C\u01A1 Duy Tr\xEC (+${gu.hotTotal} HP)`, "#7affad");
+      }
       if (gu.shieldAmount) {
         this.player.shield += gu.shieldAmount;
-        this.addFloatingText(this.player.x, this.player.y - 26, `H\u1ED9 Thu\u1EABn +${gu.shieldAmount}`, "#dce8ff");
+        this.addFloatingText(this.player.x, this.player.y - 26, `H\u1ED9 Thu\u1EABn +${gu.shieldAmount}`, gu.color || "#dce8ff");
+      }
+      if (gu.buffDuration) {
+        this.player.armorBuffTimer = gu.buffDuration;
+        this.player.armorBuffBonus = gu.buffArmorBonus ?? 0.16;
+        this.player.thornsBuffBonus = gu.buffThornsPct ?? 0.2;
+        this.player.armorBuffColor = gu.color;
+      }
+      if (gu.speedBuffDuration) {
+        this.player.speedBuffTimer = gu.speedBuffDuration;
+        this.player.speedBuffBonus = gu.speedBuffBonus ?? 0.22;
+      }
+      if (gu.refineBuffDuration) {
+        this.player.refineBuffTimer = gu.refineBuffDuration;
+        this.player.refineDmgBonus = gu.refineDmgBonus ?? 0.18;
+        this.player.refineCdBonus = gu.refineCdBonus ?? 0.18;
+        this.player.refineMpSave = gu.refineMpSave ?? 0.2;
+        this.addFloatingText(this.player.x, this.player.y - 38, `T\u1EEDu Tr\xF9ng Tinh Luy\u1EC7n (${gu.refineBuffDuration}s)`, "#ffd15c");
       }
       if (gu.resetsBasicSlotsCd) {
         this.player.cooldowns.slot_0 = 0;
@@ -17099,6 +18190,7 @@
         if (dmg > 0) {
           this._damageInCircle(this.player.x + Math.cos(ang) * 32, this.player.y + Math.sin(ang) * 32, 34, dmg, gu);
         }
+        this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 8, gu.color || "#7effd4", 7, "spark"));
         this.spawnVfx(gu.vfxKey ?? "vfx/anh-bo", this.player.x, this.player.y, { scale: 0.7 });
         this.sfx?.play("dash");
       } else if (dmg > 0) {
@@ -17125,22 +18217,26 @@
             this.playerProjectiles.push({
               x: this.player.x + Math.cos(a) * 10,
               y: this.player.y - 8 + Math.sin(a) * 10,
-              vx: Math.cos(a) * 215,
-              vy: Math.sin(a) * 215,
-              speed: 215,
-              radius: gu.radius ?? 11,
+              vx: Math.cos(a) * 225,
+              vy: Math.sin(a) * 225,
+              speed: 225,
+              radius: gu.radius ?? 12,
               damage: dmg,
               pierceLeft: gu.pierce ?? 1,
               homing: Boolean(gu.homing),
               hitIds: /* @__PURE__ */ new Set(),
-              life: (gu.range ?? 150) / 215 + 0.1,
+              trail: [],
+              life: (gu.range ?? 155) / 225 + 0.1,
+              projStyle: gu.projStyle || "crescent_moon",
               color: gu.color,
+              secondaryColor: "#ffffff",
               gu
             });
           }
           this.spawnVfx(gu.vfxKey ?? "vfx/nguyet-quang", this.player.x + Math.cos(ang) * 20, this.player.y - 8 + Math.sin(ang) * 20, { angle: ang, scale: 0.55 });
           this.sfx?.play(gu.homing ? "blood" : "slash");
         } else if (gu.aimType === "arc") {
+          this.hitSparks.push(...createHitSparks(this.player.x + Math.cos(ang) * 30, this.player.y - 8 + Math.sin(ang) * 30, gu.color || "#e69b45", 8, "spark"));
           this.spawnVfx(gu.vfxKey ?? "vfx/huyet-nguyet", this.player.x + Math.cos(ang) * 24, this.player.y - 6 + Math.sin(ang) * 24, { angle: ang, scale: 0.75 });
           this._damageInCone(this.player.x, this.player.y - 6, ang, gu.arcSpread ?? Math.PI * 0.5, gu.range ?? 100, dmg, gu);
           this.sfx?.play("fire");
@@ -17148,11 +18244,13 @@
           const dist = Math.max(24, (gu.range ?? 120) * Math.max(0.35, distanceRatio));
           const tx = this.player.x + Math.cos(ang) * dist;
           const ty = this.player.y + Math.sin(ang) * dist;
+          this.hitSparks.push(...createHitSparks(tx, ty, gu.color || "#ff7b39", 10, "shatter"));
           this.spawnVfx(gu.vfxKey ?? "vfx/hoa-than", tx, ty, { scale: 0.65 });
           this._damageInCircle(tx, ty, gu.radius ?? 36, dmg, gu);
           this.sfx?.play("fire");
         }
       } else {
+        this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 10, gu.color || "#5fbf8a", 6, "spark"));
         this.spawnVfx("vfx/hit-spark", this.player.x, this.player.y - 10, { scale: 0.55 });
         this.sfx?.play("pickup");
       }
@@ -17233,10 +18331,18 @@
       const critChance = 0.08 + (this.player.chosenPath === "nguyet_dao" ? 0.1 : 0) + ((sets.dien_lang_bo ?? 0) >= 2 ? 0.1 : 0);
       const isCrit = Math.random() < critChance;
       if (isCrit) mult *= 1.55;
+      if (gu.executePct && e.maxHp > 0 && e.hp / e.maxHp <= 0.35) {
+        mult += gu.executePct;
+      }
       const dmg = Math.max(1, Math.round(rawDmg * mult));
       e.hp -= dmg;
       e.hurtFlash = 0.14;
       this.selectedTargetId = e.id;
+      if (gu.knockback && e.ai !== "ban_long_boss" && e.ai !== "aquatic" && e.ai !== "dummy") {
+        const ka = Math.atan2(e.y - this.player.y, e.x - this.player.x);
+        e.x += Math.cos(ka) * gu.knockback * 0.45;
+        e.y += Math.sin(ka) * gu.knockback * 0.45;
+      }
       if (e.passive) {
         if (!e.provoked) {
           e.provoked = true;
@@ -17282,6 +18388,7 @@
       if (gu.stunDuration) {
         e.stunTimer = Math.max(e.stunTimer, gu.stunDuration);
       }
+      this.hitSparks.push(...createHitSparks(e.x, e.y - 10, gu?.color || (isCrit ? "#ff9e5e" : "#ffe082"), isCrit ? 10 : 7, isCrit ? "shatter" : "spark"));
       this.spawnVfx("vfx/hit-spark", e.x, e.y - 8, { scale: 0.45 });
       this.addFloatingText(e.x, e.y - 18, isCrit ? `Ch\xED M\u1EA1ng -${dmg}!` : `-${dmg}`, isCrit ? "#ff9e5e" : "#ffe082");
       this.sfx?.play("hit");
@@ -17620,6 +18727,11 @@
           pr.vx = Math.cos(des) * spd;
           pr.vy = Math.sin(des) * spd;
         }
+        pr.trail = pr.trail || [];
+        if (Math.floor(this.time * 40) % 2 === 0) {
+          pr.trail.push({ x: pr.x, y: pr.y });
+          if (pr.trail.length > 3) pr.trail.shift();
+        }
         pr.x += pr.vx * dt;
         pr.y += pr.vy * dt;
         for (const p of this.banLongPillars) {
@@ -17671,8 +18783,7 @@
           continue;
         }
         if (e.ai === "aquatic") {
-          e.x = e.homeX + Math.sin(this.time * 0.8) * 45;
-          e.y = e.homeY + Math.cos(this.time * 0.6) * 20;
+          this._updateThienTriNguVuong(e, dt, events);
           continue;
         }
         if (e.passive && e.provoked) {
@@ -17751,11 +18862,61 @@
         const resEnemy = resolveWorldMovement(mapDef, e.x, e.y, e.radius, (k) => getPropSprite(k));
         e.x = resEnemy.x;
         e.y = resEnemy.y;
-        if ((e.tier === "Tinh anh" || e.tier === "B\xE1ch th\xFA v\u01B0\u01A1ng") && dist < 120) {
-          e.slamTimer = (e.slamTimer ?? 4.2) - dt;
+        const isBossEntity = e.tier === "Tinh anh" || e.tier === "B\xE1ch th\xFA v\u01B0\u01A1ng" || e.isInstanceBoss || this.mode === "arena" || this.mode === "tower";
+        if (isBossEntity && dist < 195) {
+          e.slamTimer = (e.slamTimer ?? 3.6) - dt;
           if (e.slamTimer <= 0) {
-            e.slamTimer = 5.4;
-            this.enemyTelegraphs.push({ x: this.player.x, y: this.player.y, r: 32, t: 0, dur: 1.05, damage: Math.round(e.damage * 1.45) });
+            e.slamTimer = e.isInstanceBoss || this.mode === "arena" ? 3.5 : 4.8;
+            const ang = Math.atan2(dy, dx);
+            e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
+            if (e.bossPattern === 0) {
+              this.addFloatingText(e.x, e.y - 44, `\u26A1 ${e.shortName || "Th\xFA V\u01B0\u01A1ng"} T\u1EE5 L\u1EF1c \u0110\u1ECBa Ch\u1EA5n!`, "#ffd257");
+              this.enemyTelegraphs.push({
+                shape: "circle",
+                x: this.player.x,
+                y: this.player.y,
+                r: e.isInstanceBoss || e.tier === "B\xE1ch th\xFA v\u01B0\u01A1ng" ? 42 : 34,
+                t: 0,
+                dur: 1.05,
+                damage: Math.round(e.damage * 1.45),
+                color: e.projColor || "#ff5e6c",
+                shakeAmp: 3
+              });
+            } else if (e.bossPattern === 1) {
+              this.addFloatingText(e.x, e.y - 44, `\u26A1 Qu\xE9t Di\u1EC7n R\u1ED9ng! N\xE9!`, "#ff8c42");
+              this.enemyTelegraphs.push({
+                shape: "cone",
+                x: e.x,
+                y: e.y - 4,
+                angle: ang,
+                spread: Math.PI * 0.58,
+                r: 120,
+                t: 0,
+                dur: 0.95,
+                damage: Math.round(e.damage * 1.35),
+                color: e.projColor || "#ff7b39",
+                projStyle: "boss_claw_wave",
+                spawnProjectileFan: 3,
+                shakeAmp: 2.5
+              });
+            } else {
+              this.addFloatingText(e.x, e.y - 44, `\u26A1 Xung K\xEDch Tuy\u1EBFn Th\u1EB3ng!`, "#ff6b78");
+              this.enemyTelegraphs.push({
+                shape: "wave_rect",
+                x: e.x,
+                y: e.y - 4,
+                angle: ang,
+                length: 165,
+                width: 44,
+                t: 0,
+                dur: 1,
+                damage: Math.round(e.damage * 1.5),
+                color: e.projColor || "#ff4757",
+                projStyle: e.typeId?.includes("bang") || e.typeId?.includes("tuyet") ? "frost_lance" : e.typeId?.includes("viem") ? "fire_orb" : "boss_claw_wave",
+                spawnBeamProj: true,
+                shakeAmp: 3
+              });
+            }
           }
         }
         if (dist <= this.player.radius + e.radius) {
@@ -17774,24 +18935,95 @@
         const tg = this.enemyTelegraphs[i];
         tg.t += dt;
         if (tg.t >= tg.dur) {
-          if (Math.hypot(this.player.x - tg.x, this.player.y - tg.y) <= tg.r) {
-            this.player.takeDamage(tg.damage, events);
+          if (tg.shape === "wave_rect") {
+            const dx = this.player.x - tg.x;
+            const dy = this.player.y - tg.y;
+            const ca = Math.cos(-(tg.angle ?? 0));
+            const sa = Math.sin(-(tg.angle ?? 0));
+            const lx = dx * ca - dy * sa;
+            const ly = dx * sa + dy * ca;
+            if (lx >= -10 && lx <= (tg.length ?? 160) && Math.abs(ly) <= (tg.width ?? 44) * 0.55) {
+              this.player.takeDamage(tg.damage, events);
+            }
+            if (tg.spawnBeamProj) {
+              const ang = tg.angle ?? 0;
+              this.enemyProjectiles.push({
+                x: tg.x,
+                y: tg.y - 6,
+                vx: Math.cos(ang) * 205,
+                vy: Math.sin(ang) * 205,
+                radius: tg.projRadius ?? 20,
+                damage: Math.round(tg.damage * 0.75),
+                color: tg.color || "#5ef2d6",
+                projStyle: tg.projStyle || "boss_claw_wave",
+                trail: [],
+                life: 1.4
+              });
+            }
+          } else if (tg.shape === "cone") {
+            const dx = this.player.x - tg.x;
+            const dy = this.player.y - tg.y;
+            const d = Math.hypot(dx, dy);
+            if (d <= (tg.r ?? 120) + this.player.radius) {
+              const diff = Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - (tg.angle ?? 0)), Math.cos(Math.atan2(dy, dx) - (tg.angle ?? 0))));
+              if (diff <= (tg.spread ?? Math.PI * 0.5) * 0.55) {
+                this.player.takeDamage(tg.damage, events);
+              }
+            }
+            if (tg.spawnProjectileFan) {
+              const cnt = tg.spawnProjectileFan;
+              for (let k = 0; k < cnt; k++) {
+                const a = (tg.angle ?? 0) + (k - (cnt - 1) / 2) * 0.24;
+                this.enemyProjectiles.push({
+                  x: tg.x,
+                  y: tg.y - 6,
+                  vx: Math.cos(a) * 165,
+                  vy: Math.sin(a) * 165,
+                  radius: 13,
+                  damage: Math.round(tg.damage * 0.65),
+                  color: tg.color || "#5ef2d6",
+                  projStyle: tg.projStyle || "boss_scale_lance",
+                  trail: [],
+                  life: 1.6
+                });
+              }
+            }
+          } else {
+            if (Math.hypot(this.player.x - tg.x, this.player.y - tg.y) <= (tg.r ?? 36)) {
+              this.player.takeDamage(tg.damage, events);
+            }
+            this.hitSparks.push(...createHitSparks(tg.x, tg.y, tg.color || "#ff7b39", 12, "shatter"));
+            this.spawnVfx("vfx/hoa-than", tg.x, tg.y, { scale: 0.75 });
           }
-          this.spawnVfx("vfx/hoa-than", tg.x, tg.y, { scale: 0.65 });
+          if (tg.shakeAmp) this.triggerShake(0.18, tg.shakeAmp);
           this.enemyTelegraphs.splice(i, 1);
         }
       }
       for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
         const pr = this.enemyProjectiles[i];
         pr.life -= dt;
+        pr.trail = pr.trail || [];
+        if (Math.floor(this.time * 40) % 2 === 0) {
+          pr.trail.push({ x: pr.x, y: pr.y });
+          if (pr.trail.length > 3) pr.trail.shift();
+        }
         pr.x += pr.vx * dt;
         pr.y += pr.vy * dt;
         if (Math.hypot(this.player.x - pr.x, this.player.y - 6 - pr.y) <= this.player.radius + pr.radius) {
           this.player.takeDamage(pr.damage, events);
+          this.hitSparks.push(...createHitSparks(pr.x, pr.y, pr.color || "#ff5e6c", 8, "spark"));
           this.enemyProjectiles.splice(i, 1);
           continue;
         }
         if (pr.life <= 0) this.enemyProjectiles.splice(i, 1);
+      }
+      for (let i = this.hitSparks.length - 1; i >= 0; i--) {
+        const s = this.hitSparks[i];
+        s.life -= dt;
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vy += 90 * dt;
+        if (s.life <= 0) this.hitSparks.splice(i, 1);
       }
       for (let i = this.vfxEffects.length - 1; i >= 0; i--) {
         this.vfxEffects[i].t += dt;
@@ -17870,6 +19102,88 @@
       }
       return { x: 0, y: 0, magnitude: 0, angle: ang };
     }
+    _updateThienTriNguVuong(e, dt, events) {
+      if ((e.chargeDashTimer ?? 0) > 0) {
+        e.chargeDashTimer -= dt;
+        e.x += (e.dashVx ?? 0) * dt;
+        e.y += (e.dashVy ?? 0) * dt;
+        if (Math.hypot(this.player.x - e.x, this.player.y - e.y) <= this.player.radius + 32) {
+          this.player.takeDamage(Math.round(e.damage * 1.15), events);
+        }
+        return;
+      }
+      const dx = this.player.x - e.x;
+      const dy = this.player.y - e.y;
+      const dist = Math.hypot(dx, dy);
+      const activeFight = e.provoked || this.dieuHoi.active || dist <= 260;
+      e.x = e.homeX + Math.sin(this.time * (activeFight ? 1.15 : 0.75)) * (activeFight ? 54 : 42);
+      e.y = e.homeY + Math.cos(this.time * (activeFight ? 0.9 : 0.6)) * (activeFight ? 26 : 18);
+      e.facingLeft = dx < 0;
+      if (!activeFight) return;
+      e.aiTimer = (e.aiTimer ?? 2.8) - dt;
+      if (e.aiTimer <= 0) {
+        e.aiTimer = 3.4;
+        const ang = Math.atan2(dy, dx);
+        e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
+        if (e.bossPattern === 0) {
+          this.addFloatingText(e.x, e.y - 52, "\u{1F30A} Ng\u01B0 V\u01B0\u01A1ng Qu\u1EABy \u0110u\xF4i: Th\u1EE7y Tri\u1EC1u Cu\u1ED9n Tr\xE0o!", "#5ef2d6");
+          this.enemyTelegraphs.push({
+            shape: "wave_rect",
+            x: e.x,
+            y: e.y,
+            angle: ang,
+            length: 235,
+            width: 68,
+            t: 0,
+            dur: 1.15,
+            damage: Math.round(e.damage * 1.45),
+            color: "#22b8cf",
+            projStyle: "boss_tidal_wave",
+            projRadius: 28,
+            spawnBeamProj: true,
+            shakeAmp: 3.2
+          });
+        } else if (e.bossPattern === 1) {
+          this.addFloatingText(e.x, e.y - 52, "\u26A1 L\xE2n Quang Th\u1EE7y K\xECnh!", "#87ffeb");
+          this.enemyTelegraphs.push({
+            shape: "cone",
+            x: e.x,
+            y: e.y,
+            angle: ang,
+            spread: Math.PI * 0.65,
+            r: 175,
+            t: 0,
+            dur: 1.05,
+            damage: Math.round(e.damage * 1.25),
+            color: "#5ef2d6",
+            projStyle: "boss_scale_lance",
+            spawnProjectileFan: 5,
+            shakeAmp: 2.5
+          });
+        } else {
+          this.addFloatingText(e.x, e.y - 52, "\u{1F4A7} Ng\u01B0 V\u01B0\u01A1ng X\xE9 N\u01B0\u1EDBc!", "#ffd257");
+          this.enemyTelegraphs.push({
+            shape: "wave_rect",
+            x: e.x,
+            y: e.y,
+            angle: ang,
+            length: 195,
+            width: 48,
+            t: 0,
+            dur: 0.95,
+            damage: Math.round(e.damage * 1.35),
+            color: "#4db8ff",
+            projStyle: "boss_tidal_wave",
+            projRadius: 24,
+            spawnBeamProj: true,
+            shakeAmp: 3
+          });
+          e.chargeDashTimer = 0.25;
+          e.dashVx = Math.cos(ang) * 165;
+          e.dashVy = Math.sin(ang) * 165;
+        }
+      }
+    }
     _updateBanLongBoss(b, dt, events) {
       const bloodCount = this.banLongPillars.filter((p) => p.alive && p.kind === "blood").length;
       if (bloodCount > 0 && b.hp < b.maxHp) {
@@ -17883,10 +19197,12 @@
           this.enemyProjectiles.push({
             x: b.x,
             y: b.y - 20,
-            vx: Math.cos(a + k * 0.25) * 140,
-            vy: Math.sin(a + k * 0.25) * 140,
-            radius: 6,
+            vx: Math.cos(a + k * 0.25) * 145,
+            vy: Math.sin(a + k * 0.25) * 145,
+            radius: 11,
             damage: 65,
+            projStyle: "boss_scale_lance",
+            trail: [],
             color: "#19f0c8",
             life: 2.8
           });
@@ -17933,14 +19249,7 @@
         this.banLongBreathWarn
       );
       for (const tg of this.enemyTelegraphs) {
-        const pct = Math.min(1, tg.t / tg.dur);
-        ctx.save();
-        ctx.globalAlpha = 0.2 + pct * 0.25;
-        fillPixelEllipse(ctx, tg.x, tg.y, tg.r, Math.round(tg.r * 0.68), "#ff4757", true);
-        ctx.globalAlpha = 0.92;
-        plotPixelEllipse(ctx, tg.x, tg.y, tg.r, Math.round(tg.r * 0.68), "#ff4757", 3, 0);
-        plotPixelEllipse(ctx, tg.x, tg.y, Math.max(4, Math.round(tg.r * pct)), Math.max(3, Math.round(tg.r * 0.68 * pct)), "#ffd15c");
-        ctx.restore();
+        renderBossTelegraphPixel(ctx, tg, this.time);
       }
       if (this.player.autoPathTarget) {
         ctx.save();
@@ -17998,7 +19307,9 @@
       drawBanLongMechanicPillar(ctx, p, boss, this.time, this.banLongBreathWarn);
     }
     _renderSingleNpc(ctx, npc) {
-      const sheets = getCharacterSheets({ hairColor: "bach_phat", outfitColor: "thanh_ngoc", trimColor: "vang_dong" });
+      const id = npc.id || npc.name || "";
+      const app = id.includes("toc_truong") || id.includes("gia_lao") ? { hairColor: "bach_phat", hairStyle: "hiep_khach", outfitStyle: "truong_bao", outfitColor: "bach_tuyet", trimColor: "vang_dong", headgear: "ngoc_quan" } : id.includes("duoc") || id.includes("cuu_ba") ? { hairColor: "den_huyen", hairStyle: "co_nguyet_phat", outfitStyle: "truong_bao", outfitColor: "thanh_ngoc", trimColor: "ngoc_bich", backItem: "ho_lo" } : id.includes("thuong") || id.includes("cho") || id.includes("do_thach") ? { hairColor: "vang_kim", hairStyle: "kiem_khach", outfitStyle: "doan_y", outfitColor: "hoang_kim", trimColor: "vang_dong", headgear: "dau_lap" } : id.includes("loi_dai") || id.includes("giao_dau") ? { hairColor: "den_huyen", hairStyle: "cuong_ma", outfitStyle: "chien_giap", outfitColor: "huyet_sat", trimColor: "vang_dong", headgear: "kim_co", backItem: "co_kiem" } : id.includes("ve") || id.includes("co_su") ? { hairColor: "xanh_bang", hairStyle: "hiep_khach", outfitStyle: "doan_y", outfitColor: "lam_bang", trimColor: "bac_sang", backItem: "co_kiem" } : { hairColor: "den_huyen", hairStyle: "tien_phong", outfitStyle: "truong_bao", outfitColor: "xich_viem", trimColor: "vang_dong" };
+      const sheets = getCharacterSheets(app);
       const fi = getSheetFrameIndex(sheets.idle, this.time, true);
       drawSheetFrame(ctx, sheets.idle, fi, npc.x, npc.y);
       ctx.save();
@@ -18090,6 +19401,7 @@
         plotRect(ctx, gx - 2, gy - 2, 4, 4, vital.color || "#5ef2d6");
         plotRect(ctx, gx - 1, gy - 1, 2, 2, "#ffffff");
       }
+      drawPlayerActiveBuffAuras(ctx, this.player, this.time);
       const mpRatio = this.player.mp / Math.max(1, this.player.maxMp);
       this._renderPlayerArc(ctx, mpRatio, this.player.isAbsorbingStone ? "#5ef2d6" : auraColor);
       const px = Math.round(this.player.x);
@@ -18115,24 +19427,12 @@
     }
     _renderProjectiles(ctx) {
       for (const pr of this.playerProjectiles) {
-        const px = Math.round(pr.x);
-        const py = Math.round(pr.y);
-        const ang = Math.atan2(pr.vy, pr.vx);
-        const nx = -Math.sin(ang);
-        const ny = Math.cos(ang);
-        const c = pr.color || "#5ef2d6";
-        plotPixelLine(ctx, px - nx * 6, py - ny * 6, px + nx * 6, py + ny * 6, "#06080d", 4);
-        plotPixelLine(ctx, px - nx * 5, py - ny * 5, px + nx * 5, py + ny * 5, c, 2);
-        plotRect(ctx, px - 1, py - 1, 2, 2, "#ffffff");
+        drawPixelProjectile(ctx, pr, this.time);
       }
       for (const pr of this.enemyProjectiles) {
-        const px = Math.round(pr.x);
-        const py = Math.round(pr.y);
-        const r = Math.max(3, Math.round(pr.radius * 0.75));
-        fillPixelEllipse(ctx, px, py, r + 1, r + 1, "#06080d");
-        fillPixelEllipse(ctx, px, py, r, r, pr.color || "#ff4757");
-        plotRect(ctx, px - 1, py - 1, 2, 2, "#fff5cc");
+        drawPixelProjectile(ctx, pr, this.time);
       }
+      renderHitSparks(ctx, this.hitSparks);
     }
     _renderVfxAndFloatingText(ctx) {
       for (const v of this.vfxEffects) {
@@ -18440,10 +19740,10 @@
           const dx = (x - cx) / cx;
           const dy = (y - cy) / cy;
           const dist = Math.hypot(dx, dy);
-          if (dist < 0.72) continue;
-          const t = Math.min(1, (dist - 0.72) / 0.65);
-          if (bayerThreshold(x >> 2, y >> 2) < t * 0.75) {
-            vctx.fillStyle = "rgba(5, 7, 12, 0.22)";
+          if (dist < 0.68) continue;
+          const t = Math.min(1, (dist - 0.68) / 0.68);
+          if (bayerThreshold(x >> 2, y >> 2) < t * 0.78) {
+            vctx.fillStyle = "rgba(9, 7, 4, 0.24)";
             vctx.fillRect(x, y, 4, 4);
           }
         }
@@ -18452,14 +19752,14 @@
       return c;
     }
     /**
-     * Ánh sáng Tĩnh U Tịch (Static Moody Twilight) + Thời tiết pixel cố định.
+     * Ánh sáng Tĩnh Trầm Ấm Rừng Sâu (Static Warm-Moody Forest Lighting) + Thời tiết pixel cố định.
      * TUYỆT ĐỐI KHÔNG thay đổi sáng/tối theo chu kỳ ngày/đêm.
      */
     drawEnvironmentOverlay(time, { weather = "clear", biome = "grass" } = {}) {
       const ctx = this.ctx;
       ctx.save();
       ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = "rgba(8, 12, 20, 0.10)";
+      ctx.fillStyle = "rgba(16, 12, 7, 0.08)";
       ctx.fillRect(0, 0, this.width, this.height);
       if (weather === "rain" || weather === "storm") {
         const dropCol = weather === "storm" ? "rgba(170, 220, 255, 0.42)" : "rgba(155, 205, 235, 0.28)";
@@ -19489,10 +20789,10 @@
   }
 
   // src/ui/CotienloHUD.js
-  var HUD_LAYOUT_STORAGE_KEY = "ctl_hud_layout_v1";
+  var HUD_LAYOUT_STORAGE_KEY = "ctl_hud_layout_v2";
   function createDefaultHudLayout() {
     return {
-      skillStyle: "moba",
+      skillStyle: "bar",
       handedness: "right",
       alwaysShowJoystick: false,
       joystick: { xPct: null, yPct: null, scale: 1 },
@@ -19580,6 +20880,8 @@
       this._armedQuestAt = 0;
       this._lastQuestTriggerAt = 0;
       this._currentSideItems = [];
+      this._dismissedNoticeKey = "";
+      this._lastNoticeKey = "";
       this.localChatFeed = [
         { kind: "sys", sender: "H\u1EC7 th\u1ED1ng", text: "Ch\xE0o m\u1EEBng \u0111\u1EBFn v\u1EDBi C\u1ED5 Ti\xEAn L\u1ED9! \u1EA4n 2 l\u1EA7n v\xE0o nhi\u1EC7m v\u1EE5 \u0111\u1EC3 t\u1EF1 \u0111i t\u1EDBi." }
       ];
@@ -19623,10 +20925,9 @@
       }
     }
     _buildMarkup() {
-      const uiFrames = getUiFrameAssets();
       const archSlots = [0, 1, 2, 3, 4, 5, 6].map(
         (idx) => `
-      <button type="button" class="arch-gu-slot arch-gu-slot--${idx}" data-arch-slot="${idx}" style="background-image:url('${uiFrames.slot48Url}')">
+      <button type="button" class="arch-gu-slot arch-gu-slot--${idx}" data-arch-slot="${idx}">
         <span class="arch-icon"></span>
         <span class="ctl-cd-mask"></span>
         <span class="ctl-cd-num"></span>
@@ -19646,12 +20947,12 @@
       ].map(([id, lbl], i) => `<button type="button" class="ctl-chat-tab ${i === 0 ? "is-active" : ""}" data-chat-tab="${id}">${lbl}</button>`).join("");
       return `
       <div class="ctl-health-notice">Ch\u01A1i game qu\xE1 180 ph\xFAt m\u1ED9t ng\xE0y s\u1EBD \u1EA3nh h\u01B0\u1EDFng x\u1EA5u \u0111\u1EBFn s\u1EE9c kh\u1ECFe</div>
-      <button type="button" id="hud-world-prompt" class="ctl-jade-prompt">
-        <img id="hud-prompt-token" class="ctl-pixel-icon ctl-prompt-token" src="${uiFrames.jadeTokenFUrl}" width="24" height="24" alt="F" />
-        <span id="hud-prompt-text" class="ctl-prompt-text">F \xB7 T\u01B0\u01A1ng t\xE1c</span>
-      </button>
+      <div id="hud-notice-banner" class="ctl-parch-notice" role="status">
+        <span id="hud-notice-text" class="ctl-parch-notice-txt"></span>
+        <button type="button" id="hud-notice-close" class="ctl-parch-notice-close" title="\u0110\xF3ng th\xF4ng b\xE1o">\xD7</button>
+      </div>
 
-      <!-- G\xD3C TR\xCAN-TR\xC1I -->
+      <!-- G\xD3C TR\xCAN-TR\xC1I: AVATAR TR\xD2N VI\u1EC0N \u0110\u1ED2NG \xB7 M\xC1U / CH\xC2N NGUY\xCAN \xB7 CU\u1ED8N GI\u1EA4Y NHI\u1EC6M V\u1EE4 -->
       <div class="ctl-top-left">
         <div class="ctl-profile-bar">
           <button type="button" id="hud-avatar-btn" class="ctl-avatar-ring" title="M\u1EDF B\u1EA3ng Nh\xE2n V\u1EADt (C)">
@@ -19684,6 +20985,8 @@
 
         <div id="hud-quest-box" class="ctl-quest-parchment">
           <div class="ctl-quest-ribbon"></div>
+          <span class="ctl-stud ctl-stud--bl" aria-hidden="true"></span>
+          <span class="ctl-stud ctl-stud--br" aria-hidden="true"></span>
           <div class="ctl-quest-tabs">
             <button type="button" class="ctl-qtab is-active" data-qtab="main">Ch\xEDnh (1/18)</button>
             <button type="button" class="ctl-qtab" data-qtab="side">Ph\u1EE5 (2)</button>
@@ -19694,7 +20997,7 @@
         </div>
       </div>
 
-      <!-- CH\xCDNH GI\u1EEEA TR\xCAN -->
+      <!-- CH\xCDNH GI\u1EEEA TR\xCAN: THANH M\u1EE4C TI\xCAU (T) & S\u1EF0 KI\u1EC6N -->
       <div class="ctl-top-center">
         <div id="hud-target-bar" class="ctl-target-bar">
           <div class="ctl-target-badge">T</div>
@@ -19713,7 +21016,7 @@
         </div>
       </div>
 
-      <!-- G\xD3C TR\xCAN-PH\u1EA2I -->
+      <!-- G\xD3C TR\xCAN-PH\u1EA2I: H\xC0NG HUY HI\u1EC6U C\u1ED4 PHONG & MINIMAP TR\xD2N VI\u1EC0N \u0110\u1ED2NG G\u1ED6 -->
       <div class="ctl-top-right">
         <div class="ctl-quick-icons">
           <button type="button" class="ctl-round-btn" data-panel="world" title="B\u1EA3n \u0111\u1ED3 th\u1EBF gi\u1EDBi (M)">${getUiIconSvg("map")}<em>B\u1EA3n \u0111\u1ED3</em></button>
@@ -19727,17 +21030,19 @@
           </button>
         </div>
 
-        <div id="hud-minimap-wrap" class="ctl-minimap-box">
+        <div id="hud-minimap-wrap" class="ctl-minimap-box ctl-minimap-round">
           <div class="ctl-minimap-head">
             <span id="hud-map-label">T\u1EA1 Gia Tr\u1EA1i</span>
-            <span id="hud-coord-label" class="ctl-coord-tag">360,368</span>
-            <button type="button" id="hud-minimap-toggle" class="ctl-mini-circle">&gt;</button>
+            <button type="button" id="hud-minimap-toggle" class="ctl-mini-circle" title="Thu g\u1ECDn minimap">&gt;</button>
           </div>
-          <div class="ctl-minimap-frame">
-            <canvas id="hud-minimap-canvas" width="156" height="100" title="B\u1EA5m l\xEAn b\u1EA3n \u0111\u1ED3 nh\u1ECF \u0111\u1EC3 t\u1EF1 \u0111i t\u1EDBi"></canvas>
+          <div class="ctl-minimap-frame ctl-minimap-circle-frame">
+            <canvas id="hud-minimap-canvas" width="116" height="116" title="B\u1EA5m l\xEAn b\u1EA3n \u0111\u1ED3 nh\u1ECF \u0111\u1EC3 t\u1EF1 \u0111i t\u1EDBi"></canvas>
             <span class="ctl-compass-n">B</span>
           </div>
-          <div id="hud-weather-label" class="ctl-weather-sub">U T\u1ECBch \xB7 Thanh T\u0129nh</div>
+          <div class="ctl-minimap-meta-row">
+            <span id="hud-weather-label" class="ctl-weather-sub">Thanh T\u0129nh</span>
+            <span id="hud-coord-label" class="ctl-coord-tag">360,368</span>
+          </div>
         </div>
       </div>
 
@@ -19758,7 +21063,7 @@
         </div>
       </div>
 
-      <!-- CH\xCDNH GI\u1EEEA D\u01AF\u1EDAI: THANH K\u1EF8 N\u0102NG PIXEL FANTASY + TOOLTIP -->
+      <!-- CH\xCDNH GI\u1EEEA D\u01AF\u1EDAI: C\u1EE4M CHI\xCAU TH\u1EE8C KHUNG TR\xD2N C\u1ED4 PHONG & TH\u1EBA T\u01AF\u01A0NG T\xC1C TINH T\u1EBE -->
       <div class="ctl-bottom-arch ctl-pixel-skilldock">
         <div id="hud-slot-tooltip" class="ctl-slot-tooltip">
           <div id="hud-tt-title" class="ctl-tt-title"></div>
@@ -19784,18 +21089,22 @@
             <span class="ctl-cd-num"></span>
             <span id="hud-qcnt-1" class="ctl-sq-cnt">0</span>
           </button>
-          <button type="button" id="hud-basic-btn" class="ctl-basic-btn" title="\u0110\xE1nh th\u01B0\u1EDDng (Chu\u1ED9t Tr\xE1i)">
-            ${getUiIconSvg("attack")}
-            <span>\u0110\xE1nh<em class="ctl-kb-hint"> [LMB]</em></span>
-          </button>
           <button type="button" id="hud-absorb-pill" class="ctl-absorb-pill" title="Gi\u1EEF R \u0111\u1EC3 H\u1EA5p Thu Nguy\xEAn Th\u1EA1ch">
             ${getUiIconSvg("absorb")}<span><em class="ctl-kb-hint">R \xB7 </em>H\u1EA5p thu</span>
+          </button>
+          <button type="button" id="hud-context-pill" class="ctl-context-pill" title="Ph\xEDm F t\u01B0\u01A1ng t\xE1c \u0111\u1ED1i t\u01B0\u1EE3ng g\u1EA7n">
+            <span id="hud-context-text">F \xB7 Ng\u1EEF c\u1EA3nh</span>
           </button>
           <button type="button" id="hud-dash-btn" class="ctl-dash-pill" title="L\u01B0\u1EDBt n\xE9 (Space)"><span class="ctl-kb-hint">Space \xB7 </span>L\u01B0\u1EDBt</button>
         </div>
 
         <div class="ctl-pixel-mainbar">
-          <button type="button" id="hud-vital-btn" class="ctl-vital-orb" title="C\u1ED5 B\u1EA3n M\u1EC7nh (Chu\u1ED9t Ph\u1EA3i)" style="background-image:url('${uiFrames.vital56Url}')">
+          <button type="button" id="hud-basic-btn" class="ctl-basic-btn ctl-basic-circle" title="\u0110\xE1nh th\u01B0\u1EDDng (Chu\u1ED9t Tr\xE1i)">
+            ${getUiIconSvg("attack")}
+            <span>\u0110\xE1nh</span>
+          </button>
+
+          <button type="button" id="hud-vital-btn" class="ctl-vital-orb" title="C\u1ED5 B\u1EA3n M\u1EC7nh (Chu\u1ED9t Ph\u1EA3i)">
             <span id="hud-vital-icon" style="width:32px;height:32px;display:grid;place-items:center"></span>
             <span class="ctl-cd-mask"></span>
             <span class="ctl-cd-num"></span>
@@ -19807,14 +21116,14 @@
           </div>
 
           <div class="ctl-pixel-km-row">
-            <button type="button" id="hud-km-0" class="ctl-km-btn ctl-km-0" title="S\xE1t chi\xEAu Q" style="background-image:url('${uiFrames.slot48Url}')">
-              <span id="hud-km-icon-0" style="width:30px;height:30px;display:grid;place-items:center"></span>
+            <button type="button" id="hud-km-0" class="ctl-km-btn ctl-km-0" title="S\xE1t chi\xEAu / T\u1ED5 H\u1EE3p Q">
+              <span id="hud-km-icon-0" style="width:28px;height:28px;display:grid;place-items:center"></span>
               <span class="ctl-cd-mask"></span>
               <span class="ctl-cd-num"></span>
               <span class="arch-key">Q</span>
             </button>
-            <button type="button" id="hud-km-1" class="ctl-km-btn ctl-km-1" title="S\xE1t chi\xEAu E" style="background-image:url('${uiFrames.slot48Url}')">
-              <span id="hud-km-icon-1" style="width:30px;height:30px;display:grid;place-items:center"></span>
+            <button type="button" id="hud-km-1" class="ctl-km-btn ctl-km-1" title="S\xE1t chi\xEAu / T\u1ED5 H\u1EE3p E">
+              <span id="hud-km-icon-1" style="width:28px;height:28px;display:grid;place-items:center"></span>
               <span class="ctl-cd-mask"></span>
               <span class="ctl-cd-num"></span>
               <span class="arch-key">E</span>
@@ -19888,14 +21197,14 @@
         <em id="hud-mobile-menu-lbl">Menu</em>
       </button>
       <div id="hud-util-drawer" class="ctl-bottom-right">
-        <button type="button" class="ctl-util-btn" data-panel="cultivate" title="Bu\u1ED3ng T\u0129nh T\u1ECDa Tu Luy\u1EC7n Kh\xF4ng Khi\u1EBFu (K)"><span class="ctl-svg-wrap">${getUiIconSvg("absorb")}</span><em>Tu Luy\u1EC7n</em></button>
-        <button type="button" class="ctl-util-btn" data-panel="quests" title="Gia T\u1ED9c Nhi\u1EC7m V\u1EE5 \u0110\u01B0\u1EDDng & S\u0103n C\u1ED5 (J)"><span class="ctl-svg-wrap">${getUiIconSvg("map")}</span><em>N.V\u1EE5 (J)</em></button>
         <button type="button" class="ctl-util-btn" data-panel="bag" title="T\xFAi \u0110\u1ED3 & \u0110\u1ED5 Th\u1EA1ch (B)"><span class="ctl-svg-wrap">${getUiIconSvg("bag")}</span><em>T\xFAi (B)</em></button>
-        <button type="button" class="ctl-util-btn" data-panel="gu" title="C\u1ED5 Tr\xF9ng & L\u01B0u Ph\xE1i (V)"><span class="ctl-svg-wrap">${getUiIconSvg("gu")}</span><em>C\u1ED5 (V)</em></button>
         <button type="button" class="ctl-util-btn" data-panel="char" title="Nh\xE2n V\u1EADt & \u0110\u1ED9t Ph\xE1 (C)"><span class="ctl-svg-wrap">${getUiIconSvg("char")}</span><em>NV (C)</em></button>
-        <button type="button" id="hud-pvp-btn" class="ctl-util-btn" title="C\u1EDD PvP"><span class="ctl-svg-wrap">${getUiIconSvg("flag")}</span><em id="hud-pvp-lbl">H\xF2a</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="gu" title="C\u1ED5 Tr\xF9ng & T\u1ED5 H\u1EE3p 2+ C\u1ED5 (V)"><span class="ctl-svg-wrap">${getUiIconSvg("gu")}</span><em>C\u1ED5 (V)</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="gu" data-open-subtab="combo" title="Gh\xE9p S\xE1t Chi\xEAu 2\u20133 C\u1ED5 (Q/E)"><span class="ctl-svg-wrap">${getUiIconSvg("arena")}</span><em>S.Chi\xEAu</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="quests" title="Nhi\u1EC7m V\u1EE5 & T\u1EA7m C\u1ED5 (J)"><span class="ctl-svg-wrap">${getUiIconSvg("map")}</span><em>N.V\u1EE5 (J)</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="cultivate" title="Bu\u1ED3ng T\u0129nh T\u1ECDa Tu Luy\u1EC7n (K)"><span class="ctl-svg-wrap">${getUiIconSvg("absorb")}</span><em>Tu Luy\u1EC7n</em></button>
         <button type="button" class="ctl-util-btn" data-panel="mail" title="Th\u01B0 & Qu\xE0 T\xE2n Th\u1EE7"><span class="ctl-svg-wrap">${getUiIconSvg("mail")}</span><em>Th\u01B0</em></button>
-        <button type="button" class="ctl-util-btn" data-panel="settings" title="C\xE0i \u0111\u1EB7t & T\xE0i kho\u1EA3n"><span class="ctl-svg-wrap">${getUiIconSvg("settings")}</span><em>C\xE0i \u0111\u1EB7t</em></button>
+        <button type="button" class="ctl-util-btn" data-panel="settings" title="C\xE0i \u0111\u1EB7t & \u0110i\u1EC1u khi\u1EC3n"><span class="ctl-svg-wrap">${getUiIconSvg("settings")}</span><em>C\xE0i \u0111\u1EB7t</em></button>
       </div>
 
       <div id="joystick-zone" class="touch-only" data-hud-widget="joystick" aria-label="Joystick">
@@ -20066,8 +21375,11 @@
       this.chatBody = this.hudRoot.querySelector("#hud-chat-body");
       this.chatLines = this.hudRoot.querySelector("#hud-chat-lines");
       this.chatInput = this.hudRoot.querySelector("#hud-chat-input");
-      this.worldPrompt = this.hudRoot.querySelector("#hud-world-prompt");
-      this.worldPromptText = this.hudRoot.querySelector("#hud-prompt-text");
+      this.noticeBanner = this.hudRoot.querySelector("#hud-notice-banner");
+      this.noticeBannerText = this.hudRoot.querySelector("#hud-notice-text");
+      this.noticeBannerClose = this.hudRoot.querySelector("#hud-notice-close");
+      this.contextPill = this.hudRoot.querySelector("#hud-context-pill");
+      this.contextPillText = this.hudRoot.querySelector("#hud-context-text");
       this.stealthPill = this.hudRoot.querySelector("#hud-stealth-pill");
       this.autoBtn = this.hudRoot.querySelector("#hud-auto-btn");
       this.vitalBtn = this.hudRoot.querySelector("#hud-vital-btn");
@@ -20314,8 +21626,13 @@
       this.hudRoot.querySelectorAll("[data-panel]").forEach((btn) => {
         btn.addEventListener("click", () => {
           if (this.mobileMenuOpen) this.setMobileMenuOpen(false);
-          this.onOpenPanel?.(btn.dataset.panel);
+          this.onOpenPanel?.(btn.dataset.panel, btn.dataset.openSubtab || null);
         });
+      });
+      this.noticeBannerClose?.addEventListener("click", () => {
+        this._dismissedNoticeKey = this._lastNoticeKey;
+        if (this._lastPlayerRef) this._lastPlayerRef.lastBacklashNotice = "";
+        this.noticeBanner?.classList.remove("is-visible");
       });
       this.hudRoot.querySelectorAll("[data-event]").forEach((btn) => {
         btn.addEventListener("click", () => this.onStartEvent?.(btn.dataset.event));
@@ -20368,7 +21685,10 @@
         const el = this.hudRoot.querySelector(`#hud-km-${idx}`);
         el?.addEventListener("mouseenter", () => {
           const km = this.lastKmData[idx];
-          if (km) this._showTooltip(`S\xE1t Chi\xEAu: ${km.name}`, `C\u1EA7n ${km.thoughtCost} Thanh Ni\u1EC7m \xB7 ${km.mpCost} Ch\xE2n nguy\xEAn`, km.desc);
+          if (km) {
+            const reqTxt = km.isMultiGu ? `T\u1ED5 H\u1EE3p ${km.guNames?.length || 2} C\u1ED5 \xB7 ${km.mpCost} MP \xB7 \u1ED4n \u0111\u1ECBnh ${km.stabilityPct}%` : `C\u1EA7n ${km.thoughtCost} Thanh Ni\u1EC7m \xB7 ${km.mpCost} Ch\xE2n nguy\xEAn`;
+            this._showTooltip(`S\xE1t Chi\xEAu: ${km.name}`, reqTxt, km.desc);
+          }
         });
         el?.addEventListener("mouseleave", () => this._hideTooltip());
       });
@@ -20383,7 +21703,7 @@
         absBtn.addEventListener("pointerleave", () => this.onAbsorbEnd?.());
         absBtn.addEventListener("pointercancel", () => this.onAbsorbEnd?.());
       }
-      this.worldPrompt?.addEventListener("click", () => this.onInteract?.());
+      this.contextPill?.addEventListener("click", () => this.onInteract?.());
       this.autoBtn?.addEventListener("click", () => this.onToggleAutoCombat?.());
       this.hudRoot.querySelector("#hud-cer-close")?.addEventListener("click", () => {
         this.ceremonyBanner?.classList.remove("is-visible");
@@ -20862,7 +22182,7 @@
       if (this.coordLabel) this.coordLabel.textContent = `${Math.round(player2.x)},${Math.round(player2.y)}`;
       if (this.weatherLabel) {
         const wLbl = { clear: "Thanh T\u0129nh", rain: "M\u01B0a R\u01A1i", storm: "Gi\xF4ng S\xE9t", fog: "S\u01B0\u01A1ng M\xF9", snow: "Tuy\u1EBFt H\xE0n" }[world2.weather] || "Thanh T\u0129nh";
-        this.weatherLabel.textContent = `U T\u1ECBch \xB7 ${wLbl}`;
+        this.weatherLabel.textContent = `R\u1EEBng C\u1ED5 \xB7 ${wLbl}`;
       }
       this._drawMinimap(player2, world2, mapDef);
       const vital = player2.getVitalGu();
@@ -20904,27 +22224,53 @@
         }
       }
       this.lastKmData = [
-        KILLER_MOVES.find((k) => k.id === player2.killerMoveIds[0]),
-        KILLER_MOVES.find((k) => k.id === player2.killerMoveIds[1])
+        player2.getResolvedKillerMove?.(0) ?? KILLER_MOVES.find((k) => k.id === player2.killerMoveIds[0]),
+        player2.getResolvedKillerMove?.(1) ?? KILLER_MOVES.find((k) => k.id === player2.killerMoveIds[1])
       ];
       for (let i = 0; i < 2; i++) {
         const km = this.lastKmData[i];
         const cd = player2.getCooldownInfo(i === 0 ? "km1" : "km2");
-        const ready = Boolean(km && player2.thoughtGauge >= km.thoughtCost && cd.rem <= 0);
-        const isOom = Boolean(km && (player2.thoughtGauge < km.thoughtCost || player2.mp < km.mpCost));
+        const reqT = km?.isMultiGu ? 0 : km?.thoughtCost ?? 60;
+        const ready = Boolean(km && player2.thoughtGauge >= reqT && cd.rem <= 0 && player2.mp >= (km.mpCost ?? 0));
+        const isOom = Boolean(km && (player2.thoughtGauge < reqT || player2.mp < (km.mpCost ?? 0)));
         for (const [btnSel, iconSel] of [
           [`#hud-km-${i}`, `#hud-km-icon-${i}`],
           [`#moba-km-${i}`, `#moba-km-icon-${i}`]
         ]) {
           const btn = this.hudRoot.querySelector(btnSel);
           const iconHost = this.hudRoot.querySelector(iconSel);
-          if (iconHost && iconHost.dataset.key !== (km?.id || "none")) {
-            iconHost.dataset.key = km?.id || "none";
-            iconHost.innerHTML = getKillerMovePixelImgHtml(km);
+          const keySig = `${km?.id || "none"}_${km?.guIds?.join(",") || ""}`;
+          if (iconHost && iconHost.dataset.key !== keySig) {
+            iconHost.dataset.key = keySig;
+            if (km?.isMultiGu && km.guUids?.length) {
+              const leadGu = player2.getGu(km.guUids[0]);
+              iconHost.innerHTML = leadGu ? getGuIconSvg(leadGu) : getKillerMovePixelImgHtml(km);
+            } else {
+              iconHost.innerHTML = getKillerMovePixelImgHtml(km);
+            }
           }
+          if (btn && km?.color) btn.style.borderColor = km.color;
           btn?.classList.toggle("is-ready", ready);
           this._updateSlotCooldownEl(btn, cd, isOom);
         }
+      }
+      let noticeMsg = "";
+      let noticeKey = "";
+      if (player2.lastBacklashNotice) {
+        noticeMsg = player2.lastBacklashNotice;
+        noticeKey = `backlash:${player2.lastBacklashNotice}`;
+      } else {
+        const hungryGu = player2.getAllEquipped().find((g) => g.foodItemId && (g.hunger ?? 100) <= 35);
+        if (hungryGu) {
+          noticeMsg = `C\u1EA3nh b\xE1o: [${hungryGu.name}] s\u1EAFp \u0111\xF3i (${Math.round(hungryGu.hunger)}%), m\u1EDF C\u1ED5 Tr\xF9ng (V) \u2192 Nu\xF4i C\u1ED5 b\u1EB1ng ${hungryGu.foodName}!`;
+          noticeKey = `hungry:${hungryGu.id}:${Math.floor((hungryGu.hunger ?? 0) / 10)}`;
+        }
+      }
+      this._lastNoticeKey = noticeKey;
+      if (this.noticeBanner && this.noticeBannerText) {
+        const showNotice = Boolean(noticeMsg && noticeKey !== this._dismissedNoticeKey);
+        this.noticeBanner.classList.toggle("is-visible", showNotice);
+        if (showNotice) this.noticeBannerText.textContent = noticeMsg;
       }
       for (let i = 0; i < 2; i++) {
         const id = player2.quickItemIds[i];
@@ -20983,38 +22329,15 @@
         }
       }
       const near = world2.getNearbyInteractable();
-      if (this.worldPrompt && this.worldPromptText) {
+      if (this.contextPill && this.contextPillText) {
         const hasPrompt = inRitual && (player2.awakeningSteps ?? 0) >= 1 || Boolean(near);
-        this.worldPrompt.classList.toggle("is-visible", hasPrompt);
-        if (hasPrompt) {
-          const isPortal = !inRitual && near?.kind === "portal";
-          this.worldPrompt.classList.toggle("is-portal", isPortal);
-          if (inRitual && (player2.awakeningSteps ?? 0) >= 1) {
-            this.worldPromptText.textContent = `F \xB7 D\u1EEBng Khai Khi\u1EBFu (${player2.awakeningSteps}/45)`;
-          } else {
-            this.worldPromptText.textContent = near.label;
-          }
-          const anchorData = !inRitual ? near?.data : null;
-          const pt = anchorData && this.worldToClient ? this.worldToClient(anchorData.x, anchorData.y, world2.camera) : null;
-          const isMobile = document.body.classList.contains("is-mobile-ui");
-          const isPortrait = document.body.classList.contains("is-mobile-portrait");
-          const minXPad = isMobile ? 105 : 130;
-          const bottomReserve = isPortrait ? 132 : isMobile ? 116 : 180;
-          if (pt?.inBounds) {
-            const vw = window.innerWidth || 1280;
-            const vh = window.innerHeight || 720;
-            const cx = isPortal ? Math.max(minXPad, Math.min(vw - minXPad, pt.x + (pt.x < 220 ? 58 : pt.x > vw - 220 ? -58 : 0))) : Math.max(minXPad, Math.min(vw - minXPad, pt.x));
-            const cy = isPortal ? pt.y + 42 <= vh - bottomReserve ? Math.round(pt.y + 42) : Math.max(52, Math.round(pt.y - 98)) : Math.max(52, Math.min(vh - bottomReserve, pt.y - 60));
-            this.worldPrompt.style.left = `${Math.round(cx)}px`;
-            this.worldPrompt.style.top = `${Math.round(cy)}px`;
-            this.worldPrompt.classList.add("is-anchored");
-          } else {
-            const vw = window.innerWidth || 1280;
-            const vh = window.innerHeight || 720;
-            this.worldPrompt.style.left = `${Math.round(vw * 0.5)}px`;
-            this.worldPrompt.style.top = `${Math.round(Math.max(64, vh - bottomReserve + 12))}px`;
-            this.worldPrompt.classList.remove("is-anchored");
-          }
+        this.contextPill.classList.toggle("is-active", hasPrompt);
+        if (inRitual && (player2.awakeningSteps ?? 0) >= 1) {
+          this.contextPillText.textContent = `F \xB7 Khai Khi\u1EBFu (${player2.awakeningSteps}/45)`;
+        } else if (near?.label) {
+          this.contextPillText.textContent = near.label;
+        } else {
+          this.contextPillText.textContent = "F \xB7 Ng\u1EEF c\u1EA3nh";
         }
       }
       if (this.pvpLbl) {
@@ -21134,6 +22457,7 @@
       this.subTab = "main";
       this.questRankFilter = 1;
       this.selectedGuUid = null;
+      this.comboPickUids = [];
       this._apertureRaf = null;
       this.notice = "";
       this.noticeKind = "success";
@@ -21183,14 +22507,15 @@
         bodyHtml = this.subTab === "armor" ? this._buildArmorBody() : this._buildCharBody();
       } else if (this.panel === "gu") {
         iconKey = "gu";
-        title = "C\u1ED5 Tr\xF9ng \xB7 H\u1EE3p Luy\u1EC7n \xB7 L\u01B0u Ph\xE1i (V)";
+        title = "C\u1ED5 Tr\xF9ng \xB7 T\u1ED5 H\u1EE3p S\xE1t Chi\xEAu \xB7 H\u1EE3p Luy\u1EC7n (V)";
         tabsHtml = [
-          ["main", "Kh\xF4ng Khi\u1EBFu & S\xE1t Chi\xEAu"],
+          ["main", "Kh\xF4ng Khi\u1EBFu & G\xE1n \xD4"],
+          ["combo", "T\u1ED5 H\u1EE3p S\xE1t Chi\xEAu (2+ C\u1ED5)"],
           ["feed", "Nu\xF4i C\u1ED5"],
           ["refine", "H\u1EE3p Luy\u1EC7n C\u1ED5 Ph\u01B0\u01A1ng"],
           ["paths", "16 L\u01B0u Ph\xE1i"]
         ].map(([id, lbl]) => `<button type="button" class="tab-btn ${this.subTab === id ? "is-active" : ""}" data-subtab="${id}">${lbl}</button>`).join("");
-        bodyHtml = this.subTab === "feed" ? this._buildFeedBody() : this.subTab === "refine" ? this._buildCompoundBody() : this.subTab === "paths" ? this._buildPathsBody() : this._buildGuLoadoutBody();
+        bodyHtml = this.subTab === "combo" ? this._buildComboBuilderBody() : this.subTab === "feed" ? this._buildFeedBody() : this.subTab === "refine" ? this._buildCompoundBody() : this.subTab === "paths" ? this._buildPathsBody() : this._buildGuLoadoutBody();
       } else if (this.panel === "bag") {
         iconKey = "bag";
         title = "T\xFAi \u0110\u1ED3 \xB7 \u0110\u1ED5 Th\u1EA1ch \xB7 Th\u01B0\u01A1ng H\u1ED9i (B)";
@@ -21368,32 +22693,118 @@
       ).join("");
       const kmHtml = KILLER_MOVES.map((k) => {
         const idx = p.killerMoveIds.indexOf(k.id);
+        const customActive = Boolean(idx >= 0 && p.customKillerMoves?.[idx]?.guIds?.length >= 2);
         return `
-        <button type="button" class="ctl-list-card ${idx >= 0 ? "is-selected" : ""}" data-pick-km="${k.id}">
+        <button type="button" class="ctl-list-card ${idx >= 0 && !customActive ? "is-selected" : ""}" data-pick-km="${k.id}">
           <span class="ctl-icon-box">${getKillerMovePixelImgHtml(k)}</span>
           <div class="ctl-list-card-txt">
-            <strong>${k.name} ${idx === 0 ? "[Q]" : idx === 1 ? "[E]" : ""}</strong>
+            <strong>${k.name} ${idx === 0 && !customActive ? "[Q]" : idx === 1 && !customActive ? "[E]" : ""}</strong>
             <span>${k.desc}</span>
           </div>
         </button>
       `;
       }).join("");
+      const kmQ = p.getResolvedKillerMove(0);
+      const kmE = p.getResolvedKillerMove(1);
       return `
       <div class="ctl-aperture-sea" style="border-color:${stage.essenceColor}">
         <span><b>Kh\xF4ng Khi\u1EBFu Ch\xE2n Nguy\xEAn H\u1EA3i:</b> <span style="color:${stage.essenceColor}">${stage.essenceName}</span></span>
         <span>Dung l\u01B0\u1EE3ng: ${Math.floor(p.mp)}/${p.maxMp} (${apt.name})</span>
       </div>
+      <div class="ctl-box" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="ctl-sub-txt">
+          <b>[Q]:</b> <span style="color:${kmQ?.color || "#fff"}">${kmQ?.name || "Tr\u1ED1ng"}</span> &nbsp;|&nbsp;
+          <b>[E]:</b> <span style="color:${kmE?.color || "#fff"}">${kmE?.name || "Tr\u1ED1ng"}</span>
+        </div>
+        <button type="button" class="ctl-btn-jade" data-subtab="combo">\u26A1 Gh\xE9p S\xE1t Chi\xEAu 2\u20133 C\u1ED5 (Q / E)</button>
+      </div>
       <div class="ctl-grid-2">
         <div>
           <div class="ctl-box-title">1. C\u1ED5 Nang (${p.guBag.length}/${p.getMaxGuCapacity()}) \u2014 Gi\u1EDBi h\u1EA1n ch\u1ECBu t\u1EA3i Kh\xF4ng Khi\u1EBFu</div>
           <div class="ctl-scroll-list">${bagHtml}</div>
-          <div class="ctl-box-title" style="margin-top:8px">S\xE1t Chi\xEAu (B\u1EA5m \u0111\u1EC3 g\xE1n Q)</div>
+          <div class="ctl-box-title" style="margin-top:8px">S\xE1t Chi\xEAu C\u01A1 B\u1EA3n (B\u1EA5m \u0111\u1EC3 g\xE1n Q)</div>
           <div class="ctl-scroll-list" style="max-height:110px">${kmHtml}</div>
         </div>
         <div>
           <div class="ctl-box-title">2. \xD4 Kh\xF4ng Khi\u1EBFu \u0110ang D\xF9ng</div>
           <div class="ctl-slots-stack">${slotsHtml}</div>
         </div>
+      </div>
+    `;
+    }
+    _buildComboBuilderBody() {
+      const p = this.player;
+      this.comboPickUids = (this.comboPickUids || []).filter((uid) => p.guBag.some((g) => g.uid === uid));
+      const pickedGu = this.comboPickUids.map((uid) => p.getGu(uid)).filter(Boolean);
+      const preview = pickedGu.length >= 2 ? resolveMultiGuKillerMove(pickedGu, p) : null;
+      const kmQ = p.getResolvedKillerMove(0);
+      const kmE = p.getResolvedKillerMove(1);
+      const bagHtml = p.guBag.map((g) => {
+        const pickedIdx = this.comboPickUids.indexOf(g.uid);
+        return `
+          <button type="button" class="ctl-list-card ${pickedIdx >= 0 ? "is-selected" : ""}" data-toggle-combo-gu="${g.uid}" style="border-left:4px solid ${g.color}">
+            <span class="ctl-icon-box">${getGuIconSvg(g)}</span>
+            <div class="ctl-list-card-txt">
+              <strong>${g.name} (C${g.rank}) ${pickedIdx >= 0 ? `#${pickedIdx + 1}` : ""}</strong>
+              <span>No: ${Math.round(g.hunger ?? 100)}% \xB7 MP: ${g.mpCost ?? 0} \xB7 ${g.path}</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+      let previewHtml = `<div class="ctl-sub-txt">Ch\u1ECDn <b>2 ho\u1EB7c 3 C\u1ED5 Tr\xF9ng</b> b\xEAn tr\xE1i \u0111\u1EC3 t\u1EF1 ph\u1ED1i h\u1EE3p th\xE0nh S\xE1t Chi\xEAu m\u1EDBi, ho\u1EB7c ch\u1ECDn c\xF4ng th\u1EE9c g\u1EE3i \xFD b\xEAn d\u01B0\u1EDBi.</div>`;
+      if (preview) {
+        const stabCol = preview.stabilityPct >= 90 ? "#5fbf8a" : preview.stabilityPct >= 78 ? "#f2c14e" : "#ff6b78";
+        const warnHtml = (preview.stabilityWarnings || []).map((w) => `<div class="ctl-sub-txt" style="color:#ff9472">\u26A0 ${w}</div>`).join("");
+        previewHtml = `
+        <div style="border-left:4px solid ${preview.color};padding-left:8px">
+          <div style="font-weight:800;font-size:13px;color:${preview.color}">${preview.name}</div>
+          <div class="ctl-sub-txt" style="margin:3px 0">${preview.guNames.join(" + ")}</div>
+          <div style="font-size:11px;margin:4px 0">${preview.desc}</div>
+          <div class="ctl-stat-row"><span>B\u1ED9i s\u1ED1 Uy l\u1EF1c:</span><b>x${preview.damageMult}</b></div>
+          <div class="ctl-stat-row"><span>Ti\xEAu hao Ch\xE2n Nguy\xEAn:</span><b>${preview.mpCost} MP</b></div>
+          <div class="ctl-stat-row"><span>H\u1ED3i chi\xEAu:</span><b>${preview.cooldown}s</b></div>
+          <div class="ctl-stat-row"><span>\u0110\u1ED9 \u1ED4n \u0110\u1ECBnh (Tr\xE1nh Ph\u1EA3n Ph\u1EC7):</span><b style="color:${stabCol}">${preview.stabilityPct}%</b></div>
+          ${warnHtml}
+          <div class="ctl-btn-row" style="justify-content:flex-start;flex-wrap:wrap">
+            <button type="button" class="ctl-btn-jade" data-bind-combo-slot="0">G\xE1n V\xE0o \xD4 [Q]</button>
+            <button type="button" class="ctl-btn-jade" data-bind-combo-slot="1">G\xE1n V\xE0o \xD4 [E]</button>
+            <button type="button" class="ctl-parch-btn" id="btn-clear-combo-picks">B\u1ECF Ch\u1ECDn</button>
+          </div>
+        </div>
+      `;
+      }
+      const recipeHtml = COMBO_SYNERGY_RECIPES.slice(0, 8).map(
+        (r) => `
+      <div class="ctl-stat-row">
+        <div>
+          <strong style="color:${r.color}">${r.name}</strong>
+          <div class="ctl-sub-txt">${r.desc}</div>
+        </div>
+        <button type="button" class="ctl-parch-btn" data-quick-recipe="${r.id}">Th\u1EED Gh\xE9p</button>
+      </div>
+    `
+      ).join("");
+      return `
+      <div class="ctl-box" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="ctl-sub-txt">
+          <b>\xD4 [Q]:</b> <span style="color:${kmQ?.color || "#fff"}">${kmQ?.name}</span> ${p.customKillerMoves?.[0] ? `<button type="button" class="ctl-parch-btn" data-clear-combo-slot="0">G\u1EE1 Q</button>` : ""}
+          &nbsp;|&nbsp;
+          <b>\xD4 [E]:</b> <span style="color:${kmE?.color || "#fff"}">${kmE?.name}</span> ${p.customKillerMoves?.[1] ? `<button type="button" class="ctl-parch-btn" data-clear-combo-slot="1">G\u1EE1 E</button>` : ""}
+        </div>
+      </div>
+      <div class="ctl-grid-2">
+        <div>
+          <div class="ctl-box-title">1. Ch\u1ECDn 2\u20133 C\u1ED5 Tr\xF9ng Trong C\u1ED5 Nang (${this.comboPickUids.length}/3)</div>
+          <div class="ctl-scroll-list" style="max-height:220px">${bagHtml || "Ch\u01B0a c\xF3 C\u1ED5 Tr\xF9ng."}</div>
+        </div>
+        <div class="ctl-box">
+          <div class="ctl-box-title">2. D\u1EF1 Ki\u1EBFn S\xE1t Chi\xEAu T\u1ED5 H\u1EE3p</div>
+          ${previewHtml}
+        </div>
+      </div>
+      <div class="ctl-box" style="margin-top:8px">
+        <div class="ctl-box-title">C\xF4ng Th\u1EE9c S\xE1t Chi\xEAu C\u1ED5 Ch\xE2n Nh\xE2n G\u1EE3i \xDD</div>
+        <div class="ctl-scroll-list" style="max-height:135px">${recipeHtml}</div>
       </div>
     `;
     }
@@ -22182,8 +23593,76 @@
           const prev1 = this.player.killerMoveIds[1];
           const nextE = prev0 !== id ? prev0 : prev1 !== id ? prev1 : KILLER_MOVES.find((k) => k.id !== id)?.id || id;
           this.player.killerMoveIds = [id, nextE];
+          if (!this.player.customKillerMoves) this.player.customKillerMoves = [null, null];
+          this.player.customKillerMoves[0] = null;
           this.onStateChanged?.();
-          this._flash("\u0110\xE3 \u0111\u1ED5i S\xE1t Chi\xEAu ph\xEDm Q!");
+          this._flash("\u0110\xE3 \u0111\u1ED5i S\xE1t Chi\xEAu c\u01A1 b\u1EA3n ph\xEDm Q!");
+        });
+      });
+      this.root.querySelectorAll("[data-toggle-combo-gu]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const uid = btn.dataset.toggleComboGu;
+          const idx = this.comboPickUids.indexOf(uid);
+          if (idx >= 0) {
+            this.comboPickUids.splice(idx, 1);
+          } else {
+            if (this.comboPickUids.length >= 3) this.comboPickUids.shift();
+            this.comboPickUids.push(uid);
+          }
+          this.render();
+        });
+      });
+      this.root.querySelector("#btn-clear-combo-picks")?.addEventListener("click", () => {
+        this.comboPickUids = [];
+        this.render();
+      });
+      this.root.querySelectorAll("[data-bind-combo-slot]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const slotIdx = Number(btn.dataset.bindComboSlot) === 1 ? 1 : 0;
+          const pickedGu = (this.comboPickUids || []).map((u) => this.player.getGu(u)).filter(Boolean);
+          if (pickedGu.length < 2) {
+            this._flash("C\u1EA7n ch\u1ECDn \xEDt nh\u1EA5t 2 C\u1ED5 Tr\xF9ng!", "fail");
+            return;
+          }
+          const resolved = resolveMultiGuKillerMove(pickedGu, this.player);
+          if (!this.player.customKillerMoves) this.player.customKillerMoves = [null, null];
+          this.player.customKillerMoves[slotIdx] = {
+            guIds: pickedGu.map((g) => g.id),
+            customName: resolved.name
+          };
+          this.sfx?.play("fusionSuccess");
+          this.onStateChanged?.();
+          this._flash(`\u0110\xE3 g\xE1n S\xE1t Chi\xEAu [${resolved.name}] v\xE0o ph\xEDm ${slotIdx === 0 ? "Q" : "E"}!`);
+        });
+      });
+      this.root.querySelectorAll("[data-clear-combo-slot]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.clearComboSlot) === 1 ? 1 : 0;
+          if (this.player.customKillerMoves) this.player.customKillerMoves[idx] = null;
+          this.onStateChanged?.();
+          this._flash(`\u0110\xE3 tr\u1EA3 ph\xEDm ${idx === 0 ? "Q" : "E"} v\u1EC1 S\xE1t Chi\xEAu m\u1EB7c \u0111\u1ECBnh!`);
+        });
+      });
+      this.root.querySelectorAll("[data-quick-recipe]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const r = COMBO_SYNERGY_RECIPES.find((x) => x.id === btn.dataset.quickRecipe);
+          if (!r) return;
+          const pool = [...this.player.guBag];
+          const matchedUids = [];
+          for (const fam of r.families) {
+            const i = pool.findIndex((g) => g.path?.startsWith(fam) || g.id.includes(fam) || fam === "sinh_co" && (g.id === "tieu_sinh_co" || g.id === "quang_vu" || g.id === "cuu_diep_sinh_co") || fam === "thi" && (g.id === "hac_thi" || g.id === "bach_thi") || fam === "bi" && (g.id === "dong_bi" || g.id === "ngoc_bi" || g.id === "thu_bi" || g.id === "bach_ngoc"));
+            if (i >= 0) {
+              matchedUids.push(pool[i].uid);
+              pool.splice(i, 1);
+            }
+          }
+          if (matchedUids.length < r.families.length) {
+            this._flash(`C\u1ED5 Nang hi\u1EC7n ch\u01B0a \u0111\u1EE7 \u0111\u1EE7 b\u1ED9 C\u1ED5 cho [${r.name}]. H\xE3y t\u1EF1 ph\u1ED1i c\xE1c C\u1ED5 \u0111ang c\xF3!`, "fail");
+            return;
+          }
+          this.comboPickUids = matchedUids;
+          this.sfx?.play("pickup");
+          this.render();
         });
       });
       this.root.querySelector("#chk-autofeed")?.addEventListener("change", (e) => {

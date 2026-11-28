@@ -20,6 +20,13 @@ import { getPropSprite } from "../world/PixelMapArt.js";
 import { findNavigationPath, resolveWorldMovement } from "../world/WorldGeometry.js";
 import { MONSTER_CATALOG, WORLD_MAPS } from "../world/WorldMaps.js";
 import { drawBanLongBossPixelArt, getMonsterSpriteFrames } from "./MonsterSpriteBuilder.js";
+import {
+  createHitSparks,
+  drawPixelProjectile,
+  drawPlayerActiveBuffAuras,
+  renderBossTelegraphPixel,
+  renderHitSparks,
+} from "./SkillVfxAndCombos.js";
 
 /**
  * Mô phỏng Thế Giới Mở & Chiến Đấu Thời Gian Thực của "Cổ Tiên Lộ":
@@ -68,6 +75,7 @@ export class WorldSimulation {
     this.decoys = [];
     this.phantoms = [];
     this.vfxEffects = [];
+    this.hitSparks = [];
     this.floatingTexts = [];
 
     // Sự kiện Thiên Trì Điếu Hội
@@ -111,6 +119,7 @@ export class WorldSimulation {
     this.decoys = [];
     this.phantoms = [];
     this.vfxEffects = [];
+    this.hitSparks = [];
     this.selectedTargetId = null;
     this.banLongPillars = [];
     if (mapDef.id !== "khe_coc") {
@@ -1014,14 +1023,17 @@ export class WorldSimulation {
       this.playerProjectiles.push({
         x: this.player.x + Math.cos(ang) * 10,
         y: this.player.y - 8 + Math.sin(ang) * 10,
-        vx: Math.cos(ang) * 230,
-        vy: Math.sin(ang) * 230,
-        radius: 10,
+        vx: Math.cos(ang) * 235,
+        vy: Math.sin(ang) * 235,
+        radius: 12,
         damage: dmg,
         pierceLeft: 1,
         hitIds: new Set(),
-        life: 0.65,
+        trail: [],
+        life: 0.68,
+        projStyle: vital.projStyle || "crescent_moon",
         color: vital.color || "#5ef2d6",
+        secondaryColor: "#ffffff",
         gu: { ...vital, lifesteal: vital.lifesteal ?? basicLifesteal },
       });
       this.spawnVfx("vfx/nguyet-quang", this.player.x + Math.cos(ang) * 18, this.player.y - 8 + Math.sin(ang) * 18, { angle: ang, scale: 0.45 });
@@ -1030,6 +1042,7 @@ export class WorldSimulation {
         ...(vital ?? { path: "luc_dao" }),
         lifesteal: vital?.lifesteal ?? basicLifesteal,
       });
+      this.hitSparks.push(...createHitSparks(this.player.x + Math.cos(ang) * 24, this.player.y - 8 + Math.sin(ang) * 24, vital?.color || "#ffe082", 6, "spark"));
       this.spawnVfx("vfx/hit-spark", this.player.x + Math.cos(ang) * 24, this.player.y - 6 + Math.sin(ang) * 24, { scale: 0.5 });
     }
     this.player.thoughtGauge = Math.min(100, this.player.thoughtGauge + 10);
@@ -1078,39 +1091,113 @@ export class WorldSimulation {
       return true;
     }
 
-    // Sát Chiêu Q / E
+    // Sát Chiêu Q / E (hỗ trợ cả Sát Chiêu mặc định lẫn Sát Chiêu kết hợp 2–3 Cổ)
     if (slotId === "km1" || slotId === "km2") {
-      const kmId = this.player.killerMoveIds[slotId === "km1" ? 0 : 1];
-      const km = KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[0];
-      if (this.player.thoughtGauge < km.thoughtCost || this.player.mp < km.mpCost) {
-        this.addFloatingText(this.player.x, this.player.y - 26, "Chưa đủ Thanh Niệm / Chân Nguyên!", "#d9b25f");
+      const slotIdx = slotId === "km1" ? 0 : 1;
+      const km = this.player.getResolvedKillerMove(slotIdx);
+      const mpSaveMult = this.player.refineBuffTimer > 0 ? Math.max(0.6, 1 - (this.player.refineMpSave ?? 0.2)) : 1;
+      const effectiveMp = Math.round((km.mpCost ?? 24) * mpSaveMult);
+      const reqThought = km.isMultiGu ? 0 : (km.thoughtCost ?? 60);
+
+      if (this.player.thoughtGauge < reqThought || this.player.mp < effectiveMp) {
+        this.addFloatingText(this.player.x, this.player.y - 26, `Cần ${effectiveMp} Chân Nguyên! (Giữ R Hấp thu)`, "#d9b25f");
         return false;
       }
-      this.player.thoughtGauge -= km.thoughtCost;
-      this.player.mp -= km.mpCost;
+
+      // Kiểm tra độ ổn định tổ hợp 2+ Cổ (phản phệ nhẹ nếu xung khắc hoặc Cổ đang đói)
+      if (km.isMultiGu) {
+        const effStab = Math.min(100, (km.stabilityPct ?? 90) + (this.player.thoughtGauge >= 60 ? 8 : 0));
+        if (Math.random() * 100 > effStab) {
+          this.player.mp = Math.max(0, this.player.mp - Math.round(effectiveMp * 0.45));
+          const backlashDmg = Math.max(4, Math.round(this.player.maxHp * 0.06));
+          this.player.hp = Math.max(1, this.player.hp - backlashDmg);
+          this.player.startCooldown(slotId, 2.5);
+          this.player.lastBacklashNotice = `Phản Phệ Sát Chiêu [${km.name}]: Đạo ngân xung khắc hoặc Cổ đói gây hụt chiêu (-${backlashDmg} HP)!`;
+          this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 14, "#ff4d5a", 12, "shatter"));
+          this.triggerShake(0.18, 2.5);
+          this.sfx?.play("fusionFail");
+          this.addFloatingText(this.player.x, this.player.y - 34, `Phản Phệ! Hụt [${km.name}] (-${backlashDmg} HP)`, "#ff6b78");
+          this.onStateChange?.(this);
+          return false;
+        }
+      }
+
+      const thoughtBonus = this.player.thoughtGauge >= 60 ? 1.15 : 1.0;
+      this.player.thoughtGauge = Math.max(0, this.player.thoughtGauge - (km.isMultiGu ? Math.min(35, this.player.thoughtGauge) : reqThought));
+      this.player.mp -= effectiveMp;
       this.player.isStealthed = false;
       this.player.stealthBreakTimer = 1.2;
       this.player.startCooldown(slotId, (km.cooldown ?? 8) * this.player.getCooldownMult());
       const target = this.getSelectedTarget();
       const ang = angle ?? (target ? Math.atan2(target.y - this.player.y, target.x - this.player.x) : this.player.facing);
-      const baseDmg = Math.round(this.player.getBasicAttackDamage() * km.damageMult * this.player.getDamageMultiplier({ path: km.path }));
+      this.player.facing = ang;
+      const baseDmg = Math.round(this.player.getBasicAttackDamage() * (km.damageMult ?? 2.4) * this.player.getDamageMultiplier({ path: km.path }) * thoughtBonus);
 
-      if (km.kind === "burst_projectiles") {
-        const cnt = km.count ?? 7;
+      // Hiệu ứng bổ trợ phân tầng của Sát Chiêu 2–3 Cổ
+      if (km.dashForward > 0) {
+        const dur = 0.14;
+        this.player.dashTimer = dur;
+        this.player.dashVx = (Math.cos(ang) * km.dashForward) / dur;
+        this.player.dashVy = (Math.sin(ang) * km.dashForward) / dur;
+      }
+      if (km.shieldAmount > 0) {
+        this.player.shield += km.shieldAmount;
+        this.addFloatingText(this.player.x, this.player.y - 42, `Hộ Thuẫn +${km.shieldAmount}`, km.secondaryColor || "#dce8ff");
+      }
+      if (km.healAmount > 0) {
+        const h = this.player.heal(km.healAmount);
+        if (h > 0) this.addFloatingText(this.player.x, this.player.y - 36, `+${h} Sinh lực`, "#6bff9c");
+      }
+      if (km.hotTotal > 0 && km.hotDuration > 0) {
+        this.player.hotTimer = km.hotDuration;
+        this.player.hotRate = km.hotTotal / km.hotDuration;
+      }
+      if (km.buffDuration > 0) {
+        this.player.armorBuffTimer = km.buffDuration;
+        this.player.armorBuffBonus = km.buffArmorBonus ?? 0.18;
+        this.player.thornsBuffBonus = km.buffThornsPct ?? 0.22;
+        this.player.armorBuffColor = km.secondaryColor || km.color;
+      }
+      if (km.speedBuffDuration > 0) {
+        this.player.speedBuffTimer = km.speedBuffDuration;
+        this.player.speedBuffBonus = km.speedBuffBonus ?? 0.24;
+      }
+      if (km.refineBuffDuration > 0) {
+        this.player.refineBuffTimer = km.refineBuffDuration;
+        this.player.refineDmgBonus = km.refineDmgBonus ?? 0.2;
+        this.player.refineCdBonus = 0.18;
+        this.player.refineMpSave = 0.2;
+      }
+
+      if (km.kind === "burst_projectiles" || km.kind === "combo_projectile_wave") {
+        const cnt = km.count ?? 5;
+        const spreadStep = cnt <= 3 ? 0.2 : 0.14;
         for (let i = 0; i < cnt; i++) {
-          const a = ang + (i - (cnt - 1) / 2) * 0.16;
+          const a = ang + (i - (cnt - 1) / 2) * spreadStep;
           this.playerProjectiles.push({
-            x: this.player.x,
-            y: this.player.y - 8,
-            vx: Math.cos(a) * 235,
-            vy: Math.sin(a) * 235,
-            radius: 13,
-            damage: Math.round(baseDmg * 0.52),
-            pierceLeft: 3,
+            x: this.player.x + Math.cos(a) * 12,
+            y: this.player.y - 8 + Math.sin(a) * 12,
+            vx: Math.cos(a) * 245,
+            vy: Math.sin(a) * 245,
+            radius: 15,
+            damage: Math.round(baseDmg * (cnt >= 5 ? 0.54 : 0.72)),
+            pierceLeft: km.pierce ?? 3,
             hitIds: new Set(),
-            life: 0.9,
+            trail: [],
+            life: (km.range ?? 190) / 245 + 0.12,
+            projStyle: km.projStyle || "combo_wind_moon",
             color: km.color,
-            gu: { path: km.path },
+            secondaryColor: km.secondaryColor || "#ffffff",
+            tertiaryColor: km.tertiaryColor || "#ffd257",
+            gu: {
+              path: km.path,
+              stunDuration: km.stunDuration,
+              slowFactor: km.slowFactor,
+              burnDps: km.burnDps,
+              poisonDps: km.poisonDps,
+              lifesteal: km.lifesteal,
+              ignitesPoison: km.ignitesPoison,
+            },
           });
         }
       } else if (km.kind === "phantom_stampede") {
@@ -1120,24 +1207,40 @@ export class WorldSimulation {
           this.phantoms.push({
             x: this.player.x,
             y: this.player.y,
-            vx: Math.cos(a) * 190,
-            vy: Math.sin(a) * 190,
+            vx: Math.cos(a) * 195,
+            vy: Math.sin(a) * 195,
             life: 0.9,
-            damage: Math.round(baseDmg * 0.7),
+            damage: Math.round(baseDmg * 0.72),
             color: ph.color,
             name: ph.name,
             hitIds: new Set(),
           });
         }
+      } else if (km.kind === "combo_shockwave") {
+        const cx = this.player.x + Math.cos(ang) * 28;
+        const cy = this.player.y - 6 + Math.sin(ang) * 28;
+        this.spawnVfx("vfx/hoa-than", cx, cy, { scale: 0.95 });
+        this.hitSparks.push(...createHitSparks(cx, cy, km.color, 14, "shatter"));
+        this._damageInCone(this.player.x, this.player.y - 6, ang, Math.PI * 0.85, km.range ?? 118, baseDmg, {
+          path: km.path,
+          stunDuration: km.stunDuration,
+          knockback: km.knockback ?? 32,
+          lifesteal: km.lifesteal,
+        });
       } else {
-        this.spawnVfx("vfx/huyet-nguyet", this.player.x, this.player.y - 6, { scale: 1.0 });
+        this.spawnVfx("vfx/huyet-nguyet", this.player.x, this.player.y - 6, { scale: 1.05 });
+        this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 10, km.color, 14, "shatter"));
         this._damageInCircle(this.player.x, this.player.y, km.range ?? 125, baseDmg, {
           path: km.path,
           stunDuration: km.stunDuration,
+          slowFactor: km.slowFactor,
+          burnDps: km.burnDps,
+          poisonDps: km.poisonDps,
+          ignitesPoison: km.ignitesPoison,
           lifesteal: km.lifesteal,
         });
       }
-      this.triggerShake(0.22, 4);
+      this.triggerShake(0.2, 3.5);
       this.sfx?.play("ult");
       this.addFloatingText(this.player.x, this.player.y - 34, `Sát Chiêu: ${km.name}!`, km.color);
       this.onStateChange?.(this);
@@ -1152,7 +1255,8 @@ export class WorldSimulation {
       return false;
     }
     const stageRank = this.player.getStage().rank;
-    const effectiveMpCost = Math.round((gu.mpCost ?? 0) * ((gu.rank ?? 1) > stageRank ? 1.5 : 1.0));
+    const mpSave = this.player.refineBuffTimer > 0 ? Math.max(0.65, 1 - (this.player.refineMpSave ?? 0.2)) : 1;
+    const effectiveMpCost = Math.round((gu.mpCost ?? 0) * ((gu.rank ?? 1) > stageRank ? 1.5 : 1.0) * mpSave);
     if (this.player.mp < effectiveMpCost) {
       this.addFloatingText(this.player.x, this.player.y - 26, "Chân nguyên không đủ! (Giữ R Hấp thu)", "#5ef2d6");
       return false;
@@ -1176,9 +1280,31 @@ export class WorldSimulation {
       const h = this.player.heal(gu.healAmount);
       this.addFloatingText(this.player.x, this.player.y - 26, `+${h} Sinh lực`, "#5fbf8a");
     }
+    if (gu.hotTotal && gu.hotDuration) {
+      this.player.hotTimer = gu.hotDuration;
+      this.player.hotRate = gu.hotTotal / gu.hotDuration;
+      this.addFloatingText(this.player.x, this.player.y - 38, `Sinh Cơ Duy Trì (+${gu.hotTotal} HP)`, "#7affad");
+    }
     if (gu.shieldAmount) {
       this.player.shield += gu.shieldAmount;
-      this.addFloatingText(this.player.x, this.player.y - 26, `Hộ Thuẫn +${gu.shieldAmount}`, "#dce8ff");
+      this.addFloatingText(this.player.x, this.player.y - 26, `Hộ Thuẫn +${gu.shieldAmount}`, gu.color || "#dce8ff");
+    }
+    if (gu.buffDuration) {
+      this.player.armorBuffTimer = gu.buffDuration;
+      this.player.armorBuffBonus = gu.buffArmorBonus ?? 0.16;
+      this.player.thornsBuffBonus = gu.buffThornsPct ?? 0.2;
+      this.player.armorBuffColor = gu.color;
+    }
+    if (gu.speedBuffDuration) {
+      this.player.speedBuffTimer = gu.speedBuffDuration;
+      this.player.speedBuffBonus = gu.speedBuffBonus ?? 0.22;
+    }
+    if (gu.refineBuffDuration) {
+      this.player.refineBuffTimer = gu.refineBuffDuration;
+      this.player.refineDmgBonus = gu.refineDmgBonus ?? 0.18;
+      this.player.refineCdBonus = gu.refineCdBonus ?? 0.18;
+      this.player.refineMpSave = gu.refineMpSave ?? 0.2;
+      this.addFloatingText(this.player.x, this.player.y - 38, `Tửu Trùng Tinh Luyện (${gu.refineBuffDuration}s)`, "#ffd15c");
     }
     if (gu.resetsBasicSlotsCd) {
       this.player.cooldowns.slot_0 = 0;
@@ -1201,6 +1327,7 @@ export class WorldSimulation {
       if (dmg > 0) {
         this._damageInCircle(this.player.x + Math.cos(ang) * 32, this.player.y + Math.sin(ang) * 32, 34, dmg, gu);
       }
+      this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 8, gu.color || "#7effd4", 7, "spark"));
       this.spawnVfx(gu.vfxKey ?? "vfx/anh-bo", this.player.x, this.player.y, { scale: 0.7 });
       this.sfx?.play("dash");
     } else if (dmg > 0) {
@@ -1228,22 +1355,26 @@ export class WorldSimulation {
           this.playerProjectiles.push({
             x: this.player.x + Math.cos(a) * 10,
             y: this.player.y - 8 + Math.sin(a) * 10,
-            vx: Math.cos(a) * 215,
-            vy: Math.sin(a) * 215,
-            speed: 215,
-            radius: gu.radius ?? 11,
+            vx: Math.cos(a) * 225,
+            vy: Math.sin(a) * 225,
+            speed: 225,
+            radius: gu.radius ?? 12,
             damage: dmg,
             pierceLeft: gu.pierce ?? 1,
             homing: Boolean(gu.homing),
             hitIds: new Set(),
-            life: (gu.range ?? 150) / 215 + 0.1,
+            trail: [],
+            life: (gu.range ?? 155) / 225 + 0.1,
+            projStyle: gu.projStyle || "crescent_moon",
             color: gu.color,
+            secondaryColor: "#ffffff",
             gu,
           });
         }
         this.spawnVfx(gu.vfxKey ?? "vfx/nguyet-quang", this.player.x + Math.cos(ang) * 20, this.player.y - 8 + Math.sin(ang) * 20, { angle: ang, scale: 0.55 });
         this.sfx?.play(gu.homing ? "blood" : "slash");
       } else if (gu.aimType === "arc") {
+        this.hitSparks.push(...createHitSparks(this.player.x + Math.cos(ang) * 30, this.player.y - 8 + Math.sin(ang) * 30, gu.color || "#e69b45", 8, "spark"));
         this.spawnVfx(gu.vfxKey ?? "vfx/huyet-nguyet", this.player.x + Math.cos(ang) * 24, this.player.y - 6 + Math.sin(ang) * 24, { angle: ang, scale: 0.75 });
         this._damageInCone(this.player.x, this.player.y - 6, ang, gu.arcSpread ?? Math.PI * 0.5, gu.range ?? 100, dmg, gu);
         this.sfx?.play("fire");
@@ -1251,11 +1382,13 @@ export class WorldSimulation {
         const dist = Math.max(24, (gu.range ?? 120) * Math.max(0.35, distanceRatio));
         const tx = this.player.x + Math.cos(ang) * dist;
         const ty = this.player.y + Math.sin(ang) * dist;
+        this.hitSparks.push(...createHitSparks(tx, ty, gu.color || "#ff7b39", 10, "shatter"));
         this.spawnVfx(gu.vfxKey ?? "vfx/hoa-than", tx, ty, { scale: 0.65 });
         this._damageInCircle(tx, ty, gu.radius ?? 36, dmg, gu);
         this.sfx?.play("fire");
       }
     } else {
+      this.hitSparks.push(...createHitSparks(this.player.x, this.player.y - 10, gu.color || "#5fbf8a", 6, "spark"));
       this.spawnVfx("vfx/hit-spark", this.player.x, this.player.y - 10, { scale: 0.55 });
       this.sfx?.play("pickup");
     }
@@ -1342,11 +1475,20 @@ export class WorldSimulation {
     const critChance = 0.08 + (this.player.chosenPath === "nguyet_dao" ? 0.1 : 0) + ((sets.dien_lang_bo ?? 0) >= 2 ? 0.1 : 0);
     const isCrit = Math.random() < critChance;
     if (isCrit) mult *= 1.55;
+    if (gu.executePct && e.maxHp > 0 && e.hp / e.maxHp <= 0.35) {
+      mult += gu.executePct;
+    }
 
     const dmg = Math.max(1, Math.round(rawDmg * mult));
     e.hp -= dmg;
     e.hurtFlash = 0.14;
     this.selectedTargetId = e.id;
+
+    if (gu.knockback && e.ai !== "ban_long_boss" && e.ai !== "aquatic" && e.ai !== "dummy") {
+      const ka = Math.atan2(e.y - this.player.y, e.x - this.player.x);
+      e.x += Math.cos(ka) * gu.knockback * 0.45;
+      e.y += Math.sin(ka) * gu.knockback * 0.45;
+    }
     if (e.passive) {
       if (!e.provoked) {
         e.provoked = true;
@@ -1396,6 +1538,7 @@ export class WorldSimulation {
       e.stunTimer = Math.max(e.stunTimer, gu.stunDuration);
     }
 
+    this.hitSparks.push(...createHitSparks(e.x, e.y - 10, gu?.color || (isCrit ? "#ff9e5e" : "#ffe082"), isCrit ? 10 : 7, isCrit ? "shatter" : "spark"));
     this.spawnVfx("vfx/hit-spark", e.x, e.y - 8, { scale: 0.45 });
     this.addFloatingText(e.x, e.y - 18, isCrit ? `Chí Mạng -${dmg}!` : `-${dmg}`, isCrit ? "#ff9e5e" : "#ffe082");
     this.sfx?.play("hit");
@@ -1767,6 +1910,11 @@ export class WorldSimulation {
         pr.vx = Math.cos(des) * spd;
         pr.vy = Math.sin(des) * spd;
       }
+      pr.trail = pr.trail || [];
+      if (Math.floor(this.time * 40) % 2 === 0) {
+        pr.trail.push({ x: pr.x, y: pr.y });
+        if (pr.trail.length > 3) pr.trail.shift();
+      }
       pr.x += pr.vx * dt;
       pr.y += pr.vy * dt;
 
@@ -1814,8 +1962,7 @@ export class WorldSimulation {
         continue;
       }
       if (e.ai === "aquatic") {
-        e.x = e.homeX + Math.sin(this.time * 0.8) * 45;
-        e.y = e.homeY + Math.cos(this.time * 0.6) * 20;
+        this._updateThienTriNguVuong(e, dt, events);
         continue;
       }
 
@@ -1898,12 +2045,65 @@ export class WorldSimulation {
       const resEnemy = resolveWorldMovement(mapDef, e.x, e.y, e.radius, (k) => getPropSprite(k));
       e.x = resEnemy.x;
       e.y = resEnemy.y;
-      // Tinh anh / Thú vương thỉnh thoảng tụ chiêu vùng đỏ cảnh báo
-      if ((e.tier === "Tinh anh" || e.tier === "Bách thú vương") && dist < 120) {
-        e.slamTimer = (e.slamTimer ?? 4.2) - dt;
+      // Tinh anh / Bách thú vương / Boss Lôi Đài có Telegraph cảnh báo + đòn đặc trưng theo bản thể
+      const isBossEntity = e.tier === "Tinh anh" || e.tier === "Bách thú vương" || e.isInstanceBoss || this.mode === "arena" || this.mode === "tower";
+      if (isBossEntity && dist < 195) {
+        e.slamTimer = (e.slamTimer ?? 3.6) - dt;
         if (e.slamTimer <= 0) {
-          e.slamTimer = 5.4;
-          this.enemyTelegraphs.push({ x: this.player.x, y: this.player.y, r: 32, t: 0, dur: 1.05, damage: Math.round(e.damage * 1.45) });
+          e.slamTimer = e.isInstanceBoss || this.mode === "arena" ? 3.5 : 4.8;
+          const ang = Math.atan2(dy, dx);
+          e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
+          if (e.bossPattern === 0) {
+            // Đòn 1: Dậm Địa Chấn (vùng cảnh báo tròn dither)
+            this.addFloatingText(e.x, e.y - 44, `⚡ ${e.shortName || "Thú Vương"} Tụ Lực Địa Chấn!`, "#ffd257");
+            this.enemyTelegraphs.push({
+              shape: "circle",
+              x: this.player.x,
+              y: this.player.y,
+              r: e.isInstanceBoss || e.tier === "Bách thú vương" ? 42 : 34,
+              t: 0,
+              dur: 1.05,
+              damage: Math.round(e.damage * 1.45),
+              color: e.projColor || "#ff5e6c",
+              shakeAmp: 3.0,
+            });
+          } else if (e.bossPattern === 1) {
+            // Đòn 2: Quét Quạt Tầm Rộng + Phóng Trảo Sóng
+            this.addFloatingText(e.x, e.y - 44, `⚡ Quét Diện Rộng! Né!`, "#ff8c42");
+            this.enemyTelegraphs.push({
+              shape: "cone",
+              x: e.x,
+              y: e.y - 4,
+              angle: ang,
+              spread: Math.PI * 0.58,
+              r: 120,
+              t: 0,
+              dur: 0.95,
+              damage: Math.round(e.damage * 1.35),
+              color: e.projColor || "#ff7b39",
+              projStyle: "boss_claw_wave",
+              spawnProjectileFan: 3,
+              shakeAmp: 2.5,
+            });
+          } else {
+            // Đòn 3: Xung Kích Đường Thẳng (Wave Rect)
+            this.addFloatingText(e.x, e.y - 44, `⚡ Xung Kích Tuyến Thẳng!`, "#ff6b78");
+            this.enemyTelegraphs.push({
+              shape: "wave_rect",
+              x: e.x,
+              y: e.y - 4,
+              angle: ang,
+              length: 165,
+              width: 44,
+              t: 0,
+              dur: 1.0,
+              damage: Math.round(e.damage * 1.5),
+              color: e.projColor || "#ff4757",
+              projStyle: e.typeId?.includes("bang") || e.typeId?.includes("tuyet") ? "frost_lance" : e.typeId?.includes("viem") ? "fire_orb" : "boss_claw_wave",
+              spawnBeamProj: true,
+              shakeAmp: 3.0,
+            });
+          }
         }
       }
       if (dist <= this.player.radius + e.radius) {
@@ -1919,31 +2119,103 @@ export class WorldSimulation {
       }
     }
 
-    // Cảnh báo chiêu đỏ dưới đất của Quái Tinh Anh / Thú Vương
+    // Cảnh báo chiêu Boss (circle / cone / wave_rect)
     for (let i = this.enemyTelegraphs.length - 1; i >= 0; i--) {
       const tg = this.enemyTelegraphs[i];
       tg.t += dt;
       if (tg.t >= tg.dur) {
-        if (Math.hypot(this.player.x - tg.x, this.player.y - tg.y) <= tg.r) {
-          this.player.takeDamage(tg.damage, events);
+        if (tg.shape === "wave_rect") {
+          const dx = this.player.x - tg.x;
+          const dy = this.player.y - tg.y;
+          const ca = Math.cos(-(tg.angle ?? 0));
+          const sa = Math.sin(-(tg.angle ?? 0));
+          const lx = dx * ca - dy * sa;
+          const ly = dx * sa + dy * ca;
+          if (lx >= -10 && lx <= (tg.length ?? 160) && Math.abs(ly) <= (tg.width ?? 44) * 0.55) {
+            this.player.takeDamage(tg.damage, events);
+          }
+          if (tg.spawnBeamProj) {
+            const ang = tg.angle ?? 0;
+            this.enemyProjectiles.push({
+              x: tg.x,
+              y: tg.y - 6,
+              vx: Math.cos(ang) * 205,
+              vy: Math.sin(ang) * 205,
+              radius: tg.projRadius ?? 20,
+              damage: Math.round(tg.damage * 0.75),
+              color: tg.color || "#5ef2d6",
+              projStyle: tg.projStyle || "boss_claw_wave",
+              trail: [],
+              life: 1.4,
+            });
+          }
+        } else if (tg.shape === "cone") {
+          const dx = this.player.x - tg.x;
+          const dy = this.player.y - tg.y;
+          const d = Math.hypot(dx, dy);
+          if (d <= (tg.r ?? 120) + this.player.radius) {
+            const diff = Math.abs(Math.atan2(Math.sin(Math.atan2(dy, dx) - (tg.angle ?? 0)), Math.cos(Math.atan2(dy, dx) - (tg.angle ?? 0))));
+            if (diff <= (tg.spread ?? Math.PI * 0.5) * 0.55) {
+              this.player.takeDamage(tg.damage, events);
+            }
+          }
+          if (tg.spawnProjectileFan) {
+            const cnt = tg.spawnProjectileFan;
+            for (let k = 0; k < cnt; k++) {
+              const a = (tg.angle ?? 0) + (k - (cnt - 1) / 2) * 0.24;
+              this.enemyProjectiles.push({
+                x: tg.x,
+                y: tg.y - 6,
+                vx: Math.cos(a) * 165,
+                vy: Math.sin(a) * 165,
+                radius: 13,
+                damage: Math.round(tg.damage * 0.65),
+                color: tg.color || "#5ef2d6",
+                projStyle: tg.projStyle || "boss_scale_lance",
+                trail: [],
+                life: 1.6,
+              });
+            }
+          }
+        } else {
+          if (Math.hypot(this.player.x - tg.x, this.player.y - tg.y) <= (tg.r ?? 36)) {
+            this.player.takeDamage(tg.damage, events);
+          }
+          this.hitSparks.push(...createHitSparks(tg.x, tg.y, tg.color || "#ff7b39", 12, "shatter"));
+          this.spawnVfx("vfx/hoa-than", tg.x, tg.y, { scale: 0.75 });
         }
-        this.spawnVfx("vfx/hoa-than", tg.x, tg.y, { scale: 0.65 });
+        if (tg.shakeAmp) this.triggerShake(0.18, tg.shakeAmp);
         this.enemyTelegraphs.splice(i, 1);
       }
     }
 
-    // Đạn quái
+    // Đạn quái & Boss
     for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
       const pr = this.enemyProjectiles[i];
       pr.life -= dt;
+      pr.trail = pr.trail || [];
+      if (Math.floor(this.time * 40) % 2 === 0) {
+        pr.trail.push({ x: pr.x, y: pr.y });
+        if (pr.trail.length > 3) pr.trail.shift();
+      }
       pr.x += pr.vx * dt;
       pr.y += pr.vy * dt;
       if (Math.hypot(this.player.x - pr.x, this.player.y - 6 - pr.y) <= this.player.radius + pr.radius) {
         this.player.takeDamage(pr.damage, events);
+        this.hitSparks.push(...createHitSparks(pr.x, pr.y, pr.color || "#ff5e6c", 8, "spark"));
         this.enemyProjectiles.splice(i, 1);
         continue;
       }
       if (pr.life <= 0) this.enemyProjectiles.splice(i, 1);
+    }
+
+    for (let i = this.hitSparks.length - 1; i >= 0; i--) {
+      const s = this.hitSparks[i];
+      s.life -= dt;
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      s.vy += 90 * dt;
+      if (s.life <= 0) this.hitSparks.splice(i, 1);
     }
 
     for (let i = this.vfxEffects.length - 1; i >= 0; i--) {
@@ -2036,6 +2308,97 @@ export class WorldSimulation {
     return { x: 0, y: 0, magnitude: 0, angle: ang };
   }
 
+  _updateThienTriNguVuong(e, dt, events) {
+    // Thiên Trì Ngư Vương bơi tuần tra quanh tâm hồ Thiên Trì & kích hoạt 3 chiêu thức Boss khi người chơi lại gần
+    if ((e.chargeDashTimer ?? 0) > 0) {
+      e.chargeDashTimer -= dt;
+      e.x += (e.dashVx ?? 0) * dt;
+      e.y += (e.dashVy ?? 0) * dt;
+      if (Math.hypot(this.player.x - e.x, this.player.y - e.y) <= this.player.radius + 32) {
+        this.player.takeDamage(Math.round(e.damage * 1.15), events);
+      }
+      return;
+    }
+
+    const dx = this.player.x - e.x;
+    const dy = this.player.y - e.y;
+    const dist = Math.hypot(dx, dy);
+    const activeFight = e.provoked || this.dieuHoi.active || dist <= 260;
+
+    e.x = e.homeX + Math.sin(this.time * (activeFight ? 1.15 : 0.75)) * (activeFight ? 54 : 42);
+    e.y = e.homeY + Math.cos(this.time * (activeFight ? 0.9 : 0.6)) * (activeFight ? 26 : 18);
+    e.facingLeft = dx < 0;
+
+    if (!activeFight) return;
+
+    e.aiTimer = (e.aiTimer ?? 2.8) - dt;
+    if (e.aiTimer <= 0) {
+      e.aiTimer = 3.4;
+      const ang = Math.atan2(dy, dx);
+      e.bossPattern = ((e.bossPattern ?? 0) + 1) % 3;
+      if (e.bossPattern === 0) {
+        // Chiêu 1: Quẫy đuôi tạo Sóng Thủy Triều pixel cuộn trào rộng
+        this.addFloatingText(e.x, e.y - 52, "🌊 Ngư Vương Quẫy Đuôi: Thủy Triều Cuộn Trào!", "#5ef2d6");
+        this.enemyTelegraphs.push({
+          shape: "wave_rect",
+          x: e.x,
+          y: e.y,
+          angle: ang,
+          length: 235,
+          width: 68,
+          t: 0,
+          dur: 1.15,
+          damage: Math.round(e.damage * 1.45),
+          color: "#22b8cf",
+          projStyle: "boss_tidal_wave",
+          projRadius: 28,
+          spawnBeamProj: true,
+          shakeAmp: 3.2,
+        });
+      } else if (e.bossPattern === 1) {
+        // Chiêu 2: Lân Quang Thủy Kình phun 5 luồng thủy kình diện rộng
+        this.addFloatingText(e.x, e.y - 52, "⚡ Lân Quang Thủy Kình!", "#87ffeb");
+        this.enemyTelegraphs.push({
+          shape: "cone",
+          x: e.x,
+          y: e.y,
+          angle: ang,
+          spread: Math.PI * 0.65,
+          r: 175,
+          t: 0,
+          dur: 1.05,
+          damage: Math.round(e.damage * 1.25),
+          color: "#5ef2d6",
+          projStyle: "boss_scale_lance",
+          spawnProjectileFan: 5,
+          shakeAmp: 2.5,
+        });
+      } else {
+        // Chiêu 3: Lao Vọt Xé Nước
+        this.addFloatingText(e.x, e.y - 52, "💧 Ngư Vương Xé Nước!", "#ffd257");
+        this.enemyTelegraphs.push({
+          shape: "wave_rect",
+          x: e.x,
+          y: e.y,
+          angle: ang,
+          length: 195,
+          width: 48,
+          t: 0,
+          dur: 0.95,
+          damage: Math.round(e.damage * 1.35),
+          color: "#4db8ff",
+          projStyle: "boss_tidal_wave",
+          projRadius: 24,
+          spawnBeamProj: true,
+          shakeAmp: 3.0,
+        });
+        e.chargeDashTimer = 0.25;
+        e.dashVx = Math.cos(ang) * 165;
+        e.dashVy = Math.sin(ang) * 165;
+      }
+    }
+  }
+
   _updateBanLongBoss(b, dt, events) {
     // Cột Huyết Mạch hồi máu cho rồng nếu còn sống
     const bloodCount = this.banLongPillars.filter((p) => p.alive && p.kind === "blood").length;
@@ -2051,10 +2414,12 @@ export class WorldSimulation {
         this.enemyProjectiles.push({
           x: b.x,
           y: b.y - 20,
-          vx: Math.cos(a + k * 0.25) * 140,
-          vy: Math.sin(a + k * 0.25) * 140,
-          radius: 6,
+          vx: Math.cos(a + k * 0.25) * 145,
+          vy: Math.sin(a + k * 0.25) * 145,
+          radius: 11,
           damage: 65,
+          projStyle: "boss_scale_lance",
+          trail: [],
           color: "#19f0c8",
           life: 2.8,
         });
@@ -2106,16 +2471,9 @@ export class WorldSimulation {
       this.banLongBreathWarn
     );
 
-    // Vùng cảnh báo đỏ pixel của Tinh Anh / Boss (0 ctx.ellipse)
+    // Vùng cảnh báo chiêu Boss sắc nét pixel (0 ctx.ellipse)
     for (const tg of this.enemyTelegraphs) {
-      const pct = Math.min(1, tg.t / tg.dur);
-      ctx.save();
-      ctx.globalAlpha = 0.2 + pct * 0.25;
-      fillPixelEllipse(ctx, tg.x, tg.y, tg.r, Math.round(tg.r * 0.68), "#ff4757", true);
-      ctx.globalAlpha = 0.92;
-      plotPixelEllipse(ctx, tg.x, tg.y, tg.r, Math.round(tg.r * 0.68), "#ff4757", 3, 0);
-      plotPixelEllipse(ctx, tg.x, tg.y, Math.max(4, Math.round(tg.r * pct)), Math.max(3, Math.round(tg.r * 0.68 * pct)), "#ffd15c");
-      ctx.restore();
+      renderBossTelegraphPixel(ctx, tg, this.time);
     }
 
     // Đường dẫn tự động tìm đường qua cầu & bậc thang (chấm pixel)
@@ -2186,7 +2544,20 @@ export class WorldSimulation {
   }
 
   _renderSingleNpc(ctx, npc) {
-    const sheets = getCharacterSheets({ hairColor: "bach_phat", outfitColor: "thanh_ngoc", trimColor: "vang_dong" });
+    const id = npc.id || npc.name || "";
+    const app =
+      id.includes("toc_truong") || id.includes("gia_lao")
+        ? { hairColor: "bach_phat", hairStyle: "hiep_khach", outfitStyle: "truong_bao", outfitColor: "bach_tuyet", trimColor: "vang_dong", headgear: "ngoc_quan" }
+        : id.includes("duoc") || id.includes("cuu_ba")
+          ? { hairColor: "den_huyen", hairStyle: "co_nguyet_phat", outfitStyle: "truong_bao", outfitColor: "thanh_ngoc", trimColor: "ngoc_bich", backItem: "ho_lo" }
+          : id.includes("thuong") || id.includes("cho") || id.includes("do_thach")
+            ? { hairColor: "vang_kim", hairStyle: "kiem_khach", outfitStyle: "doan_y", outfitColor: "hoang_kim", trimColor: "vang_dong", headgear: "dau_lap" }
+            : id.includes("loi_dai") || id.includes("giao_dau")
+              ? { hairColor: "den_huyen", hairStyle: "cuong_ma", outfitStyle: "chien_giap", outfitColor: "huyet_sat", trimColor: "vang_dong", headgear: "kim_co", backItem: "co_kiem" }
+              : id.includes("ve") || id.includes("co_su")
+                ? { hairColor: "xanh_bang", hairStyle: "hiep_khach", outfitStyle: "doan_y", outfitColor: "lam_bang", trimColor: "bac_sang", backItem: "co_kiem" }
+                : { hairColor: "den_huyen", hairStyle: "tien_phong", outfitStyle: "truong_bao", outfitColor: "xich_viem", trimColor: "vang_dong" };
+    const sheets = getCharacterSheets(app);
     const fi = getSheetFrameIndex(sheets.idle, this.time, true);
     drawSheetFrame(ctx, sheets.idle, fi, npc.x, npc.y);
 
@@ -2300,6 +2671,9 @@ export class WorldSimulation {
       plotRect(ctx, gx - 1, gy - 1, 2, 2, "#ffffff");
     }
 
+    // Hào quang chiêu thức Đồng Bì / Ngọc Bì / Sinh Cơ Thảo / Tửu Trùng quanh nhân vật
+    drawPlayerActiveBuffAuras(ctx, this.player, this.time);
+
     const mpRatio = this.player.mp / Math.max(1, this.player.maxMp);
     this._renderPlayerArc(ctx, mpRatio, this.player.isAbsorbingStone ? "#5ef2d6" : auraColor);
 
@@ -2331,25 +2705,12 @@ export class WorldSimulation {
 
   _renderProjectiles(ctx) {
     for (const pr of this.playerProjectiles) {
-      const px = Math.round(pr.x);
-      const py = Math.round(pr.y);
-      const ang = Math.atan2(pr.vy, pr.vx);
-      const nx = -Math.sin(ang);
-      const ny = Math.cos(ang);
-      const c = pr.color || "#5ef2d6";
-      // Lưỡi liềm / mũi tên pixel 3 tầng sắc nét
-      plotPixelLine(ctx, px - nx * 6, py - ny * 6, px + nx * 6, py + ny * 6, "#06080d", 4);
-      plotPixelLine(ctx, px - nx * 5, py - ny * 5, px + nx * 5, py + ny * 5, c, 2);
-      plotRect(ctx, px - 1, py - 1, 2, 2, "#ffffff");
+      drawPixelProjectile(ctx, pr, this.time);
     }
     for (const pr of this.enemyProjectiles) {
-      const px = Math.round(pr.x);
-      const py = Math.round(pr.y);
-      const r = Math.max(3, Math.round(pr.radius * 0.75));
-      fillPixelEllipse(ctx, px, py, r + 1, r + 1, "#06080d");
-      fillPixelEllipse(ctx, px, py, r, r, pr.color || "#ff4757");
-      plotRect(ctx, px - 1, py - 1, 2, 2, "#fff5cc");
+      drawPixelProjectile(ctx, pr, this.time);
     }
+    renderHitSparks(ctx, this.hitSparks);
   }
 
   _renderVfxAndFloatingText(ctx) {

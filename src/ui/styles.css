@@ -3366,3 +3366,719 @@ body.is-editing-hud .ctl-aux-pad .aux-btn {
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 10px;
 }
+
+/* ============================================================================
+   ĐẠI TU BỘ UI CỔ PHONG: ĐỒNG GỖ CỔ ĐIỂN + CUỘN GIẤY DA + CỤM CHIÊU TRÒN
+   (Khớp chuẩn ảnh tham chiếu UI/Map: Avatar tròn, Cuộn giấy Chính/Phụ,
+    Minimap tròn viền đồng, Cụm chiêu tròn dưới giữa, Banner giấy ngang)
+   ============================================================================ */
+:root {
+  --wood-dark: #29180d;
+  --wood-mid: #472b17;
+  --bronze-rim: #b88c48;
+  --bronze-dark: #6b4b1f;
+  --gold-bright: #f2d085;
+  --parch-light: #f3e4c3;
+  --parch-dark: #dfc794;
+  --ink-brown: #2b190c;
+  --crimson-silk: #8f1e26;
+}
+
+/* Thẻ chọn & xem trước nhân vật không bị cắt chữ trên viền */
+.pedestal-hero-wrap,
+.create-preview-box {
+  padding-top: 8px;
+}
+.pedestal-name,
+.pedestal-realm {
+  line-height: 1.25;
+  padding: 0 4px;
+}
+
+/* 1. Góc trên trái: Avatar tròn viền đồng/vàng + Thanh Máu đỏ sẫm & Chân Nguyên xanh ngọc */
+.ctl-top-left {
+  top: max(8px, var(--safe-top));
+  left: max(10px, var(--safe-left));
+  gap: 7px;
+}
+.ctl-avatar-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 3px solid #c99c4e;
+  background: radial-gradient(circle at 35% 30%, #3d2716, #140b06);
+  box-shadow:
+    inset 0 0 0 2px #5c3c1c,
+    0 0 0 2px #140b06,
+    0 4px 10px rgba(0, 0, 0, 0.72);
+}
+.ctl-bars-col {
+  margin-left: -8px;
+  padding: 5px 10px 5px 14px;
+  background: linear-gradient(180deg, rgba(48, 29, 17, 0.95), rgba(27, 16, 9, 0.96));
+  border: 2px solid #a87d3c;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 0 1px #54371d,
+    0 0 0 2px #140b06,
+    0 4px 10px rgba(0, 0, 0, 0.68);
+  min-width: 196px;
+}
+.ctl-name-banner {
+  color: #fff2d1;
+}
+.ctl-realm-tag {
+  color: #e8c06b;
+}
+.ctl-bar-track {
+  height: 13px;
+  background: #170d07;
+  border: 1.5px solid #6e4e24;
+  border-radius: 4px;
+}
+.ctl-bar-hp .ctl-bar-fill {
+  background: linear-gradient(90deg, #75131a 0%, #bf2c34 55%, #db4c48 100%);
+}
+.ctl-bar-mp .ctl-bar-fill {
+  background: linear-gradient(90deg, #167a68 0%, #26b89d 60%, #6ef2d6 100%);
+}
+.ctl-bar-sta .ctl-bar-fill {
+  background: linear-gradient(90deg, #8c631c, #e3b44f);
+}
+.ctl-mini-circle {
+  border-color: #a87d3c;
+  background: radial-gradient(circle, #4f311b, #24150b);
+  color: #f4dfae;
+}
+
+/* 2. Cạnh trái: Cuộn Giấy Nhiệm Vụ Da Cổ + Viền Gỗ Nâu Tối + 4 Chốt Kim Loại */
+.ctl-quest-parchment {
+  position: relative;
+  width: 228px;
+  background: linear-gradient(180deg, #f3e4c3 0%, #ebd6a7 52%, #dec38c 100%);
+  color: var(--ink-brown);
+  border: 3px solid #422816;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 0 0 1.5px #b8914f,
+    0 0 0 1.5px #1a0e07,
+    0 6px 14px rgba(0, 0, 0, 0.72);
+  text-shadow: none;
+}
+.ctl-quest-parchment::before,
+.ctl-quest-parchment::after,
+.ctl-stud {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fae39c, #9e712c);
+  border: 1px solid #2b180b;
+  z-index: 4;
+  pointer-events: none;
+}
+.ctl-quest-parchment::before { top: 3px; left: 3px; }
+.ctl-quest-parchment::after { top: 3px; right: 3px; }
+.ctl-stud--bl { bottom: 3px; left: 3px; }
+.ctl-stud--br { bottom: 3px; right: 3px; }
+
+.ctl-quest-ribbon {
+  height: 7px;
+  background: linear-gradient(90deg, #521318, #9e232b 50%, #521318);
+  border-bottom: 1px solid #6b4822;
+}
+.ctl-quest-tabs {
+  padding: 6px 10px 3px;
+}
+.ctl-qtab {
+  border: 1.5px solid #7d592b;
+  background: linear-gradient(180deg, #e5cf9e, #ceb078);
+  color: #3b2413;
+  text-shadow: none;
+}
+.ctl-qtab.is-active {
+  background: linear-gradient(180deg, #9e242c, #69141b);
+  color: #fff5df;
+  border-color: #d49e4b;
+  box-shadow: 0 2px 6px rgba(105, 20, 27, 0.45);
+}
+.ctl-qhide-btn {
+  border: 1.5px solid #7d592b;
+  background: #dfc794;
+  color: #3b2413;
+  text-shadow: none;
+}
+.ctl-qhide-btn:hover {
+  background: #edd7a6;
+  color: #1f1107;
+  border-color: #422816;
+}
+.ctl-quest-hint {
+  color: #6b4728;
+  text-shadow: none;
+}
+.ctl-quest-story-btn {
+  background: #472b17;
+  color: #f5e2b5;
+  border: 1px solid #966d33;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 8.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ctl-quest-item {
+  background: rgba(255, 248, 228, 0.56);
+  border: 1px solid rgba(110, 74, 38, 0.38);
+  color: var(--ink-brown);
+  text-shadow: none;
+}
+.ctl-quest-item:hover {
+  background: rgba(255, 250, 236, 0.85);
+  border-color: #8f1e26;
+}
+.ctl-quest-item.is-armed {
+  background: rgba(255, 240, 198, 0.95) !important;
+  border-color: #9e242c !important;
+}
+.ctl-qi-act {
+  color: #7d3612;
+  text-shadow: none;
+}
+.ctl-qi-title {
+  color: #241409;
+  text-shadow: none;
+}
+.ctl-qi-obj {
+  color: #402916;
+  text-shadow: none;
+}
+.ctl-qi-loc {
+  color: #7d251e;
+  font-weight: 700;
+  text-shadow: none;
+}
+.ctl-quest-restore-pill {
+  background: linear-gradient(180deg, #472b17, #29180d);
+  border: 2px solid #b88c48;
+  border-radius: 6px;
+  color: #f7e7c0;
+}
+
+/* 3. Banner Thông Báo Ngang Giấy Da Cổ */
+.ctl-parch-notice {
+  display: none;
+  position: fixed;
+  top: max(22px, var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 23;
+  pointer-events: auto;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  max-width: min(470px, 84vw);
+  border-radius: 7px;
+  border: 2.5px solid #4a2d18;
+  background: linear-gradient(180deg, #f3e4c3, #dfc690);
+  color: #541612;
+  box-shadow: inset 0 0 0 1px #c29b54, 0 4px 12px rgba(0, 0, 0, 0.65);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-shadow: none;
+}
+.ctl-parch-notice.is-visible {
+  display: inline-flex;
+}
+.ctl-parch-notice-close {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #6b4320;
+  background: #472b17;
+  color: #fae5b4;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 4. Góc Trên Giữa & Trên Phải: Hàng Huy Hiệu Ngang & Minimap Tròn Viền Đồng Gỗ */
+.ctl-top-center {
+  top: 56px;
+}
+.ctl-target-bar,
+.ctl-event-pill {
+  background: linear-gradient(180deg, rgba(46, 28, 16, 0.95), rgba(24, 14, 8, 0.97));
+  border: 2px solid #a87d3c;
+  border-radius: 8px;
+}
+.ctl-top-right {
+  top: max(8px, var(--safe-top));
+  right: max(10px, var(--safe-right));
+  align-items: flex-start;
+  gap: 10px;
+}
+.ctl-quick-icons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px 14px;
+  background: linear-gradient(180deg, rgba(43, 26, 14, 0.88), rgba(23, 13, 7, 0.92));
+  border: 1.5px solid #9c7238;
+  border-radius: 22px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.65);
+}
+.ctl-round-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #c29548;
+  background: radial-gradient(circle at 32% 28%, #543620, #23140b 82%);
+  color: #f5dfb0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 232, 178, 0.2),
+    0 0 0 1.5px #140b06;
+}
+.ctl-round-btn:hover {
+  border-color: #ffe294;
+  background: radial-gradient(circle at 32% 28%, #6e472a, #2e1b0f 82%);
+}
+.ctl-round-btn em {
+  bottom: -13px;
+  color: #f7e6bf;
+  font-size: 7.5px;
+}
+
+.ctl-minimap-box.ctl-minimap-round {
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 5px;
+  background: linear-gradient(180deg, rgba(42, 26, 14, 0.92), rgba(22, 13, 7, 0.94));
+  border: 2px solid #a87d3c;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px #4f321b, 0 5px 12px rgba(0, 0, 0, 0.72);
+}
+.ctl-minimap-box.ctl-minimap-round .ctl-minimap-head {
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0 2px;
+  color: #fae5b4;
+}
+.ctl-minimap-circle-frame {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  border: 3px solid #c99c4e;
+  box-shadow:
+    inset 0 0 0 2px #422816,
+    0 0 0 2px #140b06,
+    0 4px 10px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+  background: #142214;
+}
+.ctl-minimap-circle-frame #hud-minimap-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.ctl-minimap-circle-frame .ctl-compass-n {
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(34, 20, 11, 0.92);
+  border-color: #c99c4e;
+  color: #ffe394;
+}
+.ctl-minimap-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.ctl-minimap-meta-row .ctl-weather-sub {
+  margin-top: 0;
+  color: #e2caa0;
+  font-size: 8px;
+}
+.ctl-minimap-meta-row .ctl-coord-tag {
+  background: #1d1109;
+  border-color: #8f6831;
+  color: #f0ca78;
+}
+.ctl-minimap-box.is-collapsed .ctl-minimap-meta-row {
+  display: none;
+}
+
+/* 5. Cụm Chiêu Thức Tròn Kim Loại Cổ Dưới Giữa & Thẻ Tương Tác Tinh Tế [F] / [R] */
+.ctl-pixel-topstrip {
+  padding: 4px 10px;
+  max-width: min(96vw, 680px);
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(44, 27, 15, 0.94), rgba(24, 14, 8, 0.96));
+  border: 2px solid #9e7437;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1.5px #140b06, 0 4px 10px rgba(0, 0, 0, 0.65);
+}
+.ctl-auto-btn,
+.ctl-item-sq,
+.ctl-absorb-pill,
+.ctl-dash-pill,
+.ctl-context-pill {
+  border-radius: 999px;
+  border: 1.5px solid #9e7437;
+  background: linear-gradient(180deg, #422917, #24150b);
+  color: #f7e6c0;
+  padding: 3px 9px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.ctl-context-pill {
+  max-width: 145px;
+  overflow: hidden;
+}
+#hud-context-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ctl-item-sq {
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  border-radius: 50%;
+  justify-content: center;
+}
+.ctl-context-pill {
+  opacity: 0.72;
+}
+.ctl-context-pill.is-active {
+  opacity: 1;
+  border-color: #f2d085;
+  background: linear-gradient(180deg, #1b5c4d, #0f362d);
+  color: #e8fff9;
+  box-shadow: 0 0 10px rgba(94, 242, 214, 0.45);
+}
+.ctl-auto-btn.is-active {
+  border-color: #6ef2d6;
+  background: linear-gradient(180deg, #1d5748, #10332b);
+}
+
+.ctl-pixel-mainbar {
+  padding: 6px 12px;
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(46, 28, 16, 0.94), rgba(23, 14, 8, 0.97));
+  border: 2.5px solid #b88c48;
+  border-radius: 30px;
+  box-shadow:
+    inset 0 0 0 1.5px #4d301a,
+    0 0 0 2px #140b06,
+    0 6px 16px rgba(0, 0, 0, 0.78);
+}
+
+.ctl-basic-circle {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2.5px solid #d4a64a;
+  background: radial-gradient(circle at 35% 30%, #7d2429, #3b0e12 82%);
+  color: #fff1cf;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  font-size: 9px;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 224, 158, 0.25), 0 0 0 1.5px #140b06;
+}
+.ctl-basic-circle img {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.ctl-vital-orb,
+.arch-gu-slot,
+.ctl-km-btn {
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #4a301c, #1c1008 82%);
+  border: 2.5px solid #c29548;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 226, 160, 0.2),
+    0 0 0 1.5px #140b06,
+    0 3px 6px rgba(0, 0, 0, 0.65);
+}
+.ctl-vital-orb {
+  width: 48px;
+  height: 48px;
+  border-color: #f2d085;
+}
+.arch-gu-slot {
+  width: 40px;
+  height: 40px;
+}
+.arch-gu-slot .arch-icon {
+  width: 26px;
+  height: 26px;
+}
+.ctl-km-btn {
+  width: 44px;
+  height: 44px;
+  border-color: #e6a84c;
+}
+.ctl-pixel-km-row {
+  padding-left: 6px;
+  border-left: 2px solid #755327;
+}
+.arch-key {
+  bottom: -2px;
+  right: -2px;
+  border-radius: 999px;
+  background: #24150b;
+  border-color: #9e7437;
+  color: #fae3ae;
+}
+.ctl-slot-tooltip {
+  background: linear-gradient(180deg, #332013, #1e120a);
+  border: 2px solid #b88c48;
+  border-radius: 8px;
+}
+
+/* 6. Góc Dưới Phải (Ô Vuông Bo Góc Viền Đồng Gỗ) & Góc Dưới Trái (Chat Gỗ Sẫm) */
+.ctl-util-btn {
+  width: 46px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid #b08340;
+  background: linear-gradient(180deg, #472c18, #24150b);
+  color: #f7e6bf;
+  box-shadow:
+    inset 0 0 0 1px #633e22,
+    0 0 0 1.5px #140b06,
+    0 3px 6px rgba(0, 0, 0, 0.68);
+}
+.ctl-util-btn:hover {
+  border-color: #ffe294;
+  background: linear-gradient(180deg, #5e3b21, #2e1b0f);
+}
+.ctl-util-btn .ctl-svg-wrap,
+.ctl-util-btn em {
+  color: #f7e6bf;
+}
+
+.ctl-chat-box {
+  background: linear-gradient(180deg, rgba(36, 22, 12, 0.94), rgba(20, 12, 7, 0.96));
+  border: 2px solid #9c7238;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px #4f321b, 0 0 0 1.5px #140b06;
+}
+.ctl-chat-top {
+  background: linear-gradient(90deg, #472b17, #29180d);
+  border-bottom-color: #7d592b;
+  color: #fae3ae;
+}
+.ctl-chat-tabs,
+.ctl-chat-form {
+  background: rgba(24, 14, 8, 0.95);
+}
+.ctl-chat-tab {
+  border-color: #6b4b22;
+  background: #332012;
+  color: #dec79e;
+}
+.ctl-chat-tab.is-active {
+  background: linear-gradient(180deg, #9e242c, #631319);
+  border-color: #d49e4b;
+}
+.ctl-chat-form input {
+  border-color: #7d592b;
+  background: #170d07;
+}
+.ctl-parch-btn {
+  border-color: #9e7437;
+  background: linear-gradient(180deg, #4f311c, #29180d);
+  color: #f7e6bf;
+}
+
+/* Cũng đồng bộ nút MOBA (khi bật trong Cài đặt) sang viền đồng cổ */
+.moba-btn,
+.aux-btn {
+  border-color: #b88c48;
+  background: radial-gradient(circle at 34% 28%, #4a301c, #1c1008 82%);
+}
+.ctl-aux-pad {
+  background: rgba(34, 20, 11, 0.9);
+  border-color: #9c7238;
+}
+
+/* Tương thích Desktop Hẹp, Điện Thoại Ngang & Dọc với Cụm Chiêu Tròn & Minimap Tròn */
+@media (max-width: 1180px) and (min-width: 933px) {
+  .ctl-chat-box {
+    width: 186px;
+  }
+  .ctl-pixel-skilldock:not(.is-custom-pos) {
+    transform: translateX(-50%) scale(0.84);
+    transform-origin: bottom center;
+  }
+}
+
+body.is-mobile-landscape .ctl-qtab,
+body.is-mobile-landscape .ctl-qhide-btn {
+  white-space: nowrap;
+  font-size: 9px;
+  padding: 3px 5px;
+}
+body.is-mobile-landscape:not(.is-skill-moba) .ctl-chat-box.is-collapsed {
+  left: auto;
+  right: max(8px, var(--safe-right));
+  bottom: calc(98px + var(--safe-bottom));
+}
+body.is-mobile-landscape:not(.is-skill-moba) .ctl-mobile-menu-btn {
+  right: max(8px, var(--safe-right));
+  bottom: calc(50px + var(--safe-bottom));
+}
+body.is-mobile-landscape:not(.is-skill-moba) .ctl-bottom-right.is-mobile-open {
+  right: max(8px, var(--safe-right));
+  bottom: calc(96px + var(--safe-bottom));
+}
+body.is-mobile-landscape .ctl-quick-icons {
+  padding: 2px 6px 11px;
+  gap: 5px;
+}
+body.is-mobile-landscape .ctl-minimap-circle-frame {
+  width: 82px;
+  height: 82px;
+}
+body.is-mobile-landscape .ctl-parch-notice {
+  top: 40px;
+  max-width: 340px;
+  font-size: 9.5px;
+}
+body.is-mobile-landscape .ctl-pixel-skilldock {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  bottom: max(5px, var(--safe-bottom));
+  align-items: center;
+}
+body.is-mobile-landscape.is-skill-moba .ctl-pixel-skilldock {
+  left: auto;
+  right: max(8px, var(--safe-right));
+  transform: none;
+}
+body.is-mobile-landscape .ctl-basic-circle {
+  width: 38px;
+  height: 38px;
+  font-size: 8px;
+}
+body.is-mobile-landscape .ctl-vital-orb {
+  width: 38px;
+  height: 38px;
+}
+body.is-mobile-landscape .arch-gu-slot {
+  width: 32px;
+  height: 32px;
+}
+body.is-mobile-landscape .ctl-km-btn {
+  width: 35px;
+  height: 35px;
+}
+
+body.is-mobile-portrait:not(.is-skill-moba) #joystick-zone:not(.is-custom-pos) {
+  left: max(4px, var(--safe-left));
+  bottom: calc(94px + var(--safe-bottom));
+  width: 116px;
+  height: 116px;
+}
+body.is-mobile-portrait:not(.is-skill-moba) .ctl-mobile-menu-btn {
+  right: max(8px, var(--safe-right));
+  bottom: calc(96px + var(--safe-bottom));
+}
+body.is-mobile-portrait:not(.is-skill-moba) .ctl-bottom-right.is-mobile-open {
+  right: max(8px, var(--safe-right));
+  bottom: calc(142px + var(--safe-bottom));
+}
+body.is-mobile-portrait:not(.is-skill-moba) .ctl-chat-box.is-collapsed {
+  left: auto;
+  right: max(8px, var(--safe-right));
+  bottom: calc(142px + var(--safe-bottom));
+}
+body.is-mobile-portrait .ctl-quick-icons {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  row-gap: 11px;
+  column-gap: 5px;
+  padding: 4px 6px 12px;
+  border-radius: 12px;
+}
+body.is-mobile-portrait .ctl-minimap-circle-frame {
+  width: 84px;
+  height: 84px;
+}
+body.is-mobile-portrait .ctl-parch-notice {
+  top: calc(106px + var(--safe-top));
+  max-width: 92vw;
+  font-size: 9.5px;
+}
+body.is-mobile-portrait .ctl-pixel-topstrip {
+  max-width: calc(100vw - 8px);
+  padding: 3px 5px;
+  gap: 3px;
+}
+body.is-mobile-portrait .ctl-context-pill {
+  max-width: 96px;
+}
+body.is-mobile-portrait .ctl-auto-btn,
+body.is-mobile-portrait .ctl-absorb-pill,
+body.is-mobile-portrait .ctl-dash-pill,
+body.is-mobile-portrait .ctl-context-pill {
+  padding: 3px 6px;
+  font-size: 8.5px;
+}
+body.is-mobile-portrait .ctl-pixel-mainbar {
+  flex-wrap: nowrap;
+  max-width: calc(100vw - 6px);
+  border-radius: 22px;
+  padding: 4px 5px;
+  gap: 2px;
+}
+body.is-mobile-portrait .ctl-pixel-slots-row,
+body.is-mobile-portrait .ctl-pixel-km-row {
+  gap: 2px;
+}
+body.is-mobile-portrait .ctl-pixel-km-row {
+  padding-left: 3px;
+}
+body.is-mobile-portrait .ctl-basic-circle {
+  width: 31px;
+  height: 31px;
+  font-size: 7px;
+}
+body.is-mobile-portrait .ctl-vital-orb {
+  width: 31px;
+  height: 31px;
+}
+body.is-mobile-portrait .arch-gu-slot {
+  width: 26px;
+  height: 26px;
+}
+body.is-mobile-portrait .arch-gu-slot .arch-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+body.is-mobile-portrait .ctl-km-btn {
+  width: 29px;
+  height: 29px;
+}
