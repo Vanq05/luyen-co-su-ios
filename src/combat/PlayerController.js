@@ -664,6 +664,20 @@ export class PlayerController {
     if (slotId === "vital") return this.getVitalGu();
     if (slotId === "passive") return this.getPassiveGu();
     if (slotId === "move") return this.getAllEquipped().find((g) => g.role === "move") ?? null;
+    if (slotId === "dash") {
+      const moveGu = this.getAllEquipped().find((g) => g.role === "move");
+      return { aimType: "dash", range: moveGu?.range ?? 78, color: moveGu?.color ?? "#5ef2d6" };
+    }
+    if (slotId === "km1" || slotId === "km2") {
+      const kmId = this.killerMoveIds[slotId === "km1" ? 0 : 1];
+      const km = KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[0];
+      return {
+        aimType: km.kind === "nova" ? "aoe" : "line",
+        range: km.range ?? 150,
+        radius: km.kind === "nova" ? km.range : 16,
+        color: km.color ?? "#ffd257",
+      };
+    }
     if (slotId?.startsWith("slot_")) {
       const idx = Number(slotId.replace("slot_", ""));
       return this.getActiveGu(idx);
@@ -828,6 +842,10 @@ export class PlayerController {
     mult += tier.bonusPct;
     if (gu && gu.path === "luc_dao") {
       mult += (this.potentials.luc + this.bodyTemperBonusForce) * 0.015;
+    }
+    if (gu?.lowHpBerserk && this.maxHp > 0) {
+      const missingPct = Math.max(0, 1 - this.hp / this.maxHp);
+      mult += missingPct * gu.lowHpBerserk;
     }
     const sets = this.getSetCounts();
     if ((sets.dien_lang_bo ?? 0) >= 4) mult += 0.16;

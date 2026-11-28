@@ -35,6 +35,11 @@ export class GameModals {
     onSwitchCharacter,
     getUiMode,
     onCycleUiMode,
+    getHudLayout,
+    onUpdateHudLayout,
+    onSwapHudHands,
+    onResetHudLayout,
+    onOpenHudEditor,
   }) {
     this.root = rootEl;
     this.player = player;
@@ -50,6 +55,11 @@ export class GameModals {
     this.onSwitchCharacter = onSwitchCharacter;
     this.getUiMode = getUiMode;
     this.onCycleUiMode = onCycleUiMode;
+    this.getHudLayout = getHudLayout;
+    this.onUpdateHudLayout = onUpdateHudLayout;
+    this.onSwapHudHands = onSwapHudHands;
+    this.onResetHudLayout = onResetHudLayout;
+    this.onOpenHudEditor = onOpenHudEditor;
 
     this.panel = null;
     this.subTab = "main";
@@ -666,8 +676,8 @@ export class GameModals {
   }
 
   _buildRankGuQuestsBody() {
-    const rankTabs = [1, 2, 3]
-      .map((r) => `<button type="button" class="floor-pill ${this.questRankFilter === r ? "is-selected" : ""}" data-gq-rank="${r}">Cổ Trùng Chuyển ${r}</button>`)
+    const rankTabs = [1, 2, 3, 4, 5]
+      .map((r) => `<button type="button" class="floor-pill ${this.questRankFilter === r ? "is-selected" : ""}" data-gq-rank="${r}">Cổ Chuyển ${r}</button>`)
       .join("");
     const active = this.player.activeGuQuest;
     const claimedSet = new Set(this.player.claimedGuQuestIds ?? []);
@@ -680,17 +690,19 @@ export class GameModals {
         const isDone = isAct && active.completed;
         const isClaimed = claimedSet.has(q.id);
         const cur = isAct ? Math.min(q.goal.count ?? 1, active.progress ?? 0) : 0;
+        const reqRank = q.rank >= 4 ? q.rank : Math.max(1, q.rank - 1);
+        const feeTag = q.stoneFee ? ` · Phí nhận: ${q.stoneFee} Thạch` : "";
         return `
           <div class="ctl-stat-row" style="align-items:center">
             <div style="display:flex;align-items:center;gap:8px">
               <span class="ctl-icon-box" style="width:34px;height:34px">${getGuIconSvg(gu)}</span>
               <div>
-                <div style="display:flex;align-items:center;gap:6px">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                   <strong style="color:${gu?.color || "#e3bc6b"}">${q.title}</strong>
                   <span class="ctl-qi-badge">${q.pathLabel}</span>
                 </div>
                 <div class="ctl-sub-txt">${q.desc}</div>
-                <div class="ctl-sub-txt">Thưởng: <b style="color:${gu?.color}">${gu?.name}</b> + <b>${q.rewards.stones} Nguyên Thạch</b>${isAct ? ` · Tiến độ: <b>${cur}/${q.goal.count ?? 1}</b>` : ""}</div>
+                <div class="ctl-sub-txt">Thưởng: <b style="color:${gu?.color}">${gu?.name}</b> + <b>${q.rewards.stones} Nguyên Thạch</b> · Yêu cầu Chuyển ${reqRank}${feeTag}${isAct ? ` · Tiến độ: <b>${cur}/${q.goal.count ?? 1}</b>` : ""}</div>
               </div>
             </div>
             <div style="flex-shrink:0">
@@ -701,7 +713,7 @@ export class GameModals {
                     ? `<button type="button" class="ctl-btn-jade" data-claim-gu-quest="${q.id}">Luyện Hóa Cổ!</button>`
                     : isAct
                       ? `<button type="button" class="ctl-parch-btn" data-go-mission="${q.mapId}:${q.x}:${q.y}">Đi Săn (${cur}/${q.goal.count ?? 1})</button>`
-                      : `<button type="button" class="ctl-btn-gold" data-accept-gu-quest="${q.id}">Chọn Nhiệm Vụ</button>`
+                      : `<button type="button" class="ctl-btn-gold" data-accept-gu-quest="${q.id}">Chọn (${q.stoneFee ? `${q.stoneFee}💎` : "Miễn phí"})</button>`
               }
             </div>
           </div>
@@ -710,7 +722,7 @@ export class GameModals {
       .join("");
 
     return `
-      <div style="display:flex;gap:6px;margin-bottom:8px">${rankTabs}</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">${rankTabs}</div>
       <div class="ctl-scroll-list" style="max-height:290px">${rows}</div>
     `;
   }
@@ -865,6 +877,15 @@ export class GameModals {
     const isMuted = this.sfx?.muted;
     const uiMode = this.getUiMode?.() || "auto";
     const uiModeLabel = uiMode === "mobile" ? "Điện Thoại" : uiMode === "desktop" ? "Máy Tính" : "Tự Động";
+    const layout = this.getHudLayout?.() || {
+      skillStyle: "moba",
+      handedness: "right",
+      alwaysShowJoystick: false,
+      joystick: { scale: 1 },
+      skills: { scale: 1 },
+    };
+    const joyPct = Math.round((layout.joystick?.scale ?? 1) * 100);
+    const skillPct = Math.round((layout.skills?.scale ?? 1) * 100);
     return `
       <div class="ctl-box">
         <div class="ctl-box-title">Tùy Chọn & Tài Khoản</div>
@@ -875,9 +896,30 @@ export class GameModals {
           <button type="button" id="btn-open-acc" class="ctl-parch-btn">Tài Khoản Đám Mây</button>
           <button type="button" id="btn-switch-char" class="ctl-btn-jade">Quay Về Chọn Nhân Vật</button>
         </div>
-        <div class="ctl-sub-txt" style="margin-top:10px">
-          <b>Máy tính:</b> WASD di chuyển · Chuột Trái đánh thường · Chuột Phải Cổ Bản Mệnh · 1-7 Cổ Chủ Động · Q/E Sát Chiêu · Z/G Đan Dược · Giữ R Hấp Thu · X Bế Quan · F Tương tác · Tab Đổi mục tiêu · Space Lướt.<br/>
-          <b>Điện thoại / Cảm ứng:</b> Kéo Joystick góc dưới-trái để di chuyển · Chạm bản đồ để chọn mục tiêu/đi tới · Chạm trực tiếp nút Đánh, Cổ Trùng, Sát Chiêu và Menu bên phải.
+      </div>
+
+      <div class="ctl-box" style="margin-top:8px">
+        <div class="ctl-box-title">Tùy Chỉnh Vị Trí Joystick & Cụm Chiêu MOBA</div>
+        <div class="ctl-btn-row" style="margin-top:6px;flex-wrap:wrap;justify-content:flex-start">
+          <button type="button" id="btn-open-hud-editor" class="ctl-btn-jade">Chỉnh Vị Trí Nút (Kéo Thả Trực Tiếp)</button>
+          <button type="button" id="btn-toggle-skill-style" class="ctl-parch-btn">Kiểu Chiêu: ${layout.skillStyle === "bar" ? "Thanh Ngang PC" : "Cụm Nút MOBA"}</button>
+          <button type="button" id="btn-swap-hud-hands" class="ctl-parch-btn">${layout.handedness === "left" ? "Đảo Tay: Chiêu Trái · Stick Phải" : "Thuận Tay: Stick Trái · Chiêu Phải"}</button>
+          <button type="button" id="btn-toggle-joy-vis" class="ctl-parch-btn">Joystick: ${layout.alwaysShowJoystick ? "Luôn Hiện" : "Tự Động (Mobile)"}</button>
+          <button type="button" id="btn-reset-hud-layout" class="ctl-btn-gold">Mặc Định</button>
+        </div>
+        <div class="ctl-grid-2" style="margin-top:10px">
+          <label class="acc-field">
+            <span>Cỡ Vòng Joystick: <b id="lbl-joy-scale">${joyPct}%</b></span>
+            <input type="range" id="rng-joy-scale" min="70" max="140" step="5" value="${joyPct}" />
+          </label>
+          <label class="acc-field">
+            <span>Cỡ Cụm Chiêu MOBA: <b id="lbl-skill-scale">${skillPct}%</b></span>
+            <input type="range" id="rng-skill-scale" min="70" max="135" step="5" value="${skillPct}" />
+          </label>
+        </div>
+        <div class="ctl-sub-txt" style="margin-top:8px">
+          <b>Chạm & Kéo thả (MOBA):</b> Nhấn nhả nhanh nút chiêu để tung ngay theo hướng đang chạy/mục tiêu; giữ & kéo nút chiêu để ngắm 360°, kéo vào vùng đỏ <b>HỦY</b> để hủy chiêu.<br/>
+          <b>Máy tính:</b> WASD · LMB/RMB · 1-7 · Q/E · Z/G · Giữ R Hấp Thu · X Bế Quan · F Tương tác · Tab Đổi mục tiêu · Space Lướt.
         </div>
       </div>
     `;
@@ -998,6 +1040,17 @@ export class GameModals {
       btn.addEventListener("click", () => {
         const q = RANK_GU_QUESTS.find((x) => x.id === btn.dataset.acceptGuQuest);
         if (!q) return;
+        const playerRank = this.player.getStage().rank;
+        const reqRank = q.rank >= 4 ? q.rank : Math.max(1, q.rank - 1);
+        if (playerRank < reqRank) {
+          this._flash(`Cần đạt cảnh giới Chuyển ${reqRank} mới nhận được nhiệm vụ Cổ Chuyển ${q.rank}!`, "fail");
+          return;
+        }
+        if (q.stoneFee && this.player.nguyenThach < q.stoneFee) {
+          this._flash(`Cần ${q.stoneFee} Nguyên Thạch phí tầm cổ!`, "fail");
+          return;
+        }
+        if (q.stoneFee) this.player.nguyenThach -= q.stoneFee;
         this.player.selectGuQuest(q);
         this.sfx?.play("pickup");
         this.onStateChanged?.();
@@ -1305,10 +1358,22 @@ export class GameModals {
         const stoneId = btn.dataset.cutStone;
         if (!this.player.consumeItem(stoneId, 1)) return;
         const tier = ITEMS_CATALOG[stoneId]?.tier ?? 1;
-        const pool = Object.values(GU_CATALOG).filter((g) => g.rank <= tier + 1);
+        const guChance = tier === 1 ? 0.32 : tier === 2 ? 0.25 : 0.18;
         const roll = Math.random();
         const maxCap = this.player.getMaxGuCapacity();
-        if (roll < 0.52) {
+        if (roll < guChance) {
+          const rPick = Math.random();
+          let targetRank = 1;
+          if (tier === 1) {
+            targetRank = rPick < 0.92 ? 1 : 2;
+          } else if (tier === 2) {
+            targetRank = rPick < 0.58 ? 1 : rPick < 0.9 ? 2 : rPick < 0.995 ? 3 : 4;
+          } else {
+            targetRank = rPick < 0.36 ? 2 : rPick < 0.82 ? 3 : rPick < 0.975 ? 4 : 5;
+          }
+          const rankPool = Object.values(GU_CATALOG).filter((g) => g.rank === targetRank);
+          const fallbackPool = Object.values(GU_CATALOG).filter((g) => g.rank <= tier + 1);
+          const pool = rankPool.length > 0 ? rankPool : fallbackPool;
           const picked = pool[Math.floor(Math.random() * pool.length)];
           if (this.player.guBag.length >= maxCap) {
             const comp = tier * 65;
@@ -1402,6 +1467,42 @@ export class GameModals {
     this.root.querySelector("#btn-cycle-uimode")?.addEventListener("click", () => {
       this.onCycleUiMode?.();
       this.render();
+    });
+    this.root.querySelector("#btn-open-hud-editor")?.addEventListener("click", () => {
+      this.close();
+      this.onOpenHudEditor?.();
+    });
+    this.root.querySelector("#btn-toggle-skill-style")?.addEventListener("click", () => {
+      const cur = this.getHudLayout?.();
+      const nextStyle = cur?.skillStyle === "bar" ? "moba" : "bar";
+      this.onUpdateHudLayout?.({ skillStyle: nextStyle });
+      this.render();
+    });
+    this.root.querySelector("#btn-swap-hud-hands")?.addEventListener("click", () => {
+      this.onSwapHudHands?.();
+      this.render();
+    });
+    this.root.querySelector("#btn-toggle-joy-vis")?.addEventListener("click", () => {
+      const cur = this.getHudLayout?.();
+      this.onUpdateHudLayout?.({ alwaysShowJoystick: !cur?.alwaysShowJoystick });
+      this.render();
+    });
+    this.root.querySelector("#btn-reset-hud-layout")?.addEventListener("click", () => {
+      this.onResetHudLayout?.();
+      this.render();
+      this._flash("Đã khôi phục vị trí Joystick & Cụm Chiêu mặc định!");
+    });
+    this.root.querySelector("#rng-joy-scale")?.addEventListener("input", (e) => {
+      const pct = Number(e.target.value) || 100;
+      const lbl = this.root.querySelector("#lbl-joy-scale");
+      if (lbl) lbl.textContent = `${pct}%`;
+      this.onUpdateHudLayout?.({ joystick: { scale: pct / 100 } });
+    });
+    this.root.querySelector("#rng-skill-scale")?.addEventListener("input", (e) => {
+      const pct = Number(e.target.value) || 100;
+      const lbl = this.root.querySelector("#lbl-skill-scale");
+      if (lbl) lbl.textContent = `${pct}%`;
+      this.onUpdateHudLayout?.({ skills: { scale: pct / 100 }, aux: { scale: pct / 100 } });
     });
     this.root.querySelector("#btn-open-mirror")?.addEventListener("click", () => {
       this.close();

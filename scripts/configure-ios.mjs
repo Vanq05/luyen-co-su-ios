@@ -53,6 +53,7 @@ function patchInfoPlist() {
   plist = setOrReplacePlistKey(plist, "UIRequiresFullScreen", "<true/>");
   plist = setOrReplacePlistKey(plist, "UIStatusBarHidden", "<true/>");
   plist = setOrReplacePlistKey(plist, "UIViewControllerBasedStatusBarAppearance", "<false/>");
+  plist = setOrReplacePlistKey(plist, "ITSAppUsesNonExemptEncryption", "<false/>");
 
   writeFileSync(INFO_PLIST_PATH, plist, "utf8");
   console.log(`[configure-ios] Updated ${INFO_PLIST_PATH}`);

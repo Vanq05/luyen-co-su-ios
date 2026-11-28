@@ -27,6 +27,7 @@ export class VirtualJoystick {
 
   _bindEvents() {
     this.zoneEl.addEventListener("pointerdown", (e) => {
+      if (document.body.classList.contains("is-editing-hud")) return;
       if (this.pointerId !== null) return;
       e.preventDefault();
       this.pointerId = e.pointerId;

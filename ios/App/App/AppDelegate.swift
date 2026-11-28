@@ -27,6 +27,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        if let bridgeVC = window?.rootViewController as? CAPBridgeViewController, let wv = bridgeVC.webView {
+            wv.isOpaque = false
+            wv.backgroundColor = UIColor(red: 0.027, green: 0.035, blue: 0.051, alpha: 1.0)
+            wv.scrollView.bounces = false
+            wv.scrollView.isScrollEnabled = false
+            wv.scrollView.contentInsetAdjustmentBehavior = .never
+            wv.allowsLinkPreview = false
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

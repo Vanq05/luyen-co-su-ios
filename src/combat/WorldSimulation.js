@@ -3,7 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH, RANK_ESSENCE_COLORS } from "../config/constant
 import { BEAST_PHANTOMS } from "../data/CultivationData.js";
 import { getStageProgress } from "../data/CultivationData.js";
 import { ITEMS_CATALOG, createArmorPiece } from "../data/EquipmentAndItems.js";
-import { GU_CATALOG, KILLER_MOVES, createGuWorm } from "../data/GuCatalog.js";
+import { GU_CATALOG, KILLER_MOVES, createGuWorm, getGuWildSpawnConfig } from "../data/GuCatalog.js";
 import { STARTER_GU_HABITATS, MAIN_QUESTS } from "../data/QuestsAndEvents.js";
 import {
   bakeEssenceAuraFrames,
@@ -117,11 +117,16 @@ export class WorldSimulation {
     }
 
     const rareBonus = this.player.getAptitudeInfo().rareEncounterBonus ?? 0;
-    const wildSpawnChance = Math.min(0.75, 0.42 + rareBonus * 0.35);
     this.gatherNodes = (mapDef.gatherNodes ?? []).map((g) => {
-      if (g.kind === "wild_gu" && !this._isQuestRequiredWildGu(g)) {
-        const active = Math.random() < wildSpawnChance;
-        return { ...g, cooldown: active ? 0 : 45 + Math.floor(Math.random() * 45) };
+      if (g.kind === "wild_gu") {
+        const guRank = GU_CATALOG[g.guId]?.rank ?? 1;
+        const cfg = getGuWildSpawnConfig(guRank);
+        const forceStarter = !this.player.vitalUid && guRank === 1 && this._isQuestRequiredWildGu(g);
+        if (!forceStarter) {
+          const chance = Math.min(0.82, cfg.spawnChance * (1 + rareBonus * 0.45));
+          const active = Math.random() < chance;
+          return { ...g, cooldown: active ? 0 : cfg.respawnSec + Math.floor(Math.random() * 60) };
+        }
       }
       return { ...g, cooldown: 0 };
     });
@@ -717,7 +722,13 @@ export class WorldSimulation {
         return { kind: "gather", label: lbl, data: g };
       }
       if (g.cooldown <= 0 && Math.hypot(this.player.x - g.x, this.player.y - g.y) <= 44) {
-        const prefix = g.kind === "fish" ? "F · Câu cá" : g.kind === "mine" ? "F · Khai mỏ" : g.kind === "wild_gu" ? "F · Bắt Dã Cổ" : "F · Hái thảo dược";
+        let prefix = g.kind === "fish" ? "F · Câu cá" : g.kind === "mine" ? "F · Khai mỏ" : "F · Hái thảo dược";
+        if (g.kind === "wild_gu") {
+          const gu = GU_CATALOG[g.guId];
+          const cfg = getGuWildSpawnConfig(gu?.rank ?? 1);
+          const costTag = `${cfg.baitCost} Mồi${cfg.stoneCost ? ` · ${cfg.stoneCost} Thạch` : ""}`;
+          prefix = `F · Bắt [C${gu?.rank ?? 1}] ${gu?.shortLabel ?? "Dã Cổ"} (${costTag})`;
+        }
         return { kind: "gather", label: prefix, data: g };
       }
     }
@@ -862,7 +873,10 @@ export class WorldSimulation {
           this.addFloatingText(this.player.x, this.player.y - 26, "Cần Khai Khiếu tại Nguyên Tuyền trước khi luyện Cổ!", "#f2c14e");
           return false;
         }
-        const isFirstVitalSeek = !this.player.vitalUid && this._isQuestRequiredWildGu(g);
+        const guDef = GU_CATALOG[g.guId];
+        const guRank = guDef?.rank ?? 1;
+        const cfg = getGuWildSpawnConfig(guRank);
+        const isFirstVitalSeek = !this.player.vitalUid && guRank === 1 && this._isQuestRequiredWildGu(g);
         const maxCap = this.player.getMaxGuCapacity();
         if (this.player.vitalUid && this.player.guBag.length >= maxCap) {
           this.addFloatingText(
@@ -873,29 +887,79 @@ export class WorldSimulation {
           );
           return false;
         }
-        if (!this.player.consumeItem("moi_bat_co", 1) && !isFirstVitalSeek) {
-          this.addFloatingText(this.player.x, this.player.y - 26, "Cần Mồi Bắt Dã Cổ!", "#d0573c");
+        if (!isFirstVitalSeek && (this.player.stageLevel ?? 1) < cfg.minStageLevel) {
+          this.addFloatingText(
+            this.player.x,
+            this.player.y - 26,
+            `[${guDef?.name || "Dã Cổ"} C${guRank}] áp lực quá mạnh! Cần tu vi tối thiểu Chuyển ${guRank}!`,
+            "#ff8570"
+          );
           return false;
         }
+        if (cfg.guardRadius > 0) {
+          const guardian = this.enemies.find(
+            (e) => e.hp > 0 && e.ai !== "dummy" && Math.hypot(e.x - g.x, e.y - g.y) <= cfg.guardRadius
+          );
+          if (guardian) {
+            guardian.provoked = true;
+            guardian.provokedTimer = 10;
+            this.addFloatingText(
+              this.player.x,
+              this.player.y - 26,
+              `Có [${guardian.name}] canh giữ ${guDef?.shortLabel || "Dã Cổ"}! Phải diệt trước!`,
+              "#ff6b78"
+            );
+            return false;
+          }
+        }
+        if (!isFirstVitalSeek) {
+          if (this.player.getItemCount("moi_bat_co") < cfg.baitCost) {
+            this.addFloatingText(
+              this.player.x,
+              this.player.y - 26,
+              `Cần ${cfg.baitCost} Mồi Bắt Dã Cổ (mua tại Chợ B)!`,
+              "#d0573c"
+            );
+            return false;
+          }
+          if (cfg.stoneCost > 0 && this.player.nguyenThach < cfg.stoneCost) {
+            this.addFloatingText(
+              this.player.x,
+              this.player.y - 26,
+              `Cần ${cfg.stoneCost} Nguyên Thạch để áp chế Dã Cổ Chuyển ${guRank}!`,
+              "#d0573c"
+            );
+            return false;
+          }
+          this.player.consumeItem("moi_bat_co", cfg.baitCost);
+          this.player.nguyenThach -= cfg.stoneCost;
+        }
         this.onStartMinigame?.("refine", {
-          guName: GU_CATALOG[g.guId]?.name ?? "Dã Cổ",
+          guName: `${guDef?.name ?? "Dã Cổ"} (Chuyển ${guRank})`,
+          guRank,
           onSuccess: () => {
-            g.cooldown = 85;
+            g.cooldown = cfg.respawnSec;
             const res = this.player.acquireRefinedWildGu(g.guId);
             this._advanceQuest("refine_first_gu", {});
             this.sfx?.play("fusionSuccess");
             this.addFloatingText(
               this.player.x,
               this.player.y - 30,
-              res.boundAsVital ? `Luyện Hóa Cổ Bản Mệnh: ${res.worm.name}!` : `Thu phục ${res.worm.name}!`,
-              "#d9b25f"
+              res.boundAsVital ? `Luyện Hóa Cổ Bản Mệnh: ${res.worm.name}!` : `Thu phục hiếm: ${res.worm.name} (C${guRank})!`,
+              "#ffd257"
             );
             this.onAwakenCeremony?.({ type: "gu_refined", ...res });
             this.onStateChange?.(this);
           },
           onFail: () => {
-            g.cooldown = 32;
-            this.addFloatingText(this.player.x, this.player.y - 26, "Dã Cổ kinh động lẩn trốn (32s)!", "#d0573c");
+            g.cooldown = Math.round(cfg.respawnSec * 0.55);
+            if (guRank >= 4) {
+              const backlash = Math.round(this.player.maxHp * 0.12);
+              this.player.hp = Math.max(1, this.player.hp - backlash);
+              this.addFloatingText(this.player.x, this.player.y - 26, `Luyện Cổ C${guRank} phản phệ -${backlash} HP! Dã Cổ độn mất!`, "#ff4d6a");
+            } else {
+              this.addFloatingText(this.player.x, this.player.y - 26, `Dã Cổ kinh động lẩn trốn (${g.cooldown}s)!`, "#d0573c");
+            }
           },
         });
         return true;
@@ -1113,6 +1177,12 @@ export class WorldSimulation {
     if (gu.shieldAmount) {
       this.player.shield += gu.shieldAmount;
       this.addFloatingText(this.player.x, this.player.y - 26, `Hộ Thuẫn +${gu.shieldAmount}`, "#dce8ff");
+    }
+    if (gu.resetsBasicSlotsCd) {
+      this.player.cooldowns.slot_0 = 0;
+      this.player.cooldowns.slot_1 = 0;
+      this.player.cooldowns.slot_2 = 0;
+      this.addFloatingText(this.player.x, this.player.y - 34, "Nghịch Lưu Thời Gian: Xóa Hồi Chiêu Ô 1–3!", "#ffd978");
     }
 
     const dmg = Math.round((gu.damage ?? 0) * this.player.getDamageMultiplier(gu));

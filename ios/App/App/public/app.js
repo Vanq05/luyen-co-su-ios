@@ -586,7 +586,58 @@
     }
     return frames;
   }
+  function buildStrawDummyFrames() {
+    const W = 34;
+    const H = 40;
+    const anchorX = 17;
+    const anchorY = 36;
+    const barOffsetY = 36;
+    const pal = { k: "#523218", d: "#7a5822", m: "#c89d54", b: "#f0cc75", r: "#d0573c", w: "#fff3d1" };
+    const rows = [
+      "....dddd....",
+      "...dmmmmdd..",
+      "...drrrrrd..",
+      "...dmbbbmd..",
+      "ddddmmbmmddd",
+      "mbbbmbrbmmbm",
+      "ddddmrbrmddd",
+      "...dmbbbmd..",
+      "....dmmd....",
+      ".....kk.....",
+      ".....kk.....",
+      "....kkkk...."
+    ];
+    const frames = [];
+    for (let f = 0; f < 3; f++) {
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const tilt = f === 1 ? 1 : f === 2 ? -1 : 0;
+      const ox = 5 + tilt;
+      const oy = 6;
+      for (let y = 0; y < rows.length; y++) {
+        const row = rows[y];
+        for (let x = 0; x < row.length; x++) {
+          const ch = row[x];
+          if (ch === "." || ch === " ") continue;
+          const col = pal[ch];
+          if (!col) continue;
+          plotRect(g, ox + x * 2, oy + y * 2, 2, 2, col);
+        }
+      }
+      applySelectiveOutline(g, W, H, "#2a1a0d", "#140b06");
+      if (ctx) {
+        fillPixelEllipse(ctx, anchorX, anchorY, 10, 3, "rgba(5, 8, 12, 0.36)", true);
+        ctx.drawImage(tmp.canvas, 0, 0);
+      }
+      frames.push({ canvas: canvas2, anchorX, anchorY, barOffsetY });
+    }
+    return frames;
+  }
   function buildGenericMonster64(typeId) {
+    if (typeId === "coc_thao_nhan") {
+      return buildStrawDummyFrames();
+    }
     const W = typeId === "thien_tri_ngu_vuong" ? 76 : 64;
     const H = 64;
     const anchorX = Math.round(W * 0.5);
@@ -599,15 +650,7 @@
       const g = tmp.ctx;
       const ox = Math.round(W * 0.5);
       const oy = Math.round(H * 0.54) + (f === 1 ? -2 : f === 3 ? 1 : 0);
-      if (typeId === "coc_thao_nhan") {
-        const tilt = f === 1 ? 1 : f === 3 ? -1 : 0;
-        plotRect(g, ox - 3, oy + 4, 6, 16, "#4d3118");
-        plotRect(g, ox - 12 + tilt, oy - 6, 24, 5, "#8f6528");
-        plotRect(g, ox - 7 + tilt, oy - 14, 14, 18, "#c89d54");
-        plotRect(g, ox - 5 + tilt, oy - 22, 10, 8, "#d9b25f");
-        plotRect(g, ox - 4 + tilt, oy - 12, 8, 3, "#d0573c");
-        plotRect(g, ox - 3 + tilt, oy - 5, 6, 3, "#d0573c");
-      } else if (typeId === "thien_tri_ngu_vuong") {
+      if (typeId === "thien_tri_ngu_vuong") {
         const ramp = ["#061921", "#0c3d4a", "#177582", "#2fb8ad", "#6cf2d8", "#d6fff7"];
         paintShadedPixelLobes(
           g,
@@ -2666,7 +2709,7 @@
   var AccountManager = class {
     constructor() {
       this.session = null;
-      this.guestMode = false;
+      this.guestMode = true;
       this.profile = createDefaultProfile();
       this.characters = [null, null, null];
       this.activeSlotIndex = null;
@@ -2717,7 +2760,7 @@
         if (!raw) return;
         const parsed = JSON.parse(raw);
         if (parsed.session) this.session = parsed.session;
-        if (parsed.guestMode) this.guestMode = Boolean(parsed.guestMode);
+        if (parsed.guestMode !== void 0) this.guestMode = Boolean(parsed.guestMode);
         if (parsed.profile) {
           this.profile = { ...createDefaultProfile(), ...parsed.profile };
           this.characters = normalizeCharactersArray(parsed.profile.characters);
@@ -3974,6 +4017,93 @@
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: T\xE0ng h\xECnh l\u01B0\u1EDBt \u1EA3nh t\u1EA1o ph\xE2n th\xE2n thu h\xFAt to\xE0n b\u1ED9 qu\xE1i.",
       description: "Nh\u1ECB Chuy\u1EC3n: H\xF3a v\u1EA3y \u1EA9n th\xE2n l\u01B0\u1EDBt \u0111i trong ch\u1EDBp m\u1EAFt."
     },
+    thiet_cot: {
+      id: "thiet_cot",
+      name: "Thi\u1EBFt C\u1ED1t C\u1ED5",
+      shortLabel: "Thi\u1EBFt C\u1ED1t",
+      rank: 2,
+      path: "cot_dao",
+      role: "defense",
+      aimType: "aoe",
+      mpCost: 16,
+      cooldown: 5.5,
+      armorBonus: 0.22,
+      meleeDmgBonus: 0.15,
+      shieldAmount: 105,
+      guardStance: true,
+      color: "#9fb3c8",
+      vfxKey: "vfx/bach-cot-don",
+      foodItemId: "mao_thach_so",
+      foodName: "B\u1ED9t Mao Th\u1EA1ch / Th\u1ECBt th\xFA",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: X\u01B0\u01A1ng c\u1ED1t c\u1EE9ng nh\u01B0 th\xE9p (+22% Gi\xE1p, +15% C\u1EADn chi\u1EBFn, Khi\xEAn 105 HP).",
+      description: "Nh\u1ECB Chuy\u1EC3n: T\xF4i luy\u1EC7n x\u01B0\u01A1ng c\u1ED1t th\xE0nh huy\u1EC1n thi\u1EBFt, ch\u1EB7n 105 s\xE1t th\u01B0\u01A1ng."
+    },
+    xoan_oc_cot_thuong: {
+      id: "xoan_oc_cot_thuong",
+      name: "Xo\u1EAFn \u1ED0c C\u1ED1t Th\u01B0\u01A1ng C\u1ED5",
+      shortLabel: "Xo\u1EAFn C\u1ED1t",
+      rank: 2,
+      path: "cot_dao",
+      role: "attack",
+      aimType: "line",
+      mpCost: 19,
+      cooldown: 1.7,
+      damage: 68,
+      range: 170,
+      radius: 11,
+      pierce: 3,
+      color: "#ece4d8",
+      vfxKey: "vfx/bach-cot-don",
+      foodItemId: "thit_thu",
+      foodName: "Th\u1ECBt th\xFA",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: B\u1EAFn th\u01B0\u01A1ng x\u01B0\u01A1ng xo\u1EAFn xuy\xEAn 3 m\u1EE5c ti\xEAu c\u1EF1c m\u1EA1nh.",
+      description: "Nh\u1ECB Chuy\u1EC3n: Ng\u01B0ng t\u1EE5 c\u1ED1t th\u01B0\u01A1ng xo\xE1y tr\xF2n xuy\xEAn ph\xE1 h\u1ED9 gi\xE1p \u0111\u1ECBch."
+    },
+    kho_luc: {
+      id: "kho_luc",
+      name: "Kh\u1ED5 L\u1EF1c C\u1ED5",
+      shortLabel: "Kh\u1ED5 L\u1EF1c",
+      rank: 2,
+      path: "luc_dao",
+      role: "attack",
+      aimType: "arc",
+      mpCost: 17,
+      cooldown: 1.9,
+      damage: 72,
+      range: 98,
+      arcSpread: 88 * Math.PI / 180,
+      lowHpBerserk: 0.65,
+      meleeDmgBonus: 0.22,
+      color: "#d97236",
+      vfxKey: "vfx/hit-spark",
+      foodItemId: "thit_thu",
+      foodName: "Th\u1ECBt th\xFA",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: C\xE0ng m\u1EA5t nhi\u1EC1u Sinh l\u1EF1c uy l\u1EF1c c\xE0ng b\xF9ng n\u1ED5 (t\u1ED1i \u0111a +65% ST).",
+      description: "Nh\u1ECB Chuy\u1EC3n: Th\u01B0\u01A1ng t\xEDch c\xE0ng n\u1EB7ng \u0111\xE1nh c\xE0ng cu\u1ED3ng b\u1EA1o (+22% C\u1EADn chi\u1EBFn)."
+    },
+    doc_hat: {
+      id: "doc_hat",
+      name: "\u0110\u1ED9c H\u1EA1t C\u1ED5",
+      shortLabel: "\u0110\u1ED9c H\u1EA1t",
+      rank: 2,
+      path: "doc_dao",
+      role: "attack",
+      aimType: "line",
+      mpCost: 18,
+      cooldown: 1.8,
+      damage: 52,
+      projectileCount: 2,
+      range: 160,
+      radius: 10,
+      poisonDps: 15,
+      slowFactor: 0.35,
+      color: "#8ce84c",
+      vfxKey: "vfx/thanh-doc",
+      foodItemId: "thao_duoc_tram_nam",
+      foodName: "Th\u1EA3o d\u01B0\u1EE3c tr\u0103m n\u0103m",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: B\u1EAFn 2 \u0111u\xF4i b\u1ECD c\u1EA1p \u0111\u1ED9c g\xE2y r\xFAt m\xE1u s\xE2u v\xE0 l\xE0m ch\u1EADm 35%.",
+      description: "Nh\u1ECB Chuy\u1EC3n: Ph\xF3ng song ch\xE2m \u0111\u1ED9c b\u1ECD c\u1EA1p l\xE0m t\xEA li\u1EC7t k\u1EBB th\xF9."
+    },
     // === TAM CHUYỂN ===
     hoang_kim_nguyet: {
       id: "hoang_kim_nguyet",
@@ -4184,6 +4314,136 @@
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Th\u1EDF h\u01A1i l\u1EEDa h\xECnh qu\u1EA1t thi\xEAu r\u1EE5i m\u1ECDi k\u1EBB \u0111\u1ECBch tr\u01B0\u1EDBc m\u1EB7t.",
       description: "Tam Chuy\u1EC3n: Phun lu\u1ED3ng X\xEDch Vi\xEAm n\xF3ng ch\u1EA3y g\xE2y B\u1ECFng n\u1EB7ng."
     },
+    ngan_trung_nguyet: {
+      id: "ngan_trung_nguyet",
+      name: "Ng\xE2n Trung Nguy\u1EC7t C\u1ED5",
+      shortLabel: "Ng\xE2n Nguy\u1EC7t",
+      rank: 3,
+      path: "nguyet_dao",
+      role: "attack",
+      aimType: "aoe",
+      mpCost: 26,
+      cooldown: 2.5,
+      damage: 116,
+      range: 160,
+      radius: 44,
+      slowFactor: 0.4,
+      color: "#dff6ff",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "suong_truc_linh_lo",
+      foodName: "S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Nguy\u1EC7t hoa n\u1ED5 tung l\u1EA1nh th\u1EA5u x\u01B0\u01A1ng l\xE0m ch\u1EADm 40% to\xE0n v\xF9ng.",
+      description: "Tam Chuy\u1EC3n: N\xE9m v\xF2ng ng\xE2n nguy\u1EC7t n\u1ED5 \xE1nh tr\u0103ng \u0111\xF3ng s\u01B0\u01A1ng di\u1EC7n r\u1ED9ng."
+    },
+    huyet_cuong: {
+      id: "huyet_cuong",
+      name: "Huy\u1EBFt Cu\u1ED3ng C\u1ED5",
+      shortLabel: "Huy\u1EBFt Cu\u1ED3ng",
+      rank: 3,
+      path: "huyet_dao",
+      role: "attack",
+      aimType: "arc",
+      mpCost: 25,
+      cooldown: 2.4,
+      damage: 124,
+      range: 125,
+      arcSpread: 98 * Math.PI / 180,
+      lifesteal: 0.34,
+      lowHpBerserk: 0.5,
+      color: "#eb2646",
+      vfxKey: "vfx/huyet-nguyet",
+      foodItemId: "thit_thu",
+      foodName: "Th\u1ECBt th\xFA",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: M\xE1u c\xE0ng th\u1EA5p ch\xE9m c\xE0ng \u0111i\xEAn cu\u1ED3ng, h\xFAt 34% sinh l\u1EF1c.",
+      description: "Tam Chuy\u1EC3n: Huy\u1EBFt kh\xED cu\u1ED3ng b\u1EA1o tr\u1EA3m k\xEDch h\xECnh qu\u1EA1t & h\u1ED3i m\xE1u m\u1EA1nh."
+    },
+    thuc_tinh: {
+      id: "thuc_tinh",
+      name: "Th\u1EF1c Tinh C\u1ED5",
+      shortLabel: "Th\u1EF1c Tinh",
+      rank: 3,
+      path: "thuc_dao",
+      role: "support",
+      aimType: "aoe",
+      mpCost: 10,
+      cooldown: 6,
+      mpRestore: 155,
+      healAmount: 70,
+      moveSpeedBonus: 0.16,
+      range: 48,
+      radius: 30,
+      color: "#ffcf5c",
+      vfxKey: "vfx/hit-spark",
+      foodItemId: "ruou_trang",
+      foodName: "R\u01B0\u1EE3u tr\u1EAFng",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Tinh l\u1ECDc Ch\xE2n Nguy\xEAn c\u1EF1c ph\u1EA9m (+16% t\u1ED1c ch\u1EA1y & h\u1ED3i 155 MP).",
+      description: "Tam Chuy\u1EC3n: Tinh t\xFAy Th\u1EF1c \u0110\u1EA1o b\u1ED5 sung t\u1EE9c th\u1EDDi 155 Ch\xE2n nguy\xEAn & 70 HP."
+    },
+    bang_co: {
+      id: "bang_co",
+      name: "B\u0103ng C\u01A1 Ng\u1ECDc C\u1ED1t C\u1ED5",
+      shortLabel: "B\u0103ng C\u01A1",
+      rank: 3,
+      path: "bang_tuyet_dao",
+      role: "defense",
+      aimType: "aoe",
+      mpCost: 24,
+      cooldown: 5.8,
+      hpBonusPct: 0.36,
+      armorBonus: 0.34,
+      shieldAmount: 225,
+      thornsPct: 0.32,
+      guardStance: true,
+      color: "#9eeeff",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "bang_tuyen_tinh",
+      foodName: "B\u0103ng Tuy\u1EC1n Tinh",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Da th\u1ECBt h\xF3a b\u0103ng ng\u1ECDc (+36% HP, +34% Gi\xE1p, Khi\xEAn 225 HP).",
+      description: "Tam Chuy\u1EC3n: Tuy\u1EC7t k\u1EF9 ph\xF2ng ng\u1EF1 c\u1EE7a B\u0103ng Tuy\u1EBFt \u0110\u1EA1o, ph\u1EA3n s\u01B0\u01A1ng k\u1EBB t\u1EA5n c\xF4ng."
+    },
+    truy_phong: {
+      id: "truy_phong",
+      name: "Truy Phong C\u1ED5",
+      shortLabel: "Truy Phong",
+      rank: 3,
+      path: "phong_dao",
+      role: "move",
+      aimType: "dash",
+      mpCost: 20,
+      cooldown: 1.7,
+      damage: 98,
+      range: 122,
+      moveSpeedBonus: 0.32,
+      dodgeBonus: 0.22,
+      color: "#72ffd8",
+      vfxKey: "vfx/anh-bo",
+      foodItemId: null,
+      foodName: "H\xFAt cu\u1ED3ng phong (kh\xF4ng c\u1EA7n th\u1EE9c \u0103n)",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +32% T\u1ED1c ch\u1EA1y, +22% N\xE9 tr\xE1nh & l\u01B0\u1EDBt x\xE9 gi\xF3 si\xEAu xa.",
+      description: "Tam Chuy\u1EC3n: Truy phong tr\u1EE5c \u0111i\u1EC7n, l\u01B0\u1EDBt qua chi\u1EBFn tr\u01B0\u1EDDng kh\xF4ng d\u1EA5u v\u1EBFt."
+    },
+    phe_hon_thiem: {
+      id: "phe_hon_thiem",
+      name: "Ph\u1EC7 H\u1ED3n Thi\u1EC1m C\u1ED5",
+      shortLabel: "Ph\u1EC7 H\u1ED3n",
+      rank: 3,
+      path: "doc_dao",
+      role: "attack",
+      aimType: "aoe",
+      mpCost: 28,
+      cooldown: 3.2,
+      damage: 110,
+      range: 135,
+      radius: 48,
+      poisonDps: 22,
+      stunDuration: 0.55,
+      color: "#9d5cff",
+      vfxKey: "vfx/chuong-khi-boc",
+      foodItemId: "vay_thuy_mang",
+      foodName: "V\u1EA3y Th\u1EE7y M\xE3ng",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ti\u1EBFng c\xF3c \u0111\u1ED9c ch\u1EA5n nhi\u1EBFp h\u1ED3n ph\xE1ch l\xE0m cho\xE1ng 0.55s & tr\xFAng \u0111\u1ED9c n\u1EB7ng.",
+      description: "Tam Chuy\u1EC3n: Thi\u1EC1m th\u1EEB u minh phun \u0111\u1ED9c v\u1EE5 \u0103n m\xF2n th\u1EA7n th\u1EE9c \u0111\u1ECBch."
+    },
     // === TỨ CHUYỂN ===
     huyet_lo: {
       id: "huyet_lo",
@@ -4270,6 +4530,133 @@
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ph\xF3ng 3 lu\u1ED3ng ki\u1EBFm \u1EA3nh \u0111\u1ED3ng lo\u1EA1t xuy\xEAn 4 m\u1EE5c ti\xEAu.",
       description: "T\u1EE9 Chuy\u1EC3n: H\xE0ng lo\u1EA1t phi ki\u1EBFm h\u1ED9i t\u1EE5 ch\xE9m n\xE1t \u0111\u1ED9i h\xECnh \u0111\u1ECBch."
     },
+    thien_nguyen_bao_lien_4: {
+      id: "thien_nguyen_bao_lien_4",
+      name: "Thi\xEAn Nguy\xEAn B\u1EA3o Ho\xE0ng Li\xEAn",
+      shortLabel: "B\u1EA3o Ho\xE0ng Li\xEAn",
+      rank: 4,
+      path: "moc_dao",
+      role: "support",
+      aimType: "aoe",
+      mpCost: 0,
+      cooldown: 7.5,
+      mpRestore: 235,
+      healAmount: 195,
+      combatRegenPct: 0.032,
+      color: "#ffe47a",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "suong_truc_linh_lo",
+      foodName: "S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: H\u1ED3i +3.2% HP/s & \u0111\u1EA1i l\u01B0\u1EE3ng Ch\xE2n nguy\xEAn kh\xF4ng t\u1ED1n ti\xEAu hao.",
+      description: "T\u1EE9 Chuy\u1EC3n Ch\xED B\u1EA3o: Li\xEAn hoa ho\xE0ng kim n\u1EDF r\u1ED9 h\u1ED3i 235 MP & 195 HP t\u1EE9c th\u1EDDi."
+    },
+    long_tuong_luc: {
+      id: "long_tuong_luc",
+      name: "Long T\u01B0\u1EE3ng L\u1EF1c C\u1ED5",
+      shortLabel: "Long T\u01B0\u1EE3ng",
+      rank: 4,
+      path: "luc_dao",
+      role: "attack",
+      aimType: "arc",
+      mpCost: 34,
+      cooldown: 2.7,
+      damage: 178,
+      range: 132,
+      arcSpread: 108 * Math.PI / 180,
+      stunDuration: 1,
+      summonsPhantom: true,
+      color: "#ffb347",
+      vfxKey: "vfx/hoa-than",
+      foodItemId: "xich_nham_hoa_tuy",
+      foodName: "X\xEDch Nham H\u1ECFa T\u1EE7y",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Huy\u1EC5n h\xF3a Long T\u01B0\u1EE3ng chi l\u1EF1c l\xE0m cho\xE1ng 1.0s & g\u1ECDi H\u01B0 \u1EA2nh h\u1EE3p k\xEDch.",
+      description: "T\u1EE9 Chuy\u1EC3n: S\u1EE9c m\u1EA1nh Long T\u01B0\u1EE3ng gi\xE1ng xu\u1ED1ng nghi\u1EC1n n\xE1t \u0111\u1ECBch nh\xE2n."
+    },
+    huyet_ha_xa: {
+      id: "huyet_ha_xa",
+      name: "Huy\u1EBFt H\xE0 Xa C\u1ED5",
+      shortLabel: "Huy\u1EBFt H\xE0",
+      rank: 4,
+      path: "huyet_dao",
+      role: "move",
+      aimType: "dash",
+      mpCost: 30,
+      cooldown: 2.4,
+      damage: 158,
+      range: 128,
+      lifesteal: 0.38,
+      color: "#ff2e4c",
+      vfxKey: "vfx/huyet-nguyet",
+      foodItemId: "xich_nham_hoa_tuy",
+      foodName: "X\xEDch Nham H\u1ECFa T\u1EE7y",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: H\xF3a th\xE0nh s\xF4ng m\xE1u lao xuy\xEAn b\u1EA7y \u0111\u1ECBch v\xE0 h\xFAt 38% HP.",
+      description: "T\u1EE9 Chuy\u1EC3n: Huy\u1EBFt \u0110\u1EA1o \u0111\u1ED9n thu\u1EADt c\xE0n l\u01B0\u1EDBt qua k\u1EBB th\xF9 v\u1EEBa g\xE2y ST v\u1EEBa h\u1ED3i m\xE1u."
+    },
+    am_anh_don: {
+      id: "am_anh_don",
+      name: "\xC1m \u1EA2nh V\xF4 H\xECnh C\u1ED5",
+      shortLabel: "\xC1m \u1EA2nh",
+      rank: 4,
+      path: "anh_dao",
+      role: "move",
+      aimType: "dash",
+      mpCost: 28,
+      cooldown: 2.2,
+      damage: 148,
+      range: 124,
+      decoyDuration: 4,
+      dodgeBonus: 0.26,
+      color: "#b87aff",
+      vfxKey: "vfx/anh-bo",
+      foodItemId: null,
+      foodName: "H\xFAt u minh kh\xED (kh\xF4ng c\u1EA7n th\u1EE9c \u0103n)",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: +26% N\xE9 tr\xE1nh & t\u1EA1o \u1EA3nh ma d\u1EE5 to\xE0n b\u1ED9 s\xE1t th\u01B0\u01A1ng 4s.",
+      description: "T\u1EE9 Chuy\u1EC3n: \u1EA8n m\xECnh v\xE0o h\u01B0 kh\xF4ng, \u0111\u1EC3 l\u1EA1i t\xE0n \u1EA3nh ph\xE1t n\u1ED5."
+    },
+    kim_chung_trao: {
+      id: "kim_chung_trao",
+      name: "Kim Chung Tr\xE1o C\u1ED5",
+      shortLabel: "Kim Chung",
+      rank: 4,
+      path: "tho_dao",
+      role: "defense",
+      aimType: "aoe",
+      mpCost: 32,
+      cooldown: 6.2,
+      hpBonusPct: 0.48,
+      armorBonus: 0.44,
+      thornsPct: 0.45,
+      shieldAmount: 380,
+      guardStance: true,
+      color: "#ffd257",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "hoang_tho_tinh_sa",
+      foodName: "Ho\xE0ng Th\u1ED5 Tinh Sa",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh (H\u01B0\u1EDBng Th\u1EE7): Chu\xF4ng v\xE0ng b\u1EA5t ho\u1EA1i +48% HP, +44% Gi\xE1p, Khi\xEAn 380 HP!",
+      description: "T\u1EE9 Chuy\u1EC3n: K\u1EBFt t\u1EE5 \u0111\u1EA1i h\u1ED3ng chung kim s\u1EAFc h\u1ED9 th\u1EC3 & ph\u1EA3n 45% s\xE1t th\u01B0\u01A1ng."
+    },
+    liet_diem_phan_thanh: {
+      id: "liet_diem_phan_thanh",
+      name: "Li\u1EC7t Di\u1EC5m Ph\u1EA7n Th\xE0nh C\u1ED5",
+      shortLabel: "Li\u1EC7t Di\u1EC5m",
+      rank: 4,
+      path: "viem_dao",
+      role: "attack",
+      aimType: "aoe",
+      mpCost: 35,
+      cooldown: 3.1,
+      damage: 172,
+      range: 155,
+      radius: 54,
+      burnDps: 26,
+      ignitesPoison: true,
+      color: "#ff6229",
+      vfxKey: "vfx/hoa-than",
+      foodItemId: "xich_nham_hoa_tuy",
+      foodName: "X\xEDch Nham H\u1ECFa T\u1EE7y",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Bi\u1EC3n l\u1EEDa thi\xEAu r\u1EE5i di\u1EC7n r\u1ED9ng & k\xEDch n\u1ED5 to\xE0n b\u1ED9 \u0111\u1ED9c t\u1ED1.",
+      description: "T\u1EE9 Chuy\u1EC3n: Tr\xFAt bi\u1EC3n l\u1EEDa ph\u1EA7n th\xE0nh g\xE2y s\xE1t th\u01B0\u01A1ng n\u1ED5 l\u1EDBn & b\u1ECFng 26 DPS."
+    },
     // === NGŨ CHUYỂN ===
     de_nhi_khong_khieu: {
       id: "de_nhi_khong_khieu",
@@ -4353,8 +4740,151 @@
       foodName: "X\xEDch Nham H\u1ECFa T\u1EE7y",
       vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Long t\u1EE9c ch\xE1y r\u1EF1c xuy\xEAn m\u1ECDi h\u1ED9 gi\xE1p.",
       description: "Ng\u0169 Chuy\u1EC3n: Ng\u1ECDn l\u1EEDa Th\xE1i C\u1ED5 Long T\u1EE9c qu\xE9t s\u1EA1ch chi\u1EBFn tr\u01B0\u1EDDng."
+    },
+    xuan_thu_thien_an: {
+      id: "xuan_thu_thien_an",
+      name: "Xu\xE2n Thu Thi\u1EC1n \xB7 Ph\xE0m \u1EA4n",
+      shortLabel: "Xu\xE2n Thu Thi\u1EC1n",
+      rank: 5,
+      path: "nhan_dao",
+      role: "support",
+      aimType: "aoe",
+      mpCost: 35,
+      cooldown: 14,
+      healAmount: 420,
+      mpRestore: 260,
+      resetsBasicSlotsCd: true,
+      range: 60,
+      radius: 40,
+      color: "#ffd978",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "bang_tuyen_tinh",
+      foodName: "N\u01B0\u1EDBc s\xF4ng Quang \xC2m / B\u0103ng Tuy\u1EC1n Tinh",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh Ch\xED T\xF4n: Ngh\u1ECBch l\u01B0u Quang \xC2m h\u1ED3i 420 HP, 260 MP & x\xF3a s\u1EA1ch h\u1ED3i chi\xEAu \xD4 1\u20133!",
+      description: "Ng\u0169 Chuy\u1EC3n Truy\u1EC1n Thuy\u1EBFt: Kh\u1EAFc \u1EA5n th\u1EDDi gian xoay ng\u01B0\u1EE3c tr\u1EA1ng th\xE1i & h\u1ED3i chi\xEAu t\u1EE9c th\xEC."
+    },
+    huyet_tich_tu: {
+      id: "huyet_tich_tu",
+      name: "Huy\u1EBFt T\xEDch T\u1EED C\u1ED5",
+      shortLabel: "Huy\u1EBFt T\xEDch T\u1EED",
+      rank: 5,
+      path: "huyet_dao",
+      role: "attack",
+      aimType: "line",
+      mpCost: 44,
+      cooldown: 2.8,
+      damage: 112,
+      projectileCount: 5,
+      homing: true,
+      lifesteal: 0.45,
+      range: 195,
+      radius: 10,
+      color: "#ff1e42",
+      vfxKey: "vfx/huyet-nha",
+      foodItemId: "xich_nham_hoa_tuy",
+      foodName: "X\xEDch Nham H\u1ECFa T\u1EE7y",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ph\xF3ng 5 gi\u1ECDt Huy\u1EBFt T\xEDch T\u1EED t\u1EF1 truy s\xE1t & h\xFAt 45% sinh l\u1EF1c.",
+      description: "Ng\u0169 Chuy\u1EC3n Ma \u0110\u1EA1o: Huy\u1EBFt T\xEDch T\u1EED chui th\u1EB3ng v\xE0o m\u1EE5c ti\xEAu \u0111o\u1EA1t m\u1EC7nh h\u1ED3i huy\u1EBFt."
+    },
+    bat_son: {
+      id: "bat_son",
+      name: "B\u1EA1t S\u01A1n C\u1ED5",
+      shortLabel: "B\u1EA1t S\u01A1n",
+      rank: 5,
+      path: "luc_dao",
+      role: "attack",
+      aimType: "aoe",
+      mpCost: 46,
+      cooldown: 3.4,
+      damage: 268,
+      range: 140,
+      radius: 60,
+      stunDuration: 1.3,
+      summonsPhantom: true,
+      color: "#ffaa33",
+      vfxKey: "vfx/hoa-than",
+      foodItemId: "hoang_tho_tinh_sa",
+      foodName: "Ho\xE0ng Th\u1ED5 Tinh Sa",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Nh\u1EA5c n\xFAi \u0111\xE8 \u0111\u1ECBch g\xE2y cho\xE1ng 1.3s & g\u1ECDi Th\xFA H\u1ED3n h\u1EE3p k\xEDch!",
+      description: "Ng\u0169 Chuy\u1EC3n L\u1EF1c \u0110\u1EA1o: Uy l\u1EF1c d\u1EDDi non l\u1EA5p b\u1EC3 nghi\u1EC1n n\xE1t to\xE0n v\xF9ng."
+    },
+    bang_phong_thien_ly: {
+      id: "bang_phong_thien_ly",
+      name: "B\u0103ng Phong Thi\xEAn L\xFD C\u1ED5",
+      shortLabel: "B\u0103ng Phong",
+      rank: 5,
+      path: "bang_tuyet_dao",
+      role: "attack",
+      aimType: "aoe",
+      mpCost: 45,
+      cooldown: 3.5,
+      damage: 255,
+      range: 165,
+      radius: 64,
+      slowFactor: 0.65,
+      stunDuration: 1.4,
+      color: "#b8f7ff",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "bang_tuyen_tinh",
+      foodName: "B\u0103ng Tuy\u1EC1n Tinh",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: \u0110\xF3ng b\u0103ng 1.4s & gi\u1EA3m 65% t\u1ED1c \u0111\u1ED9 b\u1EA7y qu\xE1i tr\xEAn ph\u1EA1m vi c\u1EF1c l\u1EDBn.",
+      description: "Ng\u0169 Chuy\u1EC3n \u0110\u1EC9nh Phong: V\u1EA1n d\u1EB7m b\u0103ng phong \u0111\xF3ng c\u1EE9ng to\xE0n chi\u1EBFn tr\u01B0\u1EDDng."
+    },
+    van_doc_vuong: {
+      id: "van_doc_vuong",
+      name: "V\u1EA1n \u0110\u1ED9c V\u01B0\u01A1ng C\u1ED5",
+      shortLabel: "V\u1EA1n \u0110\u1ED9c",
+      rank: 5,
+      path: "doc_dao",
+      role: "attack",
+      aimType: "aoe",
+      mpCost: 44,
+      cooldown: 3.2,
+      damage: 235,
+      range: 155,
+      radius: 60,
+      poisonDps: 38,
+      slowFactor: 0.5,
+      color: "#95ff42",
+      vfxKey: "vfx/chuong-khi-boc",
+      foodItemId: "vay_thuy_mang",
+      foodName: "V\u1EA3y Th\u1EE7y M\xE3ng",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: R\xFAt 38 \u0110\u1ED9c DPS & l\xE0m ch\u1EADm 50% khi\u1EBFn qu\xE1i tan r\xE3 d\u1EA7n.",
+      description: "Ng\u0169 Chuy\u1EC3n \u0110\u1ED9c \u0110\u1EA1o: \u0110\u1ED9c v\u01B0\u01A1ng gi\xE1ng th\u1EBF ph\u1EE7 k\u1ECBch \u0111\u1ED9c kh\u1EAFp v\xF9ng."
+    },
+    thien_kiem_tuyet_anh: {
+      id: "thien_kiem_tuyet_anh",
+      name: "Thi\xEAn Ki\u1EBFm Tuy\u1EC7t \u1EA2nh C\u1ED5",
+      shortLabel: "Thi\xEAn Ki\u1EBFm",
+      rank: 5,
+      path: "kiem_dao",
+      role: "attack",
+      aimType: "line",
+      mpCost: 42,
+      cooldown: 2.3,
+      damage: 128,
+      projectileCount: 5,
+      pierce: 6,
+      range: 225,
+      radius: 14,
+      color: "#e6f9ff",
+      vfxKey: "vfx/nguyet-quang",
+      foodItemId: "bang_tuyen_tinh",
+      foodName: "B\u0103ng Tuy\u1EC1n Tinh",
+      vitalResonanceDesc: "B\u1EA3n M\u1EC7nh: Ph\xF3ng 5 \u0111\u1EA1o Ki\u1EBFm Kh\xED Ch\xED T\xF4n xuy\xEAn 6 m\u1EE5c ti\xEAu t\u1EA7m si\xEAu xa.",
+      description: "Ng\u0169 Chuy\u1EC3n Ki\u1EBFm \u0110\u1EA1o: Ng\u0169 ki\u1EBFm t\u1EC1 ph\xE1t x\xE9 to\u1EA1c kh\xF4ng gian."
     }
   };
+  var WILD_GU_RARITY_BY_RANK = {
+    1: { spawnChance: 0.36, respawnSec: 95, baitCost: 1, stoneCost: 0, minStageLevel: 1, guardRadius: 0, rarityLabel: "Ph\u1ED5 bi\u1EBFn (36%)" },
+    2: { spawnChance: 0.16, respawnSec: 170, baitCost: 2, stoneCost: 20, minStageLevel: 3, guardRadius: 0, rarityLabel: "\xCDt g\u1EB7p (16%)" },
+    3: { spawnChance: 0.07, respawnSec: 280, baitCost: 3, stoneCost: 55, minStageLevel: 7, guardRadius: 0, rarityLabel: "Hi\u1EBFm (7%)" },
+    4: { spawnChance: 0.025, respawnSec: 450, baitCost: 5, stoneCost: 140, minStageLevel: 11, guardRadius: 115, rarityLabel: "C\u1EF1c hi\u1EBFm (2.5%)" },
+    5: { spawnChance: 8e-3, respawnSec: 660, baitCost: 8, stoneCost: 320, minStageLevel: 16, guardRadius: 145, rarityLabel: "Tuy\u1EC7t th\u1EBF k\u1EF3 ng\u1ED9 (0.8%)" }
+  };
+  function getGuWildSpawnConfig(rank = 1) {
+    return WILD_GU_RARITY_BY_RANK[rank] ?? WILD_GU_RARITY_BY_RANK[1];
+  }
   var KILLER_MOVES = [
     {
       id: "km_nguyet_hoa",
@@ -4492,7 +5022,29 @@
     { id: "r_loi_3", baseId: "dien_nhan", subMatId: "bom_hao_dien_lang", subMatCount: 3, stones: 130, resultId: "loi_khieu", rate: 0.9, title: "\u0110i\u1EC7n Nh\xE3n C\u1ED5 + 3 B\u1EDDm H\xE0o \u0110i\u1EC7n Lang = L\xF4i Khi\u1EBFu C\u1ED5 (Tam Chuy\u1EC3n)" },
     { id: "r_loi_5", baseId: "loi_khieu", subMatId: "bang_tuyen_tinh", subMatCount: 6, stones: 680, resultId: "cuu_tieu_loi_nguc", rate: 0.75, title: "L\xF4i Khi\u1EBFu C\u1ED5 + 6 B\u0103ng Tuy\u1EC1n Tinh = C\u1EEDu Ti\xEAu L\xF4i Ng\u1EE5c C\u1ED5 (Ng\u0169 Chuy\u1EC3n)" },
     { id: "r_kiem_3", baseId: "kiem_anh", subMatId: "suong_truc_linh_lo", subMatCount: 3, stones: 130, resultId: "suong_truc_kiem", rate: 0.9, title: "Ki\u1EBFm \u1EA2nh C\u1ED5 + 3 S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9 = S\u01B0\u01A1ng Tr\xFAc Ki\u1EBFm C\u1ED5 (Tam Chuy\u1EC3n)" },
-    { id: "r_kiem_4", baseId: "suong_truc_kiem", subMatId: "bang_tuyen_tinh", subMatCount: 4, stones: 340, resultId: "van_kiem_quy_tong", rate: 0.82, title: "S\u01B0\u01A1ng Tr\xFAc Ki\u1EBFm + 4 B\u0103ng Tuy\u1EC1n Tinh = V\u1EA1n Ki\u1EBFm Quy T\xF4ng C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" }
+    { id: "r_kiem_4", baseId: "suong_truc_kiem", subMatId: "bang_tuyen_tinh", subMatCount: 5, stones: 420, resultId: "van_kiem_quy_tong", rate: 0.54, title: "S\u01B0\u01A1ng Tr\xFAc Ki\u1EBFm + 5 B\u0103ng Tuy\u1EC1n Tinh = V\u1EA1n Ki\u1EBFm Quy T\xF4ng C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_kiem_5", baseId: "van_kiem_quy_tong", subMatId: "bang_tuyen_tinh", subMatCount: 9, stones: 1120, resultId: "thien_kiem_tuyet_anh", rate: 0.28, title: "V\u1EA1n Ki\u1EBFm Quy T\xF4ng + 9 B\u0103ng Tuy\u1EC1n Tinh = Thi\xEAn Ki\u1EBFm Tuy\u1EC7t \u1EA2nh C\u1ED5 (Ng\u0169 Chuy\u1EC3n)" },
+    { id: "r_cot_2", baseId: "bach_cot_don", subMatId: "ngoc_vun", subMatCount: 4, stones: 65, resultId: "xoan_oc_cot_thuong", rate: 0.92, title: "B\u1EA1ch C\u1ED1t \u0110\u1ED9n + 4 Ng\u1ECDc v\u1EE5n = Xo\u1EAFn \u1ED0c C\u1ED1t Th\u01B0\u01A1ng C\u1ED5 (Nh\u1ECB Chuy\u1EC3n)" },
+    { id: "r_cot_3", baseId: "xoan_oc_cot_thuong", subMatId: "hoang_tho_tinh_sa", subMatCount: 4, stones: 160, resultId: "cot_thuong", rate: 0.78, title: "Xo\u1EAFn \u1ED0c C\u1ED1t Th\u01B0\u01A1ng + 4 Ho\xE0ng Th\u1ED5 Tinh Sa = C\u1ED1t Th\u01B0\u01A1ng C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_thiet_cot_2", baseId: "thu_bi", subMatId: "mao_thach_so", subMatCount: 3, stones: 60, resultId: "thiet_cot", rate: 0.92, title: "Th\xFA B\xEC C\u1ED5 + 3 Mao Th\u1EA1ch S\u01A1 = Thi\u1EBFt C\u1ED1t C\u1ED5 (Nh\u1ECB Chuy\u1EC3n)" },
+    { id: "r_kim_chung_4", baseId: "thien_bong", subMatId: "hoang_tho_tinh_sa", subMatCount: 6, stones: 440, resultId: "kim_chung_trao", rate: 0.52, title: "Thi\xEAn B\u1ED3ng C\u1ED5 + 6 Ho\xE0ng Th\u1ED5 Tinh Sa = Kim Chung Tr\xE1o C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_ngan_nguyet_3", baseId: "nguyet_nghe", subMatId: "suong_truc_linh_lo", subMatCount: 4, stones: 170, resultId: "ngan_trung_nguyet", rate: 0.76, title: "Nguy\u1EC7t Ngh\xEA + 4 S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9 = Ng\xE2n Trung Nguy\u1EC7t C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_bao_lien_4", baseId: "thien_thanh_lien", subMatId: "suong_truc_linh_lo", subMatCount: 6, stones: 460, resultId: "thien_nguyen_bao_lien_4", rate: 0.5, title: "Thi\xEAn Thanh Li\xEAn + 6 S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9 = Thi\xEAn Nguy\xEAn B\u1EA3o Ho\xE0ng Li\xEAn (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_huyet_cuong_3", baseId: "huyet_nguyet", subMatId: "xich_nham_hoa_tuy", subMatCount: 3, stones: 185, resultId: "huyet_cuong", rate: 0.74, title: "Huy\u1EBFt Nguy\u1EC7t + 3 X\xEDch Nham H\u1ECFa T\u1EE7y = Huy\u1EBFt Cu\u1ED3ng C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_huyet_ha_4", baseId: "huyet_cuong", subMatId: "xich_nham_hoa_tuy", subMatCount: 5, stones: 440, resultId: "huyet_ha_xa", rate: 0.52, title: "Huy\u1EBFt Cu\u1ED3ng + 5 X\xEDch Nham H\u1ECFa T\u1EE7y = Huy\u1EBFt H\xE0 Xa C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_huyet_tich_tu_5", baseId: "huyet_lo", subMatId: "xich_nham_hoa_tuy", subMatCount: 9, stones: 1180, resultId: "huyet_tich_tu", rate: 0.28, title: "Huy\u1EBFt L\xF4 C\u1ED5 + 9 X\xEDch Nham H\u1ECFa T\u1EE7y = Huy\u1EBFt T\xEDch T\u1EED C\u1ED5 (Ng\u0169 Chuy\u1EC3n)" },
+    { id: "r_kho_luc_2", baseId: "hac_thi", subMatId: "thit_thu", subMatCount: 6, stones: 65, resultId: "kho_luc", rate: 0.92, title: "H\u1EAFc Th\u1EC9 C\u1ED5 + 6 Th\u1ECBt th\xFA = Kh\u1ED5 L\u1EF1c C\u1ED5 (Nh\u1ECB Chuy\u1EC3n)" },
+    { id: "r_long_tuong_4", baseId: "toan_luc_ung_pho", subMatId: "xich_nham_hoa_tuy", subMatCount: 5, stones: 450, resultId: "long_tuong_luc", rate: 0.52, title: "To\xE0n L\u1EF1c \u1EE8ng Ph\xF3 + 5 H\u1ECFa T\u1EE7y = Long T\u01B0\u1EE3ng L\u1EF1c C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_bat_son_5", baseId: "long_tuong_luc", subMatId: "hoang_tho_tinh_sa", subMatCount: 9, stones: 1150, resultId: "bat_son", rate: 0.28, title: "Long T\u01B0\u1EE3ng L\u1EF1c + 9 Ho\xE0ng Th\u1ED5 Tinh Sa = B\u1EA1t S\u01A1n C\u1ED5 (Ng\u0169 Chuy\u1EC3n)" },
+    { id: "r_thuc_tinh_3", baseId: "tu_vi_tuu_trung", subMatId: "ruou_trang", subMatCount: 6, stones: 165, resultId: "thuc_tinh", rate: 0.78, title: "T\u1EE9 V\u1ECB T\u1EEDu Tr\xF9ng + 6 R\u01B0\u1EE3u tr\u1EAFng = Th\u1EF1c Tinh C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_truy_phong_3", baseId: "thinh_phong", subMatId: "bom_hao_dien_lang", subMatCount: 4, stones: 160, resultId: "truy_phong", rate: 0.78, title: "Th\xEDnh Phong C\u1ED5 + 4 B\u1EDDm \u0110i\u1EC7n Lang = Truy Phong C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_am_anh_4", baseId: "an_lan", subMatId: "suong_truc_linh_lo", subMatCount: 5, stones: 420, resultId: "am_anh_don", rate: 0.52, title: "\u1EA8n L\xE2n C\u1ED5 + 5 S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9 = \xC1m \u1EA2nh V\xF4 H\xECnh C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_phe_hon_3", baseId: "chuong_khi_boc", subMatId: "vay_thuy_mang", subMatCount: 4, stones: 175, resultId: "phe_hon_thiem", rate: 0.75, title: "Ch\u01B0\u1EDBng Kh\xED B\u1ED9c + 4 V\u1EA3y Th\u1EE7y M\xE3ng = Ph\u1EC7 H\u1ED3n Thi\u1EC1m C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_van_doc_5", baseId: "phe_hon_thiem", subMatId: "vay_thuy_mang", subMatCount: 9, stones: 1080, resultId: "van_doc_vuong", rate: 0.3, title: "Ph\u1EC7 H\u1ED3n Thi\u1EC1m + 9 V\u1EA3y Th\u1EE7y M\xE3ng = V\u1EA1n \u0110\u1ED9c V\u01B0\u01A1ng C\u1ED5 (Ng\u0169 Chuy\u1EC3n)" },
+    { id: "r_bang_co_3", baseId: "han_bang_tien", subMatId: "bang_tuyen_tinh", subMatCount: 3, stones: 175, resultId: "bang_co", rate: 0.76, title: "H\xE0n B\u0103ng Ti\u1EC5n + 3 B\u0103ng Tuy\u1EC1n Tinh = B\u0103ng C\u01A1 Ng\u1ECDc C\u1ED1t C\u1ED5 (Tam Chuy\u1EC3n)" },
+    { id: "r_bang_phong_5", baseId: "bang_phach_tuyet_hoa", subMatId: "bang_tuyen_tinh", subMatCount: 9, stones: 1180, resultId: "bang_phong_thien_ly", rate: 0.28, title: "B\u0103ng Ph\xE1ch Tuy\u1EBFt Hoa + 9 B\u0103ng Tuy\u1EC1n Tinh = B\u0103ng Phong Thi\xEAn L\xFD C\u1ED5 (Ng\u0169 Chuy\u1EC3n)" },
+    { id: "r_liet_diem_4", baseId: "xich_viem_long_tuc", subMatId: "xich_nham_hoa_tuy", subMatCount: 5, stones: 430, resultId: "liet_diem_phan_thanh", rate: 0.54, title: "X\xEDch Vi\xEAm Long T\u1EE9c + 5 H\u1ECFa T\u1EE7y = Li\u1EC7t Di\u1EC5m Ph\u1EA7n Th\xE0nh C\u1ED5 (T\u1EE9 Chuy\u1EC3n)" },
+    { id: "r_xuan_thu_5", baseId: "de_nhi_khong_khieu", subMatId: "bang_tuyen_tinh", subMatCount: 10, stones: 1280, resultId: "xuan_thu_thien_an", rate: 0.25, title: "\u0110\u1EC7 Nh\u1ECB Kh\xF4ng Khi\u1EBFu + 10 B\u0103ng Tuy\u1EC1n Tinh = Xu\xE2n Thu Thi\u1EC1n \xB7 Ph\xE0m \u1EA4n (Ng\u0169 Chuy\u1EC3n)" }
   ];
   var STARTER_VITAL_BUILDS = [
     {
@@ -5133,6 +5685,34 @@
       goal: { type: "kill_type", enemyType: "hao_dien_lang", count: 5 },
       rewards: { stones: 240, exp: 260, guId: "huyet_nguyet" }
     },
+    {
+      id: "gq_r2_kho_luc",
+      rank: 2,
+      pathLabel: "L\u1EF1c \u0110\u1EA1o \xB7 Cu\u1ED3ng B\u1EA1o",
+      guId: "kho_luc",
+      title: "T\u1EA7m C\u1ED5: Kh\u1ED5 L\u1EF1c C\u1ED5 (Nh\u1ECB Chuy\u1EC3n)",
+      desc: "S\u0103n 6 Thi\u1EBFt Gi\xE1p B\u1ECD C\u1EA1p t\u1EA1i B\u1EAFc L\u0129nh luy\u1EC7n h\xF3a Kh\u1ED5 L\u1EF1c C\u1ED5 (m\xE1u c\xE0ng th\u1EA5p \u0111\xE1nh c\xE0ng m\u1EA1nh).",
+      mapId: "bac_linh",
+      x: 645,
+      y: 345,
+      stoneFee: 40,
+      goal: { type: "kill_type", enemyType: "thiet_giap_bo_cap", count: 6 },
+      rewards: { stones: 260, exp: 280, guId: "kho_luc" }
+    },
+    {
+      id: "gq_r2_thiet_cot",
+      rank: 2,
+      pathLabel: "C\u1ED1t \u0110\u1EA1o \xB7 Thi\u1EBFt Gi\xE1p",
+      guId: "thiet_cot",
+      title: "T\u1EA7m C\u1ED5: Thi\u1EBFt C\u1ED1t C\u1ED5 (Nh\u1ECB Chuy\u1EC3n)",
+      desc: "S\u0103n 6 Th\u1EA1ch H\u1EA7u trong Hang \u0110\u1ED9ng Th\u1EA1ch Nh\u0169 \u0111\u1EC3 r\xE8n Thi\u1EBFt C\u1ED1t C\u1ED5 h\u1ED9 th\xE2n.",
+      mapId: "hang_thach_nhu",
+      x: 760,
+      y: 540,
+      stoneFee: 40,
+      goal: { type: "kill_type", enemyType: "thach_hau", count: 6 },
+      rewards: { stones: 260, exp: 280, guId: "thiet_cot" }
+    },
     // === TAM CHUYỂN ===
     {
       id: "gq_r3_kim_nguyet",
@@ -5196,8 +5776,179 @@
       mapId: "hac_thuy_ho",
       x: 940,
       y: 450,
+      stoneFee: 80,
       goal: { type: "kill_type", enemyType: "coc_doc_hac_thuy", count: 6 },
       rewards: { stones: 420, exp: 480, guId: "toan_luc_ung_pho" }
+    },
+    {
+      id: "gq_r3_huyet_cuong",
+      rank: 3,
+      pathLabel: "Huy\u1EBFt \u0110\u1EA1o \xB7 Huy\u1EBFt Chi\u1EBFn",
+      guId: "huyet_cuong",
+      title: "T\u1EA7m C\u1ED5: Huy\u1EBFt Cu\u1ED3ng C\u1ED5 (Tam Chuy\u1EC3n)",
+      desc: "H\u1EA1 Thi\u1EBFt Gi\xE1p H\u1EA1t V\u01B0\u01A1ng t\u1EA1i B\u1EAFc L\u0129nh \u0111\u1EC3 ng\u01B0ng t\u1EE5 Huy\u1EBFt Cu\u1ED3ng C\u1ED5.",
+      mapId: "bac_linh",
+      x: 640,
+      y: 210,
+      stoneFee: 90,
+      goal: { type: "kill_type", enemyType: "thiet_giap_hat_vuong", count: 1 },
+      rewards: { stones: 440, exp: 520, guId: "huyet_cuong" }
+    },
+    {
+      id: "gq_r3_bang_co",
+      rank: 3,
+      pathLabel: "B\u0103ng Tuy\u1EBFt \u0110\u1EA1o \xB7 H\u1ED9 Th\u1EC3",
+      guId: "bang_co",
+      title: "T\u1EA7m C\u1ED5: B\u0103ng C\u01A1 Ng\u1ECDc C\u1ED1t C\u1ED5 (Tam Chuy\u1EC3n)",
+      desc: "Ch\xE9m 6 Thanh Mao \u0110i\u1EC7n Lang t\u1EA1i R\u1EEBng Tr\xFAc thu th\u1EADp h\xE0n kh\xED luy\u1EC7n B\u0103ng C\u01A1 Ng\u1ECDc C\u1ED1t.",
+      mapId: "suong_truc_lam",
+      x: 640,
+      y: 450,
+      stoneFee: 90,
+      goal: { type: "kill_type", enemyType: "hao_dien_lang", count: 6 },
+      rewards: { stones: 440, exp: 520, guId: "bang_co" }
+    },
+    // === TỨ CHUYỂN (Yêu cầu Tứ Chuyển + Phí Nguyên Thạch cao) ===
+    {
+      id: "gq_r4_huyet_lo",
+      rank: 4,
+      pathLabel: "Huy\u1EBFt \u0110\u1EA1o \xB7 Ch\xED B\u1EA3o",
+      guId: "huyet_lo",
+      title: "T\u1EA7m C\u1ED5 Hi\u1EBFm: Huy\u1EBFt L\xF4 C\u1ED5 (T\u1EE9 Chuy\u1EC3n)",
+      desc: "H\u1EA1 2 \u0110\u1ECBa Th\u1EED V\u01B0\u01A1ng t\u1EA1i X\xEDch Nham C\u1ED1c \u0111\u1EC3 tinh luy\u1EC7n Huy\u1EBFt L\xF4 C\u1ED5 (T\u1EBF Huy\u1EBFt th\u0103ng T\u01B0 Ch\u1EA5t).",
+      mapId: "xich_nham_coc",
+      x: 860,
+      y: 240,
+      stoneFee: 220,
+      goal: { type: "kill_type", enemyType: "xich_viem_vuong", count: 2 },
+      rewards: { stones: 600, exp: 950, guId: "huyet_lo" }
+    },
+    {
+      id: "gq_r4_long_tuong",
+      rank: 4,
+      pathLabel: "L\u1EF1c \u0110\u1EA1o \xB7 Tr\u1EA5n \xC1p",
+      guId: "long_tuong_luc",
+      title: "T\u1EA7m C\u1ED5 Hi\u1EBFm: Long T\u01B0\u1EE3ng L\u1EF1c C\u1ED5 (T\u1EE9 Chuy\u1EC3n)",
+      desc: "Ti\xEAu di\u1EC7t 8 X\xEDch Vi\xEAm Th\xFA trong dung nham X\xEDch Nham C\u1ED1c \u0111\u1EC3 \u0111o\u1EA1t Long T\u01B0\u1EE3ng L\u1EF1c C\u1ED5.",
+      mapId: "xich_nham_coc",
+      x: 640,
+      y: 380,
+      stoneFee: 200,
+      goal: { type: "kill_type", enemyType: "xich_viem_thu", count: 8 },
+      rewards: { stones: 580, exp: 920, guId: "long_tuong_luc" }
+    },
+    {
+      id: "gq_r4_kim_chung",
+      rank: 4,
+      pathLabel: "Th\u1ED5 \u0110\u1EA1o \xB7 B\u1EA5t Ho\u1EA1i",
+      guId: "kim_chung_trao",
+      title: "T\u1EA7m C\u1ED5 Hi\u1EBFm: Kim Chung Tr\xE1o C\u1ED5 (T\u1EE9 Chuy\u1EC3n)",
+      desc: "H\u1EA1 2 Th\u1EA1ch H\u1EA7u V\u01B0\u01A1ng \u0111\u1EC3 luy\u1EC7n Kim Chung Tr\xE1o C\u1ED5 t\u1EA1o khi\xEAn v\xE0ng 380 HP.",
+      mapId: "hang_thach_nhu",
+      x: 940,
+      y: 265,
+      stoneFee: 200,
+      goal: { type: "kill_type", enemyType: "thach_hau_vuong", count: 2 },
+      rewards: { stones: 580, exp: 920, guId: "kim_chung_trao" }
+    },
+    {
+      id: "gq_r4_bang_phach",
+      rank: 4,
+      pathLabel: "B\u0103ng \u0110\u1EA1o \xB7 \u0110\xF3ng B\u0103ng",
+      guId: "bang_phach_tuyet_hoa",
+      title: "T\u1EA7m C\u1ED5 Hi\u1EBFm: B\u0103ng Ph\xE1ch Tuy\u1EBFt Hoa C\u1ED5 (T\u1EE9 Chuy\u1EC3n)",
+      desc: "S\u0103n 8 Tuy\u1EBFt Lang t\u1EA1i V\u01B0\u01A1ng \u0110\xECnh B\u1EAFc Nguy\xEAn thu th\u1EADp tinh hoa tuy\u1EBFt luy\u1EC7n B\u0103ng Ph\xE1ch.",
+      mapId: "vuong_dinh",
+      x: 640,
+      y: 495,
+      stoneFee: 220,
+      goal: { type: "kill_type", enemyType: "soi_tuyet", count: 8 },
+      rewards: { stones: 600, exp: 950, guId: "bang_phach_tuyet_hoa" }
+    },
+    {
+      id: "gq_r4_bao_lien",
+      rank: 4,
+      pathLabel: "M\u1ED9c \u0110\u1EA1o \xB7 Nguy\xEAn Tuy\u1EC1n",
+      guId: "thien_nguyen_bao_lien_4",
+      title: "T\u1EA7m C\u1ED5 Hi\u1EBFm: Thi\xEAn Nguy\xEAn B\u1EA3o Ho\xE0ng Li\xEAn (T\u1EE9 Chuy\u1EC3n)",
+      desc: "H\u1EA1 2 \u0110\u1ED9c Thi\u1EC1m Th\u1EEB V\u01B0\u01A1ng \u1EDF \u0110\u1EA7m L\u1EA7y \u0110\u1ED9c Kh\xED \u0111\u1EC3 k\xEDch n\u1EDF Ho\xE0ng Li\xEAn T\u1EE9 Chuy\u1EC3n.",
+      mapId: "hac_thuy_ho",
+      x: 520,
+      y: 220,
+      stoneFee: 220,
+      goal: { type: "kill_type", enemyType: "thiem_thu_vuong", count: 2 },
+      rewards: { stones: 600, exp: 950, guId: "thien_nguyen_bao_lien_4" }
+    },
+    // === NGŨ CHUYỂN (Tuyệt Thế Kỳ Ngộ · Cần Ngũ Chuyển + Boss Đỉnh Phong) ===
+    {
+      id: "gq_r5_xuan_thu",
+      rank: 5,
+      pathLabel: "Nh\xE2n/Tr\u1EE5 \u0110\u1EA1o \xB7 Ch\xED T\xF4n",
+      guId: "xuan_thu_thien_an",
+      title: "Tuy\u1EC7t Th\u1EBF C\u1ED5: Xu\xE2n Thu Thi\u1EC1n \xB7 Ph\xE0m \u1EA4n (Ng\u0169 Chuy\u1EC3n)",
+      desc: "\u0110\xE1nh b\u1EA1i Thi\xEAn Th\xFA V\u01B0\u01A1ng V\u1EA1n Th\u1EE7 B\xE0n Long t\u1EA1i V\u1EF1c V\u1EA1n Th\u1EE7 \u0111\u1EC3 l\u0129nh ng\u1ED9 Xu\xE2n Thu Thi\u1EC1n!",
+      mapId: "vuc_van_thu",
+      x: 640,
+      y: 265,
+      stoneFee: 500,
+      goal: { type: "kill_type", enemyType: "van_thu_ban_long", count: 1 },
+      rewards: { stones: 1200, exp: 1800, guId: "xuan_thu_thien_an" }
+    },
+    {
+      id: "gq_r5_van_nga",
+      rank: 5,
+      pathLabel: "L\u1EF1c \u0110\u1EA1o \xB7 V\u1EA1n Ng\xE3",
+      guId: "van_nga_huyen_anh",
+      title: "Tuy\u1EC7t Th\u1EBF C\u1ED5: V\u1EA1n Ng\xE3 Huy\u1EC5n \u1EA2nh C\u1ED5 (Ng\u0169 Chuy\u1EC3n)",
+      desc: "H\u1EA1 2 Tuy\u1EBFt Lang V\u01B0\u01A1ng t\u1EA1i V\u01B0\u01A1ng \u0110\xECnh B\u1EAFc Nguy\xEAn h\u1EE3p nh\u1EA5t Huy\u1EC5n \u1EA2nh Ng\u0169 Chuy\u1EC3n.",
+      mapId: "vuong_dinh",
+      x: 320,
+      y: 480,
+      stoneFee: 460,
+      goal: { type: "kill_type", enemyType: "soi_tuyet_vuong", count: 2 },
+      rewards: { stones: 1100, exp: 1650, guId: "van_nga_huyen_anh" }
+    },
+    {
+      id: "gq_r5_cuu_tieu",
+      rank: 5,
+      pathLabel: "L\xF4i \u0110\u1EA1o \xB7 Thi\xEAn Ph\u1EA1t",
+      guId: "cuu_tieu_loi_nguc",
+      title: "Tuy\u1EC7t Th\u1EBF C\u1ED5: C\u1EEDu Ti\xEAu L\xF4i Ng\u1EE5c C\u1ED5 (Ng\u0169 Chuy\u1EC3n)",
+      desc: "H\u1EA1 3 Tam Nha \u0110i\u1EC7n Lang V\u01B0\u01A1ng tri\u1EC7u h\u1ED3i th\u1EA7n l\xF4i C\u1EEDu Ti\xEAu.",
+      mapId: "suong_truc_lam",
+      x: 1040,
+      y: 450,
+      stoneFee: 460,
+      goal: { type: "kill_type", enemyType: "tam_nha_dien_lang", count: 3 },
+      rewards: { stones: 1100, exp: 1650, guId: "cuu_tieu_loi_nguc" }
+    },
+    {
+      id: "gq_r5_huyet_tich_tu",
+      rank: 5,
+      pathLabel: "Huy\u1EBFt \u0110\u1EA1o \xB7 Tuy\u1EC7t S\xE1t",
+      guId: "huyet_tich_tu",
+      title: "Tuy\u1EC7t Th\u1EBF C\u1ED5: Huy\u1EBFt T\xEDch T\u1EED C\u1ED5 (Ng\u0169 Chuy\u1EC3n)",
+      desc: "H\u1EA1 3 \u0110\u1ECBa Th\u1EED V\u01B0\u01A1ng t\u1EA1i X\xEDch Nham C\u1ED1c \u0111\u1EC3 c\xF4 \u0111\u1ECDng Huy\u1EBFt T\xEDch T\u1EED \u0111o\u1EA1t m\u1EC7nh.",
+      mapId: "xich_nham_coc",
+      x: 860,
+      y: 240,
+      stoneFee: 460,
+      goal: { type: "kill_type", enemyType: "xich_viem_vuong", count: 3 },
+      rewards: { stones: 1100, exp: 1650, guId: "huyet_tich_tu" }
+    },
+    {
+      id: "gq_r5_thien_kiem",
+      rank: 5,
+      pathLabel: "Ki\u1EBFm \u0110\u1EA1o \xB7 V\xF4 Song",
+      guId: "thien_kiem_tuyet_anh",
+      title: "Tuy\u1EC7t Th\u1EBF C\u1ED5: Thi\xEAn Ki\u1EBFm Tuy\u1EC7t \u1EA2nh C\u1ED5 (Ng\u0169 Chuy\u1EC3n)",
+      desc: "Ch\xE9m g\u1EE5c V\u1EA1n Th\u1EE7 B\xE0n Long \u0111\u1EC3 luy\u1EC7n h\xF3a Ng\u0169 Ki\u1EBFm Ch\xED T\xF4n.",
+      mapId: "vuc_van_thu",
+      x: 640,
+      y: 265,
+      stoneFee: 480,
+      goal: { type: "kill_type", enemyType: "van_thu_ban_long", count: 1 },
+      rewards: { stones: 1150, exp: 1700, guId: "thien_kiem_tuyet_anh" }
     }
   ];
   var DUNGEONS_LIST = [
@@ -5791,6 +6542,20 @@
       if (slotId === "vital") return this.getVitalGu();
       if (slotId === "passive") return this.getPassiveGu();
       if (slotId === "move") return this.getAllEquipped().find((g) => g.role === "move") ?? null;
+      if (slotId === "dash") {
+        const moveGu = this.getAllEquipped().find((g) => g.role === "move");
+        return { aimType: "dash", range: moveGu?.range ?? 78, color: moveGu?.color ?? "#5ef2d6" };
+      }
+      if (slotId === "km1" || slotId === "km2") {
+        const kmId = this.killerMoveIds[slotId === "km1" ? 0 : 1];
+        const km = KILLER_MOVES.find((k) => k.id === kmId) ?? KILLER_MOVES[0];
+        return {
+          aimType: km.kind === "nova" ? "aoe" : "line",
+          range: km.range ?? 150,
+          radius: km.kind === "nova" ? km.range : 16,
+          color: km.color ?? "#ffd257"
+        };
+      }
       if (slotId?.startsWith("slot_")) {
         const idx = Number(slotId.replace("slot_", ""));
         return this.getActiveGu(idx);
@@ -5933,6 +6698,10 @@
       mult += tier.bonusPct;
       if (gu && gu.path === "luc_dao") {
         mult += (this.potentials.luc + this.bodyTemperBonusForce) * 0.015;
+      }
+      if (gu?.lowHpBerserk && this.maxHp > 0) {
+        const missingPct = Math.max(0, 1 - this.hp / this.maxHp);
+        mult += missingPct * gu.lowHpBerserk;
       }
       const sets = this.getSetCounts();
       if ((sets.dien_lang_bo ?? 0) >= 4) mult += 0.16;
@@ -6614,8 +7383,8 @@
       drawSpriteGrid(ctx, rows2, pal2, 2, 0, 2);
       return;
     }
-    if (id === "thinh_phong" || id === "thanh_phong_luan" || id === "an_lan" || id === "anh_bo" || id === "bach_cot_don" || id === "cot_thuong") {
-      const isBone = id === "bach_cot_don" || id === "cot_thuong";
+    if (id === "thinh_phong" || id === "thanh_phong_luan" || id === "truy_phong" || id === "an_lan" || id === "anh_bo" || id === "am_anh_don" || id === "bach_cot_don" || id === "cot_thuong" || id === "thiet_cot" || id === "xoan_oc_cot_thuong" || path === "cot_dao" || path === "phong_dao" || path === "anh_dao") {
+      const isBone = path === "cot_dao" || id === "bach_cot_don" || id === "cot_thuong" || id === "thiet_cot" || id === "xoan_oc_cot_thuong";
       const pal2 = {
         d: isBone ? "#3d3530" : "#1f2e47",
         m: isBone ? "#9e9384" : "#5e4ca6",
@@ -6643,6 +7412,39 @@
         ".....dmmd.....",
         ".....dmmd.....",
         "......dd......"
+      ];
+      drawSpriteGrid(ctx, rows2, pal2, 2, 0, 2);
+      return;
+    }
+    if (id === "xuan_thu_thien_an") {
+      const pal2 = { d: "#5c420c", m: "#cf9e2e", b: "#ffe270", g: "#34d9b8", w: "#ffffff" };
+      const rows2 = [
+        "...g......g...",
+        "..gg.dddd.gg..",
+        ".gwwdmmmmddww.",
+        "gwwdmbbggbmwwg",
+        ".ggdmbgwwgbmd.",
+        "...dmmggggmmd.",
+        "..ddmbbbbbmdd.",
+        "...dmbbwwbmdd.",
+        "....dmbbmmd...",
+        ".....dddd....."
+      ];
+      drawSpriteGrid(ctx, rows2, pal2, 2, 0, 2);
+      return;
+    }
+    if (id === "kim_chung_trao") {
+      const pal2 = { d: "#5c3f08", m: "#bd8b1a", b: "#ffd257", w: "#fff6cc", g: "#ff5c4d" };
+      const rows2 = [
+        ".....dddd.....",
+        "...ddmmmmdd...",
+        "..dmbbwwbbmd..",
+        ".dmbwbbbbwbmd.",
+        ".dmbmggggmbmd.",
+        ".dmbbmmmmbbmd.",
+        ".dmmbbwwbbmmd.",
+        "..ddmbbbbmdd..",
+        "....dddddd...."
       ];
       drawSpriteGrid(ctx, rows2, pal2, 2, 0, 2);
       return;
@@ -13412,7 +14214,9 @@
       npcs: [],
       gatherNodes: [
         { id: "mine_bl_1", kind: "mine", label: "M\u1ECF \u0110\xE1 B\u1EAFc L\u0129nh", item: "mao_thach_trung", x: 350, y: 460 },
-        { id: "herb_bl_1", kind: "herb", label: "Linh Th\u1EA3o Tr\u0103m N\u0103m", item: "thao_duoc_tram_nam", x: 920, y: 480 }
+        { id: "herb_bl_1", kind: "herb", label: "Linh Th\u1EA3o Tr\u0103m N\u0103m", item: "thao_duoc_tram_nam", x: 920, y: 480 },
+        { id: "wild_gu_kho_luc", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: Kh\u1ED5 L\u1EF1c C\u1ED5", guId: "kho_luc", x: 380, y: 245 },
+        { id: "wild_gu_dien_nhan", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: \u0110i\u1EC7n Nh\xE3n C\u1ED5", guId: "dien_nhan", x: 930, y: 255 }
       ],
       monsterSpawns: [
         { type: "thiet_giap_bo_cap", x: 460, y: 360, respawn: 7 },
@@ -13493,7 +14297,10 @@
       npcs: [],
       gatherNodes: [
         { id: "fish_ht_1", kind: "fish", label: "B\xE3i C\xE2u \u0110\u1EA7m H\u1EAFc Th\u1EE7y", x: 840, y: 430 },
-        { id: "wild_gu_thuy_trao", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 (Th\u1EE7y Tr\xE1o)", guId: "thuy_trao", x: 240, y: 430 }
+        { id: "wild_gu_thuy_trao", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: Th\u1EE7y Tr\xE1o C\u1ED5", guId: "thuy_trao", x: 240, y: 430 },
+        { id: "wild_gu_doc_hat", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: \u0110\u1ED9c H\u1EA1t C\u1ED5", guId: "doc_hat", x: 760, y: 690 },
+        { id: "wild_gu_phe_hon", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C3]: Ph\u1EC7 H\u1ED3n Thi\u1EC1m", guId: "phe_hon_thiem", x: 460, y: 255 },
+        { id: "wild_gu_van_doc", kind: "wild_gu", label: "K\u1EF3 Ng\u1ED9 [C5]: V\u1EA1n \u0110\u1ED9c V\u01B0\u01A1ng C\u1ED5", guId: "van_doc_vuong", x: 525, y: 175 }
       ],
       monsterSpawns: [
         { type: "coc_doc_hac_thuy", x: 950, y: 310, respawn: 7 },
@@ -13587,7 +14394,9 @@
       npcs: [],
       gatherNodes: [
         { id: "herb_st_1", kind: "herb", label: "S\u01B0\u01A1ng Tr\xFAc Linh L\u1ED9", item: "suong_truc_linh_lo", x: 480, y: 310 },
-        { id: "mine_st_1", kind: "mine", label: "Ho\xE0ng Th\u1ED5 Tinh Sa", item: "hoang_tho_tinh_sa", x: 880, y: 590 }
+        { id: "mine_st_1", kind: "mine", label: "Ho\xE0ng Th\u1ED5 Tinh Sa", item: "hoang_tho_tinh_sa", x: 880, y: 590 },
+        { id: "wild_gu_xoan_cot", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: Xo\u1EAFn C\u1ED1t Th\u01B0\u01A1ng", guId: "xoan_oc_cot_thuong", x: 265, y: 655 },
+        { id: "wild_gu_ngan_nguyet", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C3]: Ng\xE2n Trung Nguy\u1EC7t", guId: "ngan_trung_nguyet", x: 1030, y: 245 }
       ],
       monsterSpawns: [
         { type: "hao_dien_lang", x: 480, y: 450, respawn: 7 },
@@ -13692,7 +14501,9 @@
       gatherNodes: [
         { id: "mine_tn_1", kind: "mine", label: "M\u1EA1ch Nh\u0169 Th\u1EA1ch", item: "mao_thach_trung", x: 350, y: 615 },
         { id: "mine_tn_2", kind: "mine", label: "Ng\u1ECDc Kho\xE1ng Tinh", item: "ngoc_vun", x: 1085, y: 520 },
-        { id: "wild_gu_ngoc_bi", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5: Ng\u1ECDc B\xEC C\u1ED5", guId: "ngoc_bi", x: 245, y: 295 }
+        { id: "wild_gu_ngoc_bi", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: Ng\u1ECDc B\xEC C\u1ED5", guId: "ngoc_bi", x: 245, y: 295 },
+        { id: "wild_gu_thiet_cot", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C2]: Thi\u1EBFt C\u1ED1t C\u1ED5", guId: "thiet_cot", x: 365, y: 560 },
+        { id: "wild_gu_kim_chung", kind: "wild_gu", label: "\u1ED4 C\u1ED5 Hi\u1EBFm [C4]: Kim Chung Tr\xE1o", guId: "kim_chung_trao", x: 965, y: 240 }
       ],
       monsterSpawns: [
         { type: "thach_hau", x: 675, y: 505, respawn: 7 },
@@ -13779,7 +14590,10 @@
       npcs: [],
       gatherNodes: [
         { id: "mine_xn_1", kind: "mine", label: "M\u1EA1ch X\xEDch Nham H\u1ECFa T\u1EE7y", item: "xich_nham_hoa_tuy", x: 460, y: 280 },
-        { id: "mine_xn_2", kind: "mine", label: "Mao Th\u1EA1ch Th\xE1i C\u1ED5", item: "mao_thach_cao", x: 980, y: 340 }
+        { id: "mine_xn_2", kind: "mine", label: "Mao Th\u1EA1ch Th\xE1i C\u1ED5", item: "mao_thach_cao", x: 980, y: 340 },
+        { id: "wild_gu_liet_diem", kind: "wild_gu", label: "\u1ED4 C\u1ED5 Hi\u1EBFm [C4]: Li\u1EC7t Di\u1EC5m Ph\u1EA7n Th\xE0nh", guId: "liet_diem_phan_thanh", x: 315, y: 365 },
+        { id: "wild_gu_long_tuong", kind: "wild_gu", label: "\u1ED4 C\u1ED5 Hi\u1EBFm [C4]: Long T\u01B0\u1EE3ng L\u1EF1c C\u1ED5", guId: "long_tuong_luc", x: 895, y: 545 },
+        { id: "wild_gu_huyet_tich_tu", kind: "wild_gu", label: "K\u1EF3 Ng\u1ED9 [C5]: Huy\u1EBFt T\xEDch T\u1EED C\u1ED5", guId: "huyet_tich_tu", x: 845, y: 215 }
       ],
       monsterSpawns: [
         { type: "xich_viem_thu", x: 500, y: 420, respawn: 8 },
@@ -13886,7 +14700,11 @@
         }
       ],
       gatherNodes: [
-        { id: "mine_vd_1", kind: "mine", label: "B\u0103ng Tuy\u1EC1n Tinh", item: "bang_tuyen_tinh", x: 420, y: 280 }
+        { id: "mine_vd_1", kind: "mine", label: "B\u0103ng Tuy\u1EC1n Tinh", item: "bang_tuyen_tinh", x: 420, y: 280 },
+        { id: "wild_gu_bang_co", kind: "wild_gu", label: "\u1ED4 D\xE3 C\u1ED5 [C3]: B\u0103ng C\u01A1 Ng\u1ECDc C\u1ED1t", guId: "bang_co", x: 245, y: 365 },
+        { id: "wild_gu_tuyet_hoa", kind: "wild_gu", label: "\u1ED4 C\u1ED5 Hi\u1EBFm [C4]: B\u0103ng Ph\xE1ch Tuy\u1EBFt Hoa", guId: "bang_phach_tuyet_hoa", x: 870, y: 575 },
+        { id: "wild_gu_bang_phong", kind: "wild_gu", label: "K\u1EF3 Ng\u1ED9 [C5]: B\u0103ng Phong Thi\xEAn L\xFD", guId: "bang_phong_thien_ly", x: 335, y: 455 },
+        { id: "wild_gu_thien_kiem", kind: "wild_gu", label: "K\u1EF3 Ng\u1ED9 [C5]: Thi\xEAn Ki\u1EBFm Tuy\u1EC7t \u1EA2nh", guId: "thien_kiem_tuyet_anh", x: 960, y: 240 }
       ],
       monsterSpawns: [
         { type: "soi_tuyet", x: 460, y: 520, respawn: 8 },
@@ -14190,11 +15008,16 @@
         this.dieuHoi.active = false;
       }
       const rareBonus = this.player.getAptitudeInfo().rareEncounterBonus ?? 0;
-      const wildSpawnChance = Math.min(0.75, 0.42 + rareBonus * 0.35);
       this.gatherNodes = (mapDef.gatherNodes ?? []).map((g) => {
-        if (g.kind === "wild_gu" && !this._isQuestRequiredWildGu(g)) {
-          const active = Math.random() < wildSpawnChance;
-          return { ...g, cooldown: active ? 0 : 45 + Math.floor(Math.random() * 45) };
+        if (g.kind === "wild_gu") {
+          const guRank = GU_CATALOG[g.guId]?.rank ?? 1;
+          const cfg = getGuWildSpawnConfig(guRank);
+          const forceStarter = !this.player.vitalUid && guRank === 1 && this._isQuestRequiredWildGu(g);
+          if (!forceStarter) {
+            const chance = Math.min(0.82, cfg.spawnChance * (1 + rareBonus * 0.45));
+            const active = Math.random() < chance;
+            return { ...g, cooldown: active ? 0 : cfg.respawnSec + Math.floor(Math.random() * 60) };
+          }
         }
         return { ...g, cooldown: 0 };
       });
@@ -14725,7 +15548,13 @@
           return { kind: "gather", label: lbl, data: g };
         }
         if (g.cooldown <= 0 && Math.hypot(this.player.x - g.x, this.player.y - g.y) <= 44) {
-          const prefix = g.kind === "fish" ? "F \xB7 C\xE2u c\xE1" : g.kind === "mine" ? "F \xB7 Khai m\u1ECF" : g.kind === "wild_gu" ? "F \xB7 B\u1EAFt D\xE3 C\u1ED5" : "F \xB7 H\xE1i th\u1EA3o d\u01B0\u1EE3c";
+          let prefix = g.kind === "fish" ? "F \xB7 C\xE2u c\xE1" : g.kind === "mine" ? "F \xB7 Khai m\u1ECF" : "F \xB7 H\xE1i th\u1EA3o d\u01B0\u1EE3c";
+          if (g.kind === "wild_gu") {
+            const gu = GU_CATALOG[g.guId];
+            const cfg = getGuWildSpawnConfig(gu?.rank ?? 1);
+            const costTag = `${cfg.baitCost} M\u1ED3i${cfg.stoneCost ? ` \xB7 ${cfg.stoneCost} Th\u1EA1ch` : ""}`;
+            prefix = `F \xB7 B\u1EAFt [C${gu?.rank ?? 1}] ${gu?.shortLabel ?? "D\xE3 C\u1ED5"} (${costTag})`;
+          }
           return { kind: "gather", label: prefix, data: g };
         }
       }
@@ -14867,7 +15696,10 @@
             this.addFloatingText(this.player.x, this.player.y - 26, "C\u1EA7n Khai Khi\u1EBFu t\u1EA1i Nguy\xEAn Tuy\u1EC1n tr\u01B0\u1EDBc khi luy\u1EC7n C\u1ED5!", "#f2c14e");
             return false;
           }
-          const isFirstVitalSeek = !this.player.vitalUid && this._isQuestRequiredWildGu(g);
+          const guDef = GU_CATALOG[g.guId];
+          const guRank = guDef?.rank ?? 1;
+          const cfg = getGuWildSpawnConfig(guRank);
+          const isFirstVitalSeek = !this.player.vitalUid && guRank === 1 && this._isQuestRequiredWildGu(g);
           const maxCap = this.player.getMaxGuCapacity();
           if (this.player.vitalUid && this.player.guBag.length >= maxCap) {
             this.addFloatingText(
@@ -14878,29 +15710,79 @@
             );
             return false;
           }
-          if (!this.player.consumeItem("moi_bat_co", 1) && !isFirstVitalSeek) {
-            this.addFloatingText(this.player.x, this.player.y - 26, "C\u1EA7n M\u1ED3i B\u1EAFt D\xE3 C\u1ED5!", "#d0573c");
+          if (!isFirstVitalSeek && (this.player.stageLevel ?? 1) < cfg.minStageLevel) {
+            this.addFloatingText(
+              this.player.x,
+              this.player.y - 26,
+              `[${guDef?.name || "D\xE3 C\u1ED5"} C${guRank}] \xE1p l\u1EF1c qu\xE1 m\u1EA1nh! C\u1EA7n tu vi t\u1ED1i thi\u1EC3u Chuy\u1EC3n ${guRank}!`,
+              "#ff8570"
+            );
             return false;
           }
+          if (cfg.guardRadius > 0) {
+            const guardian = this.enemies.find(
+              (e) => e.hp > 0 && e.ai !== "dummy" && Math.hypot(e.x - g.x, e.y - g.y) <= cfg.guardRadius
+            );
+            if (guardian) {
+              guardian.provoked = true;
+              guardian.provokedTimer = 10;
+              this.addFloatingText(
+                this.player.x,
+                this.player.y - 26,
+                `C\xF3 [${guardian.name}] canh gi\u1EEF ${guDef?.shortLabel || "D\xE3 C\u1ED5"}! Ph\u1EA3i di\u1EC7t tr\u01B0\u1EDBc!`,
+                "#ff6b78"
+              );
+              return false;
+            }
+          }
+          if (!isFirstVitalSeek) {
+            if (this.player.getItemCount("moi_bat_co") < cfg.baitCost) {
+              this.addFloatingText(
+                this.player.x,
+                this.player.y - 26,
+                `C\u1EA7n ${cfg.baitCost} M\u1ED3i B\u1EAFt D\xE3 C\u1ED5 (mua t\u1EA1i Ch\u1EE3 B)!`,
+                "#d0573c"
+              );
+              return false;
+            }
+            if (cfg.stoneCost > 0 && this.player.nguyenThach < cfg.stoneCost) {
+              this.addFloatingText(
+                this.player.x,
+                this.player.y - 26,
+                `C\u1EA7n ${cfg.stoneCost} Nguy\xEAn Th\u1EA1ch \u0111\u1EC3 \xE1p ch\u1EBF D\xE3 C\u1ED5 Chuy\u1EC3n ${guRank}!`,
+                "#d0573c"
+              );
+              return false;
+            }
+            this.player.consumeItem("moi_bat_co", cfg.baitCost);
+            this.player.nguyenThach -= cfg.stoneCost;
+          }
           this.onStartMinigame?.("refine", {
-            guName: GU_CATALOG[g.guId]?.name ?? "D\xE3 C\u1ED5",
+            guName: `${guDef?.name ?? "D\xE3 C\u1ED5"} (Chuy\u1EC3n ${guRank})`,
+            guRank,
             onSuccess: () => {
-              g.cooldown = 85;
+              g.cooldown = cfg.respawnSec;
               const res = this.player.acquireRefinedWildGu(g.guId);
               this._advanceQuest("refine_first_gu", {});
               this.sfx?.play("fusionSuccess");
               this.addFloatingText(
                 this.player.x,
                 this.player.y - 30,
-                res.boundAsVital ? `Luy\u1EC7n H\xF3a C\u1ED5 B\u1EA3n M\u1EC7nh: ${res.worm.name}!` : `Thu ph\u1EE5c ${res.worm.name}!`,
-                "#d9b25f"
+                res.boundAsVital ? `Luy\u1EC7n H\xF3a C\u1ED5 B\u1EA3n M\u1EC7nh: ${res.worm.name}!` : `Thu ph\u1EE5c hi\u1EBFm: ${res.worm.name} (C${guRank})!`,
+                "#ffd257"
               );
               this.onAwakenCeremony?.({ type: "gu_refined", ...res });
               this.onStateChange?.(this);
             },
             onFail: () => {
-              g.cooldown = 32;
-              this.addFloatingText(this.player.x, this.player.y - 26, "D\xE3 C\u1ED5 kinh \u0111\u1ED9ng l\u1EA9n tr\u1ED1n (32s)!", "#d0573c");
+              g.cooldown = Math.round(cfg.respawnSec * 0.55);
+              if (guRank >= 4) {
+                const backlash = Math.round(this.player.maxHp * 0.12);
+                this.player.hp = Math.max(1, this.player.hp - backlash);
+                this.addFloatingText(this.player.x, this.player.y - 26, `Luy\u1EC7n C\u1ED5 C${guRank} ph\u1EA3n ph\u1EC7 -${backlash} HP! D\xE3 C\u1ED5 \u0111\u1ED9n m\u1EA5t!`, "#ff4d6a");
+              } else {
+                this.addFloatingText(this.player.x, this.player.y - 26, `D\xE3 C\u1ED5 kinh \u0111\u1ED9ng l\u1EA9n tr\u1ED1n (${g.cooldown}s)!`, "#d0573c");
+              }
             }
           });
           return true;
@@ -15100,6 +15982,12 @@
       if (gu.shieldAmount) {
         this.player.shield += gu.shieldAmount;
         this.addFloatingText(this.player.x, this.player.y - 26, `H\u1ED9 Thu\u1EABn +${gu.shieldAmount}`, "#dce8ff");
+      }
+      if (gu.resetsBasicSlotsCd) {
+        this.player.cooldowns.slot_0 = 0;
+        this.player.cooldowns.slot_1 = 0;
+        this.player.cooldowns.slot_2 = 0;
+        this.addFloatingText(this.player.x, this.player.y - 34, "Ngh\u1ECBch L\u01B0u Th\u1EDDi Gian: X\xF3a H\u1ED3i Chi\xEAu \xD4 1\u20133!", "#ffd978");
       }
       const dmg = Math.round((gu.damage ?? 0) * this.player.getDamageMultiplier(gu));
       if (gu.aimType === "dash") {
@@ -16874,7 +17762,7 @@
       }
     }
     async pollAll() {
-      if (this._busyPoll || !this.account.isConfigured()) return;
+      if (this._busyPoll || !this.account.isLoggedIn() || !this.account.isConfigured()) return;
       this._busyPoll = true;
       const authToken = this.account.session?.access_token || SUPABASE_KEY;
       const headers = {
@@ -17257,10 +18145,12 @@
 
   // src/input/SkillPad.js
   var SkillPad = class {
-    constructor({ slots, cancelZoneEl, getDefaultAngle, onCast, onCancel }) {
+    constructor({ slots = {}, cancelZoneEl, getDefaultAngle, canCast = null, externalCooldowns = false, onCast, onCancel }) {
       this.slots = slots;
       this.cancelZoneEl = cancelZoneEl;
       this.getDefaultAngle = getDefaultAngle;
+      this.canCast = canCast;
+      this.externalCooldowns = externalCooldowns;
       this.onCast = onCast;
       this.onCancel = onCancel;
       this.buttons = /* @__PURE__ */ new Map();
@@ -17285,12 +18175,15 @@
         this.maxCooldowns.set(id, def.cooldown ?? 2);
       }
     }
-    registerButton(slotId, buttonEl, knobEl, cooldownEl, timerTextEl) {
+    registerButton(slotId, buttonEl, knobEl = null, cooldownEl = null, timerTextEl = null) {
+      if (!buttonEl) return;
       this.buttons.set(slotId, { buttonEl, knobEl, cooldownEl, timerTextEl });
       buttonEl.addEventListener("pointerdown", (e) => {
+        if (document.body.classList.contains("is-editing-hud")) return;
         e.preventDefault();
         if (this.activeAim.active) return;
-        if ((this.cooldowns.get(slotId) ?? 0) > 0) {
+        const blocked = this.externalCooldowns ? Boolean(this.canCast && !this.canCast(slotId)) : (this.cooldowns.get(slotId) ?? 0) > 0;
+        if (blocked) {
           buttonEl.classList.remove("is-denied");
           void buttonEl.offsetWidth;
           buttonEl.classList.add("is-denied");
@@ -17315,7 +18208,7 @@
           isCanceling: false
         };
         buttonEl.classList.add("is-aiming");
-        this.cancelZoneEl.classList.add("is-visible");
+        this.cancelZoneEl?.classList.add("is-visible");
         this._updateDrag(e.clientX, e.clientY);
       });
       buttonEl.addEventListener("pointermove", (e) => {
@@ -17344,11 +18237,14 @@
         aim.angle = this.getDefaultAngle();
         aim.distanceRatio = 0.7;
       }
-      const cancelRect = this.cancelZoneEl.getBoundingClientRect();
-      const pad = 8;
-      const overCancel = clientX >= cancelRect.left - pad && clientX <= cancelRect.right + pad && clientY >= cancelRect.top - pad && clientY <= cancelRect.bottom + pad;
+      let overCancel = false;
+      if (this.cancelZoneEl) {
+        const cancelRect = this.cancelZoneEl.getBoundingClientRect();
+        const pad = 8;
+        overCancel = cancelRect.width > 0 && clientX >= cancelRect.left - pad && clientX <= cancelRect.right + pad && clientY >= cancelRect.top - pad && clientY <= cancelRect.bottom + pad;
+        this.cancelZoneEl.classList.toggle("is-hover", overCancel);
+      }
       aim.isCanceling = overCancel;
-      this.cancelZoneEl.classList.toggle("is-hover", overCancel);
       const ui = this.buttons.get(aim.slotId);
       if (ui) {
         ui.buttonEl.classList.toggle("is-canceling", overCancel);
@@ -17370,7 +18266,7 @@
           ui.knobEl.style.transform = "translate3d(0px, 0px, 0)";
         }
       }
-      this.cancelZoneEl.classList.remove("is-visible", "is-hover");
+      this.cancelZoneEl?.classList.remove("is-visible", "is-hover");
       const canceled = forceCancel || aim.isCanceling;
       const payload = {
         slotId,
@@ -17396,9 +18292,11 @@
       this.triggerCast(payload);
     }
     triggerCast({ slotId, angle, distanceRatio = 0.7, quickTap = true }) {
-      if ((this.cooldowns.get(slotId) ?? 0) > 0) return false;
-      const maxCd = this.maxCooldowns.get(slotId) ?? 2;
-      this.cooldowns.set(slotId, maxCd);
+      if (!this.externalCooldowns) {
+        if ((this.cooldowns.get(slotId) ?? 0) > 0) return false;
+        const maxCd = this.maxCooldowns.get(slotId) ?? 2;
+        this.cooldowns.set(slotId, maxCd);
+      }
       this.onCast?.({ slotId, angle, distanceRatio, quickTap });
       return true;
     }
@@ -17460,6 +18358,7 @@
     }
     _bindEvents() {
       this.zoneEl.addEventListener("pointerdown", (e) => {
+        if (document.body.classList.contains("is-editing-hud")) return;
         if (this.pointerId !== null) return;
         e.preventDefault();
         this.pointerId = e.pointerId;
@@ -17544,6 +18443,21 @@
   }
 
   // src/ui/CotienloHUD.js
+  var HUD_LAYOUT_STORAGE_KEY = "ctl_hud_layout_v1";
+  function createDefaultHudLayout() {
+    return {
+      skillStyle: "moba",
+      handedness: "right",
+      alwaysShowJoystick: false,
+      joystick: { xPct: null, yPct: null, scale: 1 },
+      skills: { xPct: null, yPct: null, scale: 1 },
+      aux: { xPct: null, yPct: null, scale: 1 }
+    };
+  }
+  function clampHudVal(val, min, max, fallback) {
+    const n = Number(val);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+  }
   var CotienloHUD = class {
     constructor({
       hudRoot,
@@ -17555,6 +18469,7 @@
       onAbsorbStart,
       onAbsorbEnd,
       onInteract,
+      onCycleTarget,
       onTriggerSurge,
       onRitualChoice,
       onQuestClick,
@@ -17576,6 +18491,7 @@
       this.onAbsorbStart = onAbsorbStart;
       this.onAbsorbEnd = onAbsorbEnd;
       this.onInteract = onInteract;
+      this.onCycleTarget = onCycleTarget;
       this.onTriggerSurge = onTriggerSurge;
       this.onRitualChoice = onRitualChoice;
       this.onQuestClick = onQuestClick;
@@ -17599,8 +18515,11 @@
       } catch {
         this.uiMode = "auto";
       }
+      this.hudLayout = this._loadHudLayout();
+      this.isEditingHud = false;
       this.mobileMenuOpen = false;
       this._wasMobileUi = false;
+      this._lastPlayerRef = null;
       this.chatTab = "all";
       this.chatCollapsed = false;
       this.chatMuted = false;
@@ -17622,7 +18541,40 @@
       this._cacheElements();
       this._bindEvents(getDefaultAngle);
       this.setQuestCollapsed(this.questCollapsed, false);
+      this.applyHudLayout();
       this.syncViewportMode();
+    }
+    _loadHudLayout() {
+      const def = createDefaultHudLayout();
+      try {
+        const raw = JSON.parse(localStorage.getItem(HUD_LAYOUT_STORAGE_KEY) || "null");
+        if (!raw || typeof raw !== "object") return def;
+        return this._normalizeHudLayout(raw);
+      } catch {
+        return def;
+      }
+    }
+    _normalizeHudLayout(raw = {}) {
+      const def = createDefaultHudLayout();
+      const normWidget = (src) => ({
+        xPct: src?.xPct === null || src?.xPct === void 0 ? null : clampHudVal(src.xPct, 1, 86, null),
+        yPct: src?.yPct === null || src?.yPct === void 0 ? null : clampHudVal(src.yPct, 4, 86, null),
+        scale: clampHudVal(src?.scale, 0.7, 1.4, 1)
+      });
+      return {
+        skillStyle: raw.skillStyle === "bar" ? "bar" : "moba",
+        handedness: raw.handedness === "left" ? "left" : "right",
+        alwaysShowJoystick: Boolean(raw.alwaysShowJoystick === true || raw.alwaysShowJoystick === "always"),
+        joystick: normWidget(raw.joystick ?? def.joystick),
+        skills: normWidget(raw.skills ?? def.skills),
+        aux: normWidget(raw.aux ?? def.aux)
+      };
+    }
+    _saveHudLayout() {
+      try {
+        localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, JSON.stringify(this.hudLayout));
+      } catch {
+      }
     }
     _buildMarkup() {
       const uiFrames = getUiFrameAssets();
@@ -17900,13 +18852,127 @@
         <button type="button" class="ctl-util-btn" data-panel="settings" title="C\xE0i \u0111\u1EB7t & T\xE0i kho\u1EA3n"><span class="ctl-svg-wrap">${getUiIconSvg("settings")}</span><em>C\xE0i \u0111\u1EB7t</em></button>
       </div>
 
-      <div id="joystick-zone" class="touch-only" aria-label="Joystick">
+      <div id="joystick-zone" class="touch-only" data-hud-widget="joystick" aria-label="Joystick">
+        <span class="ctl-edit-tag">Joystick \xB7 K\xE9o \u0111\u1EC3 d\u1EDDi</span>
         <div id="joystick-base" class="joystick-base">
           <div class="joystick-ring"></div>
           <div id="joystick-knob" class="joystick-knob"></div>
         </div>
       </div>
-      <div id="skill-cancel-zone" class="skill-cancel-zone">H\u1EE6Y</div>
+
+      <!-- C\u1EE4M N\xDAT CHI\xCAU TH\u1EE8C KI\u1EC2U MOBA (V\xD2NG CUNG NG\xD3N C\xC1I) -->
+      <div id="hud-moba-pad" class="ctl-moba-pad" data-hud-widget="skills">
+        <span class="ctl-edit-tag">C\u1EE5m Chi\xEAu MOBA \xB7 K\xE9o \u0111\u1EC3 d\u1EDDi</span>
+
+        <div id="moba-sec-row" class="moba-sec-row">
+          ${[3, 4, 5, 6].map(
+        (idx) => `
+          <button type="button" class="moba-btn moba-slot-btn moba-slot-btn--${idx}" data-moba-slot="${idx}" title="\xD4 C\u1ED5 ${idx + 1}">
+            <span class="arch-icon"></span>
+            <span class="moba-cd-mask ctl-cd-mask"></span>
+            <span class="moba-cd-num ctl-cd-num"></span>
+            <span class="moba-key">${idx + 1}</span>
+          </button>`
+      ).join("")}
+        </div>
+
+        <button type="button" id="moba-km-1" class="moba-btn moba-km-btn moba-km-btn--1" title="S\xE1t chi\xEAu E">
+          <span id="moba-km-icon-1" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">E</span>
+        </button>
+
+        <button type="button" id="moba-km-0" class="moba-btn moba-km-btn moba-km-btn--0" title="S\xE1t chi\xEAu Q">
+          <span id="moba-km-icon-0" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">Q</span>
+        </button>
+
+        ${[0, 1, 2].map(
+        (idx) => `
+        <button type="button" class="moba-btn moba-slot-btn moba-slot-btn--${idx}" data-moba-slot="${idx}" title="\xD4 C\u1ED5 ${idx + 1}">
+          <span class="arch-icon"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">${idx + 1}</span>
+        </button>`
+      ).join("")}
+
+        <button type="button" id="moba-vital-btn" class="moba-btn moba-vital-btn" title="C\u1ED5 B\u1EA3n M\u1EC7nh (RMB)">
+          <span id="moba-vital-icon" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">RMB</span>
+        </button>
+
+        <button type="button" id="moba-target-btn" class="moba-btn moba-target-btn" title="\u0110\u1ED5i m\u1EE5c ti\xEAu (Tab)">
+          ${getUiIconSvg("combat")}
+          <span class="moba-key">Tab</span>
+        </button>
+
+        <button type="button" id="moba-basic-btn" class="moba-btn moba-basic-btn" title="\u0110\xE1nh th\u01B0\u1EDDng (LMB)">
+          ${getUiIconSvg("attack")}
+          <span class="moba-basic-lbl">\u0110\xE1nh</span>
+        </button>
+      </div>
+
+      <!-- C\u1EE4M PH\xCDM PH\u1EE4 (PH\xC9P B\u1ED4 TR\u1EE2 MOBA) -->
+      <div id="hud-aux-pad" class="ctl-aux-pad" data-hud-widget="aux">
+        <span class="ctl-edit-tag">Ph\xEDm Ph\u1EE5 \xB7 K\xE9o \u0111\u1EC3 d\u1EDDi</span>
+        <button type="button" id="aux-dash-btn" class="aux-btn aux-dash-btn" title="L\u01B0\u1EDBt n\xE9 (Space)">
+          <span class="aux-lbl">L\u01B0\u1EDBt</span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">Spc</span>
+        </button>
+        <button type="button" id="aux-absorb-btn" class="aux-btn aux-absorb-btn" title="Gi\u1EEF R \u0111\u1EC3 H\u1EA5p Thu Nguy\xEAn Th\u1EA1ch">
+          ${getUiIconSvg("absorb")}
+          <span class="moba-key">R</span>
+        </button>
+        <button type="button" class="aux-btn aux-qi-btn" data-moba-qi="0" title="V\u1EADt ph\u1EA9m nhanh Z">
+          <span id="aux-qi-icon-0" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span id="aux-qcnt-0" class="ctl-sq-cnt">0</span>
+          <span class="moba-key">Z</span>
+        </button>
+        <button type="button" class="aux-btn aux-qi-btn" data-moba-qi="1" title="V\u1EADt ph\u1EA9m nhanh G">
+          <span id="aux-qi-icon-1" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span id="aux-qcnt-1" class="ctl-sq-cnt">0</span>
+          <span class="moba-key">G</span>
+        </button>
+        <button type="button" id="aux-auto-btn" class="aux-btn aux-auto-btn" title="T\u1EF1 \u0111\xE1nh (T)">
+          <span id="aux-auto-lbl">T\u1EF1 \u0110\xE1nh</span>
+        </button>
+      </div>
+
+      <!-- THANH CH\u1EBE \u0110\u1ED8 CH\u1EC8NH B\u1ED0 C\u1EE4C HUD -->
+      <div id="hud-editor-bar" class="ctl-hud-editor-bar">
+        <div class="ctl-editor-title">K\xC9O TH\u1EA2 V\u1ECA TR\xCD JOYSTICK / C\u1EE4M CHI\xCAU / PH\xCDM PH\u1EE4</div>
+        <div class="ctl-editor-controls">
+          <span class="ctl-ed-grp">
+            <span>Joystick:</span>
+            <button type="button" id="hud-ed-joy-minus" class="ctl-parch-btn">-</button>
+            <strong id="hud-ed-joy-val">100%</strong>
+            <button type="button" id="hud-ed-joy-plus" class="ctl-parch-btn">+</button>
+          </span>
+          <span class="ctl-ed-grp">
+            <span>Chi\xEAu:</span>
+            <button type="button" id="hud-ed-sk-minus" class="ctl-parch-btn">-</button>
+            <strong id="hud-ed-sk-val">100%</strong>
+            <button type="button" id="hud-ed-sk-plus" class="ctl-parch-btn">+</button>
+          </span>
+          <button type="button" id="hud-ed-swap" class="ctl-parch-btn">\u0110\u1EA3o Tr\xE1i \u21C4 Ph\u1EA3i</button>
+          <button type="button" id="hud-ed-reset" class="ctl-parch-btn">M\u1EB7c \u0110\u1ECBnh</button>
+          <button type="button" id="hud-ed-done" class="ctl-btn-jade">L\u01B0u &amp; Xong</button>
+        </div>
+      </div>
+
+      <div id="skill-cancel-zone" class="skill-cancel-zone">\u2715 H\u1EE6Y CHI\xCAU</div>
     `;
     }
     _cacheElements() {
@@ -17970,6 +19036,16 @@
       this.ttTitle = this.hudRoot.querySelector("#hud-tt-title");
       this.ttMeta = this.hudRoot.querySelector("#hud-tt-meta");
       this.ttDesc = this.hudRoot.querySelector("#hud-tt-desc");
+      this.joystickZoneEl = this.hudRoot.querySelector("#joystick-zone");
+      this.mobaPadEl = this.hudRoot.querySelector("#hud-moba-pad");
+      this.auxPadEl = this.hudRoot.querySelector("#hud-aux-pad");
+      this.mobaVitalBtn = this.hudRoot.querySelector("#moba-vital-btn");
+      this.mobaVitalIcon = this.hudRoot.querySelector("#moba-vital-icon");
+      this.auxAutoBtn = this.hudRoot.querySelector("#aux-auto-btn");
+      this.auxAutoLbl = this.hudRoot.querySelector("#aux-auto-lbl");
+      this.auxAbsorbBtn = this.hudRoot.querySelector("#aux-absorb-btn");
+      this.edJoyVal = this.hudRoot.querySelector("#hud-ed-joy-val");
+      this.edSkVal = this.hudRoot.querySelector("#hud-ed-sk-val");
     }
     _showTooltip(title, meta, desc) {
       if (!this.tooltip) return;
@@ -17983,7 +19059,7 @@
     }
     _bindEvents(getDefaultAngle) {
       this.joystick = new VirtualJoystick(
-        this.hudRoot.querySelector("#joystick-zone"),
+        this.joystickZoneEl,
         this.hudRoot.querySelector("#joystick-base"),
         this.hudRoot.querySelector("#joystick-knob"),
         { maxRadius: 42, deadzone: 0.12 }
@@ -17992,8 +19068,106 @@
         slots: {},
         cancelZoneEl: this.hudRoot.querySelector("#skill-cancel-zone"),
         getDefaultAngle,
+        externalCooldowns: true,
+        canCast: (slotId) => {
+          if (this.isEditingHud) return false;
+          const p = this._lastPlayerRef;
+          if (!p) return true;
+          if (slotId === "dash") return true;
+          if (slotId === "vital") return Boolean(p.getVitalGu?.());
+          if (slotId === "km1") return Boolean(p.killerMoveIds?.[0]);
+          if (slotId === "km2") return Boolean(p.killerMoveIds?.[1]);
+          if (slotId.startsWith("slot_")) {
+            const idx = Number(slotId.slice(5));
+            return Boolean(p.getActiveGu?.(idx));
+          }
+          return true;
+        },
         onCast: (payload) => this.onCast?.(payload)
       });
+      const registerMobaAim = (btn, slotId) => {
+        if (!btn) return;
+        this.skillPad.registerButton(slotId, btn);
+      };
+      registerMobaAim(this.mobaVitalBtn, "vital");
+      for (let i = 0; i < 7; i++) {
+        const mBtn = this.hudRoot.querySelector(`[data-moba-slot="${i}"]`);
+        registerMobaAim(mBtn, `slot_${i}`);
+        mBtn?.addEventListener("mouseenter", () => {
+          const g = this.lastSlotData[i];
+          if (g) this._showTooltip(g.name, `Chuy\u1EC3n ${g.rank} \xB7 Ti\xEAu hao ${g.mpCost} Ch\xE2n nguy\xEAn \xB7 CD ${g.cooldown}s`, g.description);
+        });
+        mBtn?.addEventListener("mouseleave", () => this._hideTooltip());
+      }
+      registerMobaAim(this.hudRoot.querySelector("#moba-km-0"), "km1");
+      registerMobaAim(this.hudRoot.querySelector("#moba-km-1"), "km2");
+      registerMobaAim(this.hudRoot.querySelector("#aux-dash-btn"), "dash");
+      this.mobaVitalBtn?.addEventListener("mouseenter", () => {
+        const g = this.lastVitalData;
+        if (g) this._showTooltip(`${g.name} (C\u1ED5 B\u1EA3n M\u1EC7nh)`, `Chuy\u1EC3n ${g.rank} \xB7 Ch\xE2n nguy\xEAn ${g.mpCost}`, g.vitalResonanceDesc || g.description);
+      });
+      this.mobaVitalBtn?.addEventListener("mouseleave", () => this._hideTooltip());
+      [0, 1].forEach((idx) => {
+        const kmBtn = this.hudRoot.querySelector(`#moba-km-${idx}`);
+        kmBtn?.addEventListener("mouseenter", () => {
+          const km = this.lastKmData[idx];
+          if (km) this._showTooltip(`S\xE1t Chi\xEAu: ${km.name}`, `C\u1EA7n ${km.thoughtCost} Thanh Ni\u1EC7m \xB7 ${km.mpCost} Ch\xE2n nguy\xEAn`, km.desc);
+        });
+        kmBtn?.addEventListener("mouseleave", () => this._hideTooltip());
+      });
+      this.hudRoot.querySelector("#moba-basic-btn")?.addEventListener("pointerdown", (e) => {
+        if (this.isEditingHud) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        e.preventDefault();
+        this.onBasicAttack?.();
+      });
+      this.hudRoot.querySelector("#moba-target-btn")?.addEventListener("pointerdown", (e) => {
+        if (this.isEditingHud) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        e.preventDefault();
+        this.onCycleTarget?.();
+      });
+      this.hudRoot.querySelectorAll("[data-moba-qi]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (!this.isEditingHud) this.onUseQuickItem?.(Number(btn.dataset.mobaQi));
+        });
+      });
+      this.auxAutoBtn?.addEventListener("click", () => {
+        if (!this.isEditingHud) this.onToggleAutoCombat?.();
+      });
+      if (this.auxAbsorbBtn) {
+        const stopAbs = () => {
+          this.auxAbsorbBtn.classList.remove("is-active");
+          this.onAbsorbEnd?.();
+        };
+        this.auxAbsorbBtn.addEventListener("pointerdown", (e) => {
+          if (this.isEditingHud) return;
+          e.preventDefault();
+          this.auxAbsorbBtn.classList.add("is-active");
+          this.onAbsorbStart?.();
+        });
+        this.auxAbsorbBtn.addEventListener("pointerup", stopAbs);
+        this.auxAbsorbBtn.addEventListener("pointerleave", stopAbs);
+        this.auxAbsorbBtn.addEventListener("pointercancel", stopAbs);
+      }
+      this.hudRoot.querySelector("#hud-ed-joy-minus")?.addEventListener("click", () => {
+        this.updateHudLayout({ joystick: { scale: (this.hudLayout.joystick?.scale ?? 1) - 0.1 } });
+      });
+      this.hudRoot.querySelector("#hud-ed-joy-plus")?.addEventListener("click", () => {
+        this.updateHudLayout({ joystick: { scale: (this.hudLayout.joystick?.scale ?? 1) + 0.1 } });
+      });
+      this.hudRoot.querySelector("#hud-ed-sk-minus")?.addEventListener("click", () => {
+        const next = (this.hudLayout.skills?.scale ?? 1) - 0.1;
+        this.updateHudLayout({ skills: { scale: next }, aux: { scale: next } });
+      });
+      this.hudRoot.querySelector("#hud-ed-sk-plus")?.addEventListener("click", () => {
+        const next = (this.hudLayout.skills?.scale ?? 1) + 0.1;
+        this.updateHudLayout({ skills: { scale: next }, aux: { scale: next } });
+      });
+      this.hudRoot.querySelector("#hud-ed-swap")?.addEventListener("click", () => this.swapHudHands());
+      this.hudRoot.querySelector("#hud-ed-reset")?.addEventListener("click", () => this.resetHudLayout());
+      this.hudRoot.querySelector("#hud-ed-done")?.addEventListener("click", () => this.closeHudEditor());
+      this._bindHudEditorDrag();
       this.hudRoot.querySelector("#hud-avatar-btn")?.addEventListener("click", () => this.onOpenPanel?.("char"));
       this.questToggleBtn?.addEventListener("click", () => this.setQuestCollapsed(!this.questCollapsed));
       this.questHideBtn?.addEventListener("click", () => this.setQuestCollapsed(true));
@@ -18294,7 +19468,8 @@
       const vw = window.innerWidth || 1280;
       const vh = window.innerHeight || 720;
       const coarse = Boolean(window.matchMedia?.("(pointer: coarse)")?.matches);
-      const autoMobile = vw <= 932 && (vw <= 768 || vh <= 540) || coarse;
+      const isNativeApp = Boolean(window.Capacitor?.isNativePlatform?.());
+      const autoMobile = isNativeApp || vw <= 932 && (vw <= 768 || vh <= 540) || coarse;
       const isMobile = this.uiMode === "mobile" || this.uiMode === "auto" && autoMobile;
       const isPortrait = isMobile && vh > vw;
       const isLandscape = isMobile && vw >= vh;
@@ -18308,6 +19483,144 @@
         this.setMobileMenuOpen(false);
       }
       this._wasMobileUi = isMobile;
+    }
+    getHudLayout() {
+      return this._normalizeHudLayout(this.hudLayout);
+    }
+    updateHudLayout(patch = {}) {
+      const prev = this.hudLayout || createDefaultHudLayout();
+      this.hudLayout = this._normalizeHudLayout({
+        skillStyle: patch.skillStyle ?? prev.skillStyle,
+        handedness: patch.handedness ?? prev.handedness,
+        alwaysShowJoystick: patch.alwaysShowJoystick ?? prev.alwaysShowJoystick,
+        joystick: { ...prev.joystick, ...patch.joystick || {} },
+        skills: { ...prev.skills, ...patch.skills || {} },
+        aux: { ...prev.aux, ...patch.aux || {} }
+      });
+      this._saveHudLayout();
+      this.applyHudLayout();
+      return this.getHudLayout();
+    }
+    swapHudHands() {
+      const cur = this.hudLayout || createDefaultHudLayout();
+      const nextHand = cur.handedness === "left" ? "right" : "left";
+      const vw = window.innerWidth || 1280;
+      const mirrorPct = (widgetCfg, el) => {
+        if (widgetCfg?.xPct === null || widgetCfg?.xPct === void 0) return widgetCfg;
+        const wPct = el ? el.getBoundingClientRect().width / Math.max(1, vw) * 100 : 18;
+        return {
+          ...widgetCfg,
+          xPct: Math.round(clampHudVal(100 - wPct - widgetCfg.xPct, 1, 86, widgetCfg.xPct) * 10) / 10
+        };
+      };
+      return this.updateHudLayout({
+        handedness: nextHand,
+        joystick: mirrorPct(cur.joystick, this.joystickZoneEl),
+        skills: mirrorPct(cur.skills, this.mobaPadEl),
+        aux: mirrorPct(cur.aux, this.auxPadEl)
+      });
+    }
+    resetHudLayout() {
+      this.hudLayout = createDefaultHudLayout();
+      this._saveHudLayout();
+      this.applyHudLayout();
+      return this.getHudLayout();
+    }
+    applyHudLayout() {
+      const l = this.hudLayout || createDefaultHudLayout();
+      document.body.classList.toggle("is-skill-moba", l.skillStyle !== "bar");
+      document.body.classList.toggle("is-skill-bar", l.skillStyle === "bar");
+      document.body.classList.toggle("is-left-handed", l.handedness === "left");
+      document.body.classList.toggle("is-joy-always", Boolean(l.alwaysShowJoystick));
+      const applyWidget = (el, cfg) => {
+        if (!el || !cfg) return;
+        el.style.setProperty("--ctl-widget-scale", String(cfg.scale ?? 1));
+        if (cfg.xPct !== null && cfg.yPct !== null) {
+          el.style.left = `${cfg.xPct}%`;
+          el.style.top = `${cfg.yPct}%`;
+          el.style.right = "auto";
+          el.style.bottom = "auto";
+          el.classList.add("is-custom-pos");
+        } else {
+          el.style.left = "";
+          el.style.top = "";
+          el.style.right = "";
+          el.style.bottom = "";
+          el.classList.remove("is-custom-pos");
+        }
+      };
+      applyWidget(this.joystickZoneEl, l.joystick);
+      applyWidget(this.mobaPadEl, l.skills);
+      applyWidget(this.auxPadEl, l.aux);
+      if (this.edJoyVal) this.edJoyVal.textContent = `${Math.round((l.joystick?.scale ?? 1) * 100)}%`;
+      if (this.edSkVal) this.edSkVal.textContent = `${Math.round((l.skills?.scale ?? 1) * 100)}%`;
+    }
+    openHudEditor() {
+      this.isEditingHud = true;
+      this.setMobileMenuOpen(false);
+      document.body.classList.add("is-editing-hud");
+      this.applyHudLayout();
+    }
+    closeHudEditor() {
+      this.isEditingHud = false;
+      document.body.classList.remove("is-editing-hud");
+      this.applyHudLayout();
+    }
+    _bindHudEditorDrag() {
+      const widgets = [
+        ["joystick", this.joystickZoneEl],
+        ["skills", this.mobaPadEl],
+        ["aux", this.auxPadEl]
+      ];
+      for (const [key, el] of widgets) {
+        if (!el) continue;
+        let dragState = null;
+        el.addEventListener("pointerdown", (e) => {
+          if (!this.isEditingHud) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const rect = el.getBoundingClientRect();
+          try {
+            el.setPointerCapture(e.pointerId);
+          } catch {
+          }
+          dragState = {
+            pointerId: e.pointerId,
+            offsetX: e.clientX - rect.left,
+            offsetY: e.clientY - rect.top,
+            w: rect.width,
+            h: rect.height
+          };
+        });
+        const onMove = (e) => {
+          if (!dragState || e.pointerId !== dragState.pointerId || !this.isEditingHud) return;
+          e.preventDefault();
+          const vw = Math.max(1, window.innerWidth || 1280);
+          const vh = Math.max(1, window.innerHeight || 720);
+          const nextLeft = Math.max(4, Math.min(vw - Math.min(dragState.w, vw * 0.85) - 4, e.clientX - dragState.offsetX));
+          const nextTop = Math.max(48, Math.min(vh - Math.min(dragState.h, vh * 0.85) - 4, e.clientY - dragState.offsetY));
+          const xPct = Math.round(nextLeft / vw * 100 * 10) / 10;
+          const yPct = Math.round(nextTop / vh * 100 * 10) / 10;
+          dragState.xPct = xPct;
+          dragState.yPct = yPct;
+          el.style.left = `${xPct}%`;
+          el.style.top = `${yPct}%`;
+          el.style.right = "auto";
+          el.style.bottom = "auto";
+          el.classList.add("is-custom-pos");
+        };
+        const onUp = (e) => {
+          if (!dragState || e.pointerId !== dragState.pointerId) return;
+          const { xPct, yPct } = dragState;
+          dragState = null;
+          if (xPct !== void 0 && yPct !== void 0) {
+            this.updateHudLayout({ [key]: { xPct, yPct } });
+          }
+        };
+        el.addEventListener("pointermove", onMove);
+        el.addEventListener("pointerup", onUp);
+        el.addEventListener("pointercancel", onUp);
+      }
     }
     focusChatInput() {
       this.setChatCollapsed(false);
@@ -18335,6 +19648,7 @@
       this.chatLines.scrollTop = this.chatLines.scrollHeight;
     }
     syncState(player2, world2, onlineHub2 = null) {
+      this._lastPlayerRef = player2;
       const stage = player2.getStage();
       const apt = player2.getAptitudeInfo();
       if (this.charNameEl) this.charNameEl.textContent = player2.characterName;
@@ -18507,66 +19821,97 @@
       this._drawMinimap(player2, world2, mapDef);
       const vital = player2.getVitalGu();
       this.lastVitalData = vital;
-      if (this.vitalIcon && this.vitalBtn) {
-        const key = vital ? vital.id : "empty";
-        if (this.vitalIcon.dataset.key !== key) {
-          this.vitalIcon.dataset.key = key;
-          this.vitalIcon.innerHTML = getGuIconSvg(vital);
+      const vitalCd = player2.getCooldownInfo("vital");
+      const vitalOom = Boolean(vital && player2.mp < (vital.mpCost ?? 0));
+      const vitalKey = vital ? vital.id : "empty";
+      for (const [btnEl, iconEl] of [
+        [this.vitalBtn, this.vitalIcon],
+        [this.mobaVitalBtn, this.mobaVitalIcon]
+      ]) {
+        if (!btnEl || !iconEl) continue;
+        if (iconEl.dataset.key !== vitalKey) {
+          iconEl.dataset.key = vitalKey;
+          iconEl.innerHTML = getGuIconSvg(vital);
         }
-        this.vitalBtn.style.borderColor = vital ? vital.color : "#4de0c9";
-        this._updateSlotCooldownEl(this.vitalBtn, player2.getCooldownInfo("vital"), Boolean(vital && player2.mp < (vital.mpCost ?? 0)));
+        btnEl.style.borderColor = vital ? vital.color : "#4de0c9";
+        this._updateSlotCooldownEl(btnEl, vitalCd, vitalOom);
       }
       for (let i = 0; i < 7; i++) {
-        const el = this.hudRoot.querySelector(`[data-arch-slot="${i}"]`);
-        if (!el) continue;
         const unlocked = i < stage.activeSlotsUnlocked;
         const g = player2.getActiveGu(i);
         this.lastSlotData[i] = unlocked ? g : null;
-        el.classList.toggle("is-locked", !unlocked);
-        el.style.borderColor = unlocked && g ? g.color : "#485b75";
-        const iconHost = el.querySelector(".arch-icon");
         const nextKey = !unlocked ? "lock" : g ? g.id : "empty";
-        if (iconHost && iconHost.dataset.key !== nextKey) {
-          iconHost.dataset.key = nextKey;
-          iconHost.innerHTML = !unlocked ? getUiIconSvg("lock") : getGuIconSvg(g);
+        const cdInfo = player2.getCooldownInfo(`slot_${i}`);
+        const isOom = Boolean(unlocked && g && player2.mp < (g.mpCost ?? 0));
+        const color = unlocked && g ? g.color : "#485b75";
+        for (const selector of [`[data-arch-slot="${i}"]`, `[data-moba-slot="${i}"]`]) {
+          const el = this.hudRoot.querySelector(selector);
+          if (!el) continue;
+          el.classList.toggle("is-locked", !unlocked);
+          el.style.borderColor = color;
+          const iconHost = el.querySelector(".arch-icon");
+          if (iconHost && iconHost.dataset.key !== nextKey) {
+            iconHost.dataset.key = nextKey;
+            iconHost.innerHTML = !unlocked ? getUiIconSvg("lock") : getGuIconSvg(g);
+          }
+          this._updateSlotCooldownEl(el, cdInfo, isOom);
         }
-        this._updateSlotCooldownEl(el, player2.getCooldownInfo(`slot_${i}`), Boolean(unlocked && g && player2.mp < (g.mpCost ?? 0)));
       }
       this.lastKmData = [
         KILLER_MOVES.find((k) => k.id === player2.killerMoveIds[0]),
         KILLER_MOVES.find((k) => k.id === player2.killerMoveIds[1])
       ];
       for (let i = 0; i < 2; i++) {
-        const btn = this.hudRoot.querySelector(`#hud-km-${i}`);
         const km = this.lastKmData[i];
-        const iconHost = this.hudRoot.querySelector(`#hud-km-icon-${i}`);
-        if (iconHost && iconHost.dataset.key !== (km?.id || "none")) {
-          iconHost.dataset.key = km?.id || "none";
-          iconHost.innerHTML = getKillerMovePixelImgHtml(km);
-        }
         const cd = player2.getCooldownInfo(i === 0 ? "km1" : "km2");
-        btn?.classList.toggle("is-ready", Boolean(km && player2.thoughtGauge >= km.thoughtCost && cd.rem <= 0));
-        this._updateSlotCooldownEl(btn, cd, Boolean(km && (player2.thoughtGauge < km.thoughtCost || player2.mp < km.mpCost)));
+        const ready = Boolean(km && player2.thoughtGauge >= km.thoughtCost && cd.rem <= 0);
+        const isOom = Boolean(km && (player2.thoughtGauge < km.thoughtCost || player2.mp < km.mpCost));
+        for (const [btnSel, iconSel] of [
+          [`#hud-km-${i}`, `#hud-km-icon-${i}`],
+          [`#moba-km-${i}`, `#moba-km-icon-${i}`]
+        ]) {
+          const btn = this.hudRoot.querySelector(btnSel);
+          const iconHost = this.hudRoot.querySelector(iconSel);
+          if (iconHost && iconHost.dataset.key !== (km?.id || "none")) {
+            iconHost.dataset.key = km?.id || "none";
+            iconHost.innerHTML = getKillerMovePixelImgHtml(km);
+          }
+          btn?.classList.toggle("is-ready", ready);
+          this._updateSlotCooldownEl(btn, cd, isOom);
+        }
       }
       for (let i = 0; i < 2; i++) {
         const id = player2.quickItemIds[i];
         const item = ITEMS_CATALOG[id];
-        const btn = this.hudRoot.querySelector(`[data-quick-item="${i}"]`);
-        const iconEl = this.hudRoot.querySelector(`#hud-qi-icon-${i}`);
-        if (iconEl && iconEl.dataset.key !== (id || "none")) {
-          iconEl.dataset.key = id || "none";
-          iconEl.innerHTML = item ? getItemIconSvg(item) : "+";
+        const cd = player2.getCooldownInfo(`qi_${i}`);
+        const cntTxt = String(id ? player2.getItemCount(id) : 0);
+        for (const [btnSel, iconSel, cntSel] of [
+          [`[data-quick-item="${i}"]`, `#hud-qi-icon-${i}`, `#hud-qcnt-${i}`],
+          [`[data-moba-qi="${i}"]`, `#aux-qi-icon-${i}`, `#aux-qcnt-${i}`]
+        ]) {
+          const btn = this.hudRoot.querySelector(btnSel);
+          const iconEl = this.hudRoot.querySelector(iconSel);
+          const cntEl = this.hudRoot.querySelector(cntSel);
+          if (iconEl && iconEl.dataset.key !== (id || "none")) {
+            iconEl.dataset.key = id || "none";
+            iconEl.innerHTML = item ? getItemIconSvg(item) : "+";
+          }
+          if (cntEl) cntEl.textContent = cntTxt;
+          this._updateSlotCooldownEl(btn, cd, false);
         }
-        this.hudRoot.querySelector(`#hud-qcnt-${i}`).textContent = id ? player2.getItemCount(id) : 0;
-        this._updateSlotCooldownEl(btn, player2.getCooldownInfo(`qi_${i}`), false);
       }
-      if (this.autoBtn) {
-        const activeAuto = Boolean(player2.autoCombat);
-        const nextAutoKey = activeAuto ? "1" : "0";
-        if (this._lastAutoCombatKey !== nextAutoKey) {
-          this._lastAutoCombatKey = nextAutoKey;
+      this._updateSlotCooldownEl(this.hudRoot.querySelector("#aux-dash-btn"), player2.getCooldownInfo("dash"), false);
+      const activeAuto = Boolean(player2.autoCombat);
+      const nextAutoKey = activeAuto ? "1" : "0";
+      if (this._lastAutoCombatKey !== nextAutoKey) {
+        this._lastAutoCombatKey = nextAutoKey;
+        if (this.autoBtn) {
           this.autoBtn.classList.toggle("is-active", activeAuto);
           this.autoBtn.innerHTML = `${activeAuto ? "\u0110ang T\u1EF1 \u0110\xE1nh" : "T\u1EF1 \u0110\xE1nh"}<span class="ctl-kb-hint"> [T]</span>`;
+        }
+        if (this.auxAutoBtn) {
+          this.auxAutoBtn.classList.toggle("is-active", activeAuto);
+          if (this.auxAutoLbl) this.auxAutoLbl.textContent = activeAuto ? "\u0110ang Auto" : "T\u1EF1 \u0110\xE1nh";
         }
       }
       this.stealthPill?.classList.toggle("is-visible", Boolean(player2.isStealthed));
@@ -18713,7 +20058,12 @@
       onOpenAccountModal,
       onSwitchCharacter,
       getUiMode,
-      onCycleUiMode
+      onCycleUiMode,
+      getHudLayout,
+      onUpdateHudLayout,
+      onSwapHudHands,
+      onResetHudLayout,
+      onOpenHudEditor
     }) {
       this.root = rootEl;
       this.player = player2;
@@ -18729,6 +20079,11 @@
       this.onSwitchCharacter = onSwitchCharacter;
       this.getUiMode = getUiMode;
       this.onCycleUiMode = onCycleUiMode;
+      this.getHudLayout = getHudLayout;
+      this.onUpdateHudLayout = onUpdateHudLayout;
+      this.onSwapHudHands = onSwapHudHands;
+      this.onResetHudLayout = onResetHudLayout;
+      this.onOpenHudEditor = onOpenHudEditor;
       this.panel = null;
       this.subTab = "main";
       this.questRankFilter = 1;
@@ -19244,7 +20599,7 @@
     `;
     }
     _buildRankGuQuestsBody() {
-      const rankTabs = [1, 2, 3].map((r) => `<button type="button" class="floor-pill ${this.questRankFilter === r ? "is-selected" : ""}" data-gq-rank="${r}">C\u1ED5 Tr\xF9ng Chuy\u1EC3n ${r}</button>`).join("");
+      const rankTabs = [1, 2, 3, 4, 5].map((r) => `<button type="button" class="floor-pill ${this.questRankFilter === r ? "is-selected" : ""}" data-gq-rank="${r}">C\u1ED5 Chuy\u1EC3n ${r}</button>`).join("");
       const active = this.player.activeGuQuest;
       const claimedSet = new Set(this.player.claimedGuQuestIds ?? []);
       const list = RANK_GU_QUESTS.filter((q) => q.rank === this.questRankFilter);
@@ -19254,27 +20609,29 @@
         const isDone = isAct && active.completed;
         const isClaimed = claimedSet.has(q.id);
         const cur = isAct ? Math.min(q.goal.count ?? 1, active.progress ?? 0) : 0;
+        const reqRank = q.rank >= 4 ? q.rank : Math.max(1, q.rank - 1);
+        const feeTag = q.stoneFee ? ` \xB7 Ph\xED nh\u1EADn: ${q.stoneFee} Th\u1EA1ch` : "";
         return `
           <div class="ctl-stat-row" style="align-items:center">
             <div style="display:flex;align-items:center;gap:8px">
               <span class="ctl-icon-box" style="width:34px;height:34px">${getGuIconSvg(gu)}</span>
               <div>
-                <div style="display:flex;align-items:center;gap:6px">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                   <strong style="color:${gu?.color || "#e3bc6b"}">${q.title}</strong>
                   <span class="ctl-qi-badge">${q.pathLabel}</span>
                 </div>
                 <div class="ctl-sub-txt">${q.desc}</div>
-                <div class="ctl-sub-txt">Th\u01B0\u1EDFng: <b style="color:${gu?.color}">${gu?.name}</b> + <b>${q.rewards.stones} Nguy\xEAn Th\u1EA1ch</b>${isAct ? ` \xB7 Ti\u1EBFn \u0111\u1ED9: <b>${cur}/${q.goal.count ?? 1}</b>` : ""}</div>
+                <div class="ctl-sub-txt">Th\u01B0\u1EDFng: <b style="color:${gu?.color}">${gu?.name}</b> + <b>${q.rewards.stones} Nguy\xEAn Th\u1EA1ch</b> \xB7 Y\xEAu c\u1EA7u Chuy\u1EC3n ${reqRank}${feeTag}${isAct ? ` \xB7 Ti\u1EBFn \u0111\u1ED9: <b>${cur}/${q.goal.count ?? 1}</b>` : ""}</div>
               </div>
             </div>
             <div style="flex-shrink:0">
-              ${isClaimed ? `<span class="ctl-sub-txt">\u0110\xE3 thu ph\u1EE5c</span>` : isDone ? `<button type="button" class="ctl-btn-jade" data-claim-gu-quest="${q.id}">Luy\u1EC7n H\xF3a C\u1ED5!</button>` : isAct ? `<button type="button" class="ctl-parch-btn" data-go-mission="${q.mapId}:${q.x}:${q.y}">\u0110i S\u0103n (${cur}/${q.goal.count ?? 1})</button>` : `<button type="button" class="ctl-btn-gold" data-accept-gu-quest="${q.id}">Ch\u1ECDn Nhi\u1EC7m V\u1EE5</button>`}
+              ${isClaimed ? `<span class="ctl-sub-txt">\u0110\xE3 thu ph\u1EE5c</span>` : isDone ? `<button type="button" class="ctl-btn-jade" data-claim-gu-quest="${q.id}">Luy\u1EC7n H\xF3a C\u1ED5!</button>` : isAct ? `<button type="button" class="ctl-parch-btn" data-go-mission="${q.mapId}:${q.x}:${q.y}">\u0110i S\u0103n (${cur}/${q.goal.count ?? 1})</button>` : `<button type="button" class="ctl-btn-gold" data-accept-gu-quest="${q.id}">Ch\u1ECDn (${q.stoneFee ? `${q.stoneFee}\u{1F48E}` : "Mi\u1EC5n ph\xED"})</button>`}
             </div>
           </div>
         `;
       }).join("");
       return `
-      <div style="display:flex;gap:6px;margin-bottom:8px">${rankTabs}</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">${rankTabs}</div>
       <div class="ctl-scroll-list" style="max-height:290px">${rows}</div>
     `;
     }
@@ -19416,6 +20773,15 @@
       const isMuted = this.sfx?.muted;
       const uiMode = this.getUiMode?.() || "auto";
       const uiModeLabel = uiMode === "mobile" ? "\u0110i\u1EC7n Tho\u1EA1i" : uiMode === "desktop" ? "M\xE1y T\xEDnh" : "T\u1EF1 \u0110\u1ED9ng";
+      const layout = this.getHudLayout?.() || {
+        skillStyle: "moba",
+        handedness: "right",
+        alwaysShowJoystick: false,
+        joystick: { scale: 1 },
+        skills: { scale: 1 }
+      };
+      const joyPct = Math.round((layout.joystick?.scale ?? 1) * 100);
+      const skillPct = Math.round((layout.skills?.scale ?? 1) * 100);
       return `
       <div class="ctl-box">
         <div class="ctl-box-title">T\xF9y Ch\u1ECDn & T\xE0i Kho\u1EA3n</div>
@@ -19426,9 +20792,30 @@
           <button type="button" id="btn-open-acc" class="ctl-parch-btn">T\xE0i Kho\u1EA3n \u0110\xE1m M\xE2y</button>
           <button type="button" id="btn-switch-char" class="ctl-btn-jade">Quay V\u1EC1 Ch\u1ECDn Nh\xE2n V\u1EADt</button>
         </div>
-        <div class="ctl-sub-txt" style="margin-top:10px">
-          <b>M\xE1y t\xEDnh:</b> WASD di chuy\u1EC3n \xB7 Chu\u1ED9t Tr\xE1i \u0111\xE1nh th\u01B0\u1EDDng \xB7 Chu\u1ED9t Ph\u1EA3i C\u1ED5 B\u1EA3n M\u1EC7nh \xB7 1-7 C\u1ED5 Ch\u1EE7 \u0110\u1ED9ng \xB7 Q/E S\xE1t Chi\xEAu \xB7 Z/G \u0110an D\u01B0\u1EE3c \xB7 Gi\u1EEF R H\u1EA5p Thu \xB7 X B\u1EBF Quan \xB7 F T\u01B0\u01A1ng t\xE1c \xB7 Tab \u0110\u1ED5i m\u1EE5c ti\xEAu \xB7 Space L\u01B0\u1EDBt.<br/>
-          <b>\u0110i\u1EC7n tho\u1EA1i / C\u1EA3m \u1EE9ng:</b> K\xE9o Joystick g\xF3c d\u01B0\u1EDBi-tr\xE1i \u0111\u1EC3 di chuy\u1EC3n \xB7 Ch\u1EA1m b\u1EA3n \u0111\u1ED3 \u0111\u1EC3 ch\u1ECDn m\u1EE5c ti\xEAu/\u0111i t\u1EDBi \xB7 Ch\u1EA1m tr\u1EF1c ti\u1EBFp n\xFAt \u0110\xE1nh, C\u1ED5 Tr\xF9ng, S\xE1t Chi\xEAu v\xE0 Menu b\xEAn ph\u1EA3i.
+      </div>
+
+      <div class="ctl-box" style="margin-top:8px">
+        <div class="ctl-box-title">T\xF9y Ch\u1EC9nh V\u1ECB Tr\xED Joystick & C\u1EE5m Chi\xEAu MOBA</div>
+        <div class="ctl-btn-row" style="margin-top:6px;flex-wrap:wrap;justify-content:flex-start">
+          <button type="button" id="btn-open-hud-editor" class="ctl-btn-jade">Ch\u1EC9nh V\u1ECB Tr\xED N\xFAt (K\xE9o Th\u1EA3 Tr\u1EF1c Ti\u1EBFp)</button>
+          <button type="button" id="btn-toggle-skill-style" class="ctl-parch-btn">Ki\u1EC3u Chi\xEAu: ${layout.skillStyle === "bar" ? "Thanh Ngang PC" : "C\u1EE5m N\xFAt MOBA"}</button>
+          <button type="button" id="btn-swap-hud-hands" class="ctl-parch-btn">${layout.handedness === "left" ? "\u0110\u1EA3o Tay: Chi\xEAu Tr\xE1i \xB7 Stick Ph\u1EA3i" : "Thu\u1EADn Tay: Stick Tr\xE1i \xB7 Chi\xEAu Ph\u1EA3i"}</button>
+          <button type="button" id="btn-toggle-joy-vis" class="ctl-parch-btn">Joystick: ${layout.alwaysShowJoystick ? "Lu\xF4n Hi\u1EC7n" : "T\u1EF1 \u0110\u1ED9ng (Mobile)"}</button>
+          <button type="button" id="btn-reset-hud-layout" class="ctl-btn-gold">M\u1EB7c \u0110\u1ECBnh</button>
+        </div>
+        <div class="ctl-grid-2" style="margin-top:10px">
+          <label class="acc-field">
+            <span>C\u1EE1 V\xF2ng Joystick: <b id="lbl-joy-scale">${joyPct}%</b></span>
+            <input type="range" id="rng-joy-scale" min="70" max="140" step="5" value="${joyPct}" />
+          </label>
+          <label class="acc-field">
+            <span>C\u1EE1 C\u1EE5m Chi\xEAu MOBA: <b id="lbl-skill-scale">${skillPct}%</b></span>
+            <input type="range" id="rng-skill-scale" min="70" max="135" step="5" value="${skillPct}" />
+          </label>
+        </div>
+        <div class="ctl-sub-txt" style="margin-top:8px">
+          <b>Ch\u1EA1m & K\xE9o th\u1EA3 (MOBA):</b> Nh\u1EA5n nh\u1EA3 nhanh n\xFAt chi\xEAu \u0111\u1EC3 tung ngay theo h\u01B0\u1EDBng \u0111ang ch\u1EA1y/m\u1EE5c ti\xEAu; gi\u1EEF & k\xE9o n\xFAt chi\xEAu \u0111\u1EC3 ng\u1EAFm 360\xB0, k\xE9o v\xE0o v\xF9ng \u0111\u1ECF <b>H\u1EE6Y</b> \u0111\u1EC3 h\u1EE7y chi\xEAu.<br/>
+          <b>M\xE1y t\xEDnh:</b> WASD \xB7 LMB/RMB \xB7 1-7 \xB7 Q/E \xB7 Z/G \xB7 Gi\u1EEF R H\u1EA5p Thu \xB7 X B\u1EBF Quan \xB7 F T\u01B0\u01A1ng t\xE1c \xB7 Tab \u0110\u1ED5i m\u1EE5c ti\xEAu \xB7 Space L\u01B0\u1EDBt.
         </div>
       </div>
     `;
@@ -19542,6 +20929,17 @@
         btn.addEventListener("click", () => {
           const q = RANK_GU_QUESTS.find((x) => x.id === btn.dataset.acceptGuQuest);
           if (!q) return;
+          const playerRank = this.player.getStage().rank;
+          const reqRank = q.rank >= 4 ? q.rank : Math.max(1, q.rank - 1);
+          if (playerRank < reqRank) {
+            this._flash(`C\u1EA7n \u0111\u1EA1t c\u1EA3nh gi\u1EDBi Chuy\u1EC3n ${reqRank} m\u1EDBi nh\u1EADn \u0111\u01B0\u1EE3c nhi\u1EC7m v\u1EE5 C\u1ED5 Chuy\u1EC3n ${q.rank}!`, "fail");
+            return;
+          }
+          if (q.stoneFee && this.player.nguyenThach < q.stoneFee) {
+            this._flash(`C\u1EA7n ${q.stoneFee} Nguy\xEAn Th\u1EA1ch ph\xED t\u1EA7m c\u1ED5!`, "fail");
+            return;
+          }
+          if (q.stoneFee) this.player.nguyenThach -= q.stoneFee;
           this.player.selectGuQuest(q);
           this.sfx?.play("pickup");
           this.onStateChanged?.();
@@ -19826,10 +21224,22 @@
           const stoneId = btn.dataset.cutStone;
           if (!this.player.consumeItem(stoneId, 1)) return;
           const tier = ITEMS_CATALOG[stoneId]?.tier ?? 1;
-          const pool = Object.values(GU_CATALOG).filter((g) => g.rank <= tier + 1);
+          const guChance = tier === 1 ? 0.32 : tier === 2 ? 0.25 : 0.18;
           const roll = Math.random();
           const maxCap = this.player.getMaxGuCapacity();
-          if (roll < 0.52) {
+          if (roll < guChance) {
+            const rPick = Math.random();
+            let targetRank = 1;
+            if (tier === 1) {
+              targetRank = rPick < 0.92 ? 1 : 2;
+            } else if (tier === 2) {
+              targetRank = rPick < 0.58 ? 1 : rPick < 0.9 ? 2 : rPick < 0.995 ? 3 : 4;
+            } else {
+              targetRank = rPick < 0.36 ? 2 : rPick < 0.82 ? 3 : rPick < 0.975 ? 4 : 5;
+            }
+            const rankPool = Object.values(GU_CATALOG).filter((g) => g.rank === targetRank);
+            const fallbackPool = Object.values(GU_CATALOG).filter((g) => g.rank <= tier + 1);
+            const pool = rankPool.length > 0 ? rankPool : fallbackPool;
             const picked = pool[Math.floor(Math.random() * pool.length)];
             if (this.player.guBag.length >= maxCap) {
               const comp = tier * 65;
@@ -19917,6 +21327,42 @@
       this.root.querySelector("#btn-cycle-uimode")?.addEventListener("click", () => {
         this.onCycleUiMode?.();
         this.render();
+      });
+      this.root.querySelector("#btn-open-hud-editor")?.addEventListener("click", () => {
+        this.close();
+        this.onOpenHudEditor?.();
+      });
+      this.root.querySelector("#btn-toggle-skill-style")?.addEventListener("click", () => {
+        const cur = this.getHudLayout?.();
+        const nextStyle = cur?.skillStyle === "bar" ? "moba" : "bar";
+        this.onUpdateHudLayout?.({ skillStyle: nextStyle });
+        this.render();
+      });
+      this.root.querySelector("#btn-swap-hud-hands")?.addEventListener("click", () => {
+        this.onSwapHudHands?.();
+        this.render();
+      });
+      this.root.querySelector("#btn-toggle-joy-vis")?.addEventListener("click", () => {
+        const cur = this.getHudLayout?.();
+        this.onUpdateHudLayout?.({ alwaysShowJoystick: !cur?.alwaysShowJoystick });
+        this.render();
+      });
+      this.root.querySelector("#btn-reset-hud-layout")?.addEventListener("click", () => {
+        this.onResetHudLayout?.();
+        this.render();
+        this._flash("\u0110\xE3 kh\xF4i ph\u1EE5c v\u1ECB tr\xED Joystick & C\u1EE5m Chi\xEAu m\u1EB7c \u0111\u1ECBnh!");
+      });
+      this.root.querySelector("#rng-joy-scale")?.addEventListener("input", (e) => {
+        const pct = Number(e.target.value) || 100;
+        const lbl = this.root.querySelector("#lbl-joy-scale");
+        if (lbl) lbl.textContent = `${pct}%`;
+        this.onUpdateHudLayout?.({ joystick: { scale: pct / 100 } });
+      });
+      this.root.querySelector("#rng-skill-scale")?.addEventListener("input", (e) => {
+        const pct = Number(e.target.value) || 100;
+        const lbl = this.root.querySelector("#lbl-skill-scale");
+        if (lbl) lbl.textContent = `${pct}%`;
+        this.onUpdateHudLayout?.({ skills: { scale: pct / 100 }, aux: { scale: pct / 100 } });
       });
       this.root.querySelector("#btn-open-mirror")?.addEventListener("click", () => {
         this.close();
@@ -20094,6 +21540,12 @@
       else if (this.screen === "char_create" || this.screen === "appearance_mirror") {
         this._renderCustomizerScreen(this.screen === "appearance_mirror");
       }
+      this.root.querySelector(".ctl-novel-corner-link")?.addEventListener("click", (e) => {
+        if (window.Capacitor?.isNativePlatform?.()) {
+          e.preventDefault();
+          window.open(e.currentTarget.href, "_blank", "noopener,noreferrer");
+        }
+      });
       this._startBambooBackdrop();
     }
     _renderLoginScreen() {
@@ -20141,7 +21593,7 @@
                 ${this.authBusy ? "\u0110ang k\u1EBFt n\u1ED1i..." : isReg ? "\u0110\u0103ng K\xFD & B\u01B0\u1EDBc V\xE0o Nam C\u01B0\u01A1ng" : "V\xE0o Giang H\u1ED3"}
               </button>
               <button type="button" id="gate-guest-btn" class="ctl-btn-gold" ${this.authBusy ? "disabled" : ""}>
-                Ch\u01A1i Ngay (Kh\xE1ch \u2014 L\u01B0u Tr\xEAn M\xE1y)
+                Quay L\u1EA1i Ch\u01A1i Offline Tr\xEAn M\xE1y
               </button>
             </div>
           </form>
@@ -20195,7 +21647,7 @@
     }
     _renderCharSelectScreen() {
       const isOnline = this.account.isLoggedIn();
-      const accLabel = isOnline ? `M\xE1y ch\u1EE7 Nam C\u01B0\u01A1ng \xB7 <b>${this.account.profile.username ?? "\u0110\u1EA1o H\u1EEFu"}</b>` : `Ch\u1EBF \u0111\u1ED9 Kh\xE1ch (L\u01B0u n\u1ED9i b\u1ED9 tr\xEAn tr\xECnh duy\u1EC7t)`;
+      const accLabel = isOnline ? `M\xE1y ch\u1EE7 Nam C\u01B0\u01A1ng \xB7 <b>${this.account.profile.username ?? "\u0110\u1EA1o H\u1EEFu"}</b>` : `L\u01B0u Tr\u1EF1c Ti\u1EBFp Tr\xEAn M\xE1y (Ch\u01A1i Offline \u0110\u1ED9c L\u1EADp)`;
       const slotsHtml = [0, 1, 2].map((slotIdx) => {
         const ch = this.account.characters[slotIdx];
         if (!ch) {
@@ -20249,7 +21701,7 @@
           </div>
           <div class="gate-topbar-right">
             <button type="button" id="gate-switch-acc-btn" class="mini-hud-btn">
-              ${isOnline ? "\u0110\u1ED5i T\xE0i Kho\u1EA3n" : "\u0110\u0103ng Nh\u1EADp"}
+              ${isOnline ? "\u0110\u1ED5i T\xE0i Kho\u1EA3n" : "\u0110\u1ED3ng B\u1ED9 \u0110\xE1m M\xE2y"}
             </button>
           </div>
         </div>
@@ -20616,22 +22068,29 @@
       };
       this.rafId = requestAnimationFrame(tick);
     }
-    _runRefine({ guName, onSuccess, onFail }) {
-      const state = { timer: 8, progress: 30, needle: 50, zone: 50, holding: false };
+    _runRefine({ guName, guRank = 1, onSuccess, onFail }) {
+      const rank = Math.max(1, Math.min(5, Number(guRank) || 1));
+      const zoneWidth = [28, 28, 22, 18, 14, 11.5][rank] || 20;
+      const halfZone = zoneWidth * 0.5;
+      const gainRate = [32, 32, 27, 23, 20, 18][rank] || 24;
+      const drainRate = [10, 10, 14, 18, 23, 28][rank] || 15;
+      const needleUp = [58, 58, 62, 66, 70, 74][rank] || 60;
+      const needleDown = [44, 44, 48, 54, 60, 66][rank] || 46;
+      const state = { timer: 7.5 + rank * 0.85, progress: rank >= 4 ? 18 : 28, needle: 50, zone: 50, holding: false };
       this.root.innerHTML = `
       <div class="ctl-mg-card">
         <div class="ctl-mg-head">
-          <span>\u{1FAB2} Luy\u1EC7n H\xF3a: ${guName}</span>
-          <span id="mg-time">8.0s</span>
+          <span>Luy\u1EC7n H\xF3a: ${guName}</span>
+          <span id="mg-time">${state.timer.toFixed(1)}s</span>
           <button type="button" id="mg-close" class="ctl-mini-circle">\xD7</button>
         </div>
-        <div class="ctl-mg-label">Ti\u1EBFn \u0111\u1ED9 thu ph\u1EE5c: <b id="mg-prog-pct">30%</b></div>
+        <div class="ctl-mg-label">Ti\u1EBFn \u0111\u1ED9 thu ph\u1EE5c (\u0110\u1ED9 kh\xF3 C${rank}): <b id="mg-prog-pct">${state.progress}%</b></div>
         <div class="ctl-mg-tension-bar">
-          <div id="mg-zone" class="ctl-mg-safe-zone" style="width:28%"></div>
+          <div id="mg-zone" class="ctl-mg-safe-zone" style="width:${zoneWidth}%"></div>
           <div id="mg-ptr" class="ctl-mg-ptr"></div>
         </div>
         <div class="ctl-mg-hint">Gi\u1EEF R ho\u1EB7c nh\u1EA5n n\xFAt \u0111\u1EC3 gi\u1EEF kim Th\u1EA7n Th\u1EE9c trong v\xF9ng ng\u1ECDc xanh!</div>
-        <button type="button" id="mg-hold" class="ctl-btn-jade" style="width:100%;margin-top:8px">\u{1F525} Gi\u1EEF Qu\xE1n Ch\xFA Ch\xE2n Nguy\xEAn (R)</button>
+        <button type="button" id="mg-hold" class="ctl-btn-jade" style="width:100%;margin-top:8px">Qu\xE1n Ch\xFA Ch\xE2n Nguy\xEAn (R)</button>
       </div>
     `;
       this.root.querySelector("#mg-close")?.addEventListener("click", () => {
@@ -20667,12 +22126,15 @@
         const dt = Math.min(0.05, (now - last) / 1e3);
         last = now;
         state.timer -= dt;
-        state.zone = 50 + Math.sin(now * 22e-4) * 24;
-        state.needle = Math.max(4, Math.min(96, state.needle + (state.holding ? 58 : -44) * dt));
-        if (Math.abs(state.needle - state.zone) <= 14) state.progress += 30 * dt;
-        else state.progress -= 10 * dt;
+        const freq1 = 2e-3 + rank * 55e-5;
+        const freq2 = 34e-4 + rank * 8e-4;
+        const amp2 = rank >= 3 ? rank * 2.8 : 0;
+        state.zone = Math.max(15, Math.min(85, 50 + Math.sin(now * freq1) * (22 + rank * 1.8) + Math.cos(now * freq2) * amp2));
+        state.needle = Math.max(4, Math.min(96, state.needle + (state.holding ? needleUp : -needleDown) * dt));
+        if (Math.abs(state.needle - state.zone) <= halfZone) state.progress += gainRate * dt;
+        else state.progress = Math.max(0, state.progress - drainRate * dt);
         this.root.querySelector("#mg-time").textContent = `${Math.max(0, state.timer).toFixed(1)}s`;
-        this.root.querySelector("#mg-zone").style.left = `${state.zone - 14}%`;
+        this.root.querySelector("#mg-zone").style.left = `${state.zone - halfZone}%`;
         this.root.querySelector("#mg-ptr").style.left = `${state.needle}%`;
         this.root.querySelector("#mg-prog-pct").textContent = `${Math.min(100, Math.max(0, Math.round(state.progress)))}%`;
         if (state.progress >= 100) {
@@ -20907,6 +22369,11 @@
       onOpenAccountModal: () => accountModal?.open(),
       getUiMode: () => hud?.getUiMode?.() || "auto",
       onCycleUiMode: () => hud?.cycleUiMode?.(),
+      getHudLayout: () => hud?.getHudLayout?.(),
+      onUpdateHudLayout: (patch) => hud?.updateHudLayout?.(patch),
+      onSwapHudHands: () => hud?.swapHudHands?.(),
+      onResetHudLayout: () => hud?.resetHudLayout?.(),
+      onOpenHudEditor: () => hud?.openHudEditor?.(),
       onSwitchCharacter: () => {
         account.persistPlayerState(player);
         account.syncCloud();
@@ -20938,6 +22405,7 @@
         player.isAbsorbingStone = false;
       },
       onInteract: () => world?.interactNearest(),
+      onCycleTarget: () => world?.cycleTarget(),
       onTriggerSurge: () => world?.triggerWillpowerSurge(),
       onRitualChoice: (action) => {
         if (!world) return;
@@ -21114,8 +22582,12 @@
       account.pullFromCloud().then(() => {
         if (!inGameplay && gateScreens?.screen === "char_select") gateScreens.render();
       });
+      onlineHub.pollAll();
     }
-    onlineHub.pollAll();
+    document.addEventListener("contextmenu", (e) => {
+      if (!["INPUT", "TEXTAREA"].includes(e.target?.tagName)) e.preventDefault();
+    });
+    document.addEventListener("gesturestart", (e) => e.preventDefault());
     const saveBeforeHide = () => {
       if (world && inGameplay) {
         account.persistPlayerState(player);

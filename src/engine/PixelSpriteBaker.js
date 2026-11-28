@@ -1137,7 +1137,59 @@ function buildScorpion64(isKing) {
   return frames;
 }
 
+function buildStrawDummyFrames() {
+  const W = 34;
+  const H = 40;
+  const anchorX = 17;
+  const anchorY = 36;
+  const barOffsetY = 36;
+  const pal = { k: "#523218", d: "#7a5822", m: "#c89d54", b: "#f0cc75", r: "#d0573c", w: "#fff3d1" };
+  const rows = [
+    "....dddd....",
+    "...dmmmmdd..",
+    "...drrrrrd..",
+    "...dmbbbmd..",
+    "ddddmmbmmddd",
+    "mbbbmbrbmmbm",
+    "ddddmrbrmddd",
+    "...dmbbbmd..",
+    "....dmmd....",
+    ".....kk.....",
+    ".....kk.....",
+    "....kkkk....",
+  ];
+  const frames = [];
+  for (let f = 0; f < 3; f++) {
+    const { canvas, ctx } = createPixelCanvas(W, H);
+    const tmp = createPixelCanvas(W, H);
+    const g = tmp.ctx;
+    const tilt = f === 1 ? 1 : f === 2 ? -1 : 0;
+    const ox = 5 + tilt;
+    const oy = 6;
+    for (let y = 0; y < rows.length; y++) {
+      const row = rows[y];
+      for (let x = 0; x < row.length; x++) {
+        const ch = row[x];
+        if (ch === "." || ch === " ") continue;
+        const col = pal[ch];
+        if (!col) continue;
+        plotRect(g, ox + x * 2, oy + y * 2, 2, 2, col);
+      }
+    }
+    applySelectiveOutline(g, W, H, "#2a1a0d", "#140b06");
+    if (ctx) {
+      fillPixelEllipse(ctx, anchorX, anchorY, 10, 3, "rgba(5, 8, 12, 0.36)", true);
+      ctx.drawImage(tmp.canvas, 0, 0);
+    }
+    frames.push({ canvas, anchorX, anchorY, barOffsetY });
+  }
+  return frames;
+}
+
 function buildGenericMonster64(typeId) {
+  if (typeId === "coc_thao_nhan") {
+    return buildStrawDummyFrames();
+  }
   const W = typeId === "thien_tri_ngu_vuong" ? 76 : 64;
   const H = 64;
   const anchorX = Math.round(W * 0.5);
@@ -1152,15 +1204,7 @@ function buildGenericMonster64(typeId) {
     const ox = Math.round(W * 0.5);
     const oy = Math.round(H * 0.54) + (f === 1 ? -2 : f === 3 ? 1 : 0);
 
-    if (typeId === "coc_thao_nhan") {
-      const tilt = f === 1 ? 1 : f === 3 ? -1 : 0;
-      plotRect(g, ox - 3, oy + 4, 6, 16, "#4d3118");
-      plotRect(g, ox - 12 + tilt, oy - 6, 24, 5, "#8f6528");
-      plotRect(g, ox - 7 + tilt, oy - 14, 14, 18, "#c89d54");
-      plotRect(g, ox - 5 + tilt, oy - 22, 10, 8, "#d9b25f");
-      plotRect(g, ox - 4 + tilt, oy - 12, 8, 3, "#d0573c");
-      plotRect(g, ox - 3 + tilt, oy - 5, 6, 3, "#d0573c");
-    } else if (typeId === "thien_tri_ngu_vuong") {
+    if (typeId === "thien_tri_ngu_vuong") {
       const ramp = ["#061921", "#0c3d4a", "#177582", "#2fb8ad", "#6cf2d8", "#d6fff7"];
       paintShadedPixelLobes(
         g,

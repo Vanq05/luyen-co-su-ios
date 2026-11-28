@@ -164,6 +164,11 @@ function enterWorldForCharacter(slotIndex) {
     onOpenAccountModal: () => accountModal?.open(),
     getUiMode: () => hud?.getUiMode?.() || "auto",
     onCycleUiMode: () => hud?.cycleUiMode?.(),
+    getHudLayout: () => hud?.getHudLayout?.(),
+    onUpdateHudLayout: (patch) => hud?.updateHudLayout?.(patch),
+    onSwapHudHands: () => hud?.swapHudHands?.(),
+    onResetHudLayout: () => hud?.resetHudLayout?.(),
+    onOpenHudEditor: () => hud?.openHudEditor?.(),
     onSwitchCharacter: () => {
       account.persistPlayerState(player);
       account.syncCloud();
@@ -198,6 +203,7 @@ function initUI() {
       player.isAbsorbingStone = false;
     },
     onInteract: () => world?.interactNearest(),
+    onCycleTarget: () => world?.cycleTarget(),
     onTriggerSurge: () => world?.triggerWillpowerSurge(),
     onRitualChoice: (action) => {
       if (!world) return;
@@ -380,8 +386,13 @@ function boot() {
     account.pullFromCloud().then(() => {
       if (!inGameplay && gateScreens?.screen === "char_select") gateScreens.render();
     });
+    onlineHub.pollAll();
   }
-  onlineHub.pollAll();
+
+  document.addEventListener("contextmenu", (e) => {
+    if (!["INPUT", "TEXTAREA"].includes(e.target?.tagName)) e.preventDefault();
+  });
+  document.addEventListener("gesturestart", (e) => e.preventDefault());
 
   const saveBeforeHide = () => {
     if (world && inGameplay) {

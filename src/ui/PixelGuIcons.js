@@ -504,16 +504,23 @@ function paintGuCreature(ctx, gu) {
     return;
   }
 
-  // 13. Thính Phong / Thanh Phong Luân / Ám Lân / Ảnh Bộ / Bạch Cốt Độn / Cốt Thương
+  // 13. Thính Phong / Truy Phong / Ảnh Bộ / Ám Ảnh / Bạch Cốt Độn / Cốt Thương / Thiết Cốt / Xoắn Ốc Cốt Thương
   if (
     id === "thinh_phong" ||
     id === "thanh_phong_luan" ||
+    id === "truy_phong" ||
     id === "an_lan" ||
     id === "anh_bo" ||
+    id === "am_anh_don" ||
     id === "bach_cot_don" ||
-    id === "cot_thuong"
+    id === "cot_thuong" ||
+    id === "thiet_cot" ||
+    id === "xoan_oc_cot_thuong" ||
+    path === "cot_dao" ||
+    path === "phong_dao" ||
+    path === "anh_dao"
   ) {
-    const isBone = id === "bach_cot_don" || id === "cot_thuong";
+    const isBone = path === "cot_dao" || id === "bach_cot_don" || id === "cot_thuong" || id === "thiet_cot" || id === "xoan_oc_cot_thuong";
     const pal = {
       d: isBone ? "#3d3530" : "#1f2e47",
       m: isBone ? "#9e9384" : "#5e4ca6",
@@ -548,7 +555,44 @@ function paintGuCreature(ctx, gu) {
     return;
   }
 
-  // 14. Đệ Nhị Không Khiếu & Mặc định -> Bọ Hung Thần Khiếu Vòng Đôi
+  // 14. Xuân Thu Thiền · Phàm Ấn -> Ve Vàng Ngọc Cánh Quang Âm
+  if (id === "xuan_thu_thien_an") {
+    const pal = { d: "#5c420c", m: "#cf9e2e", b: "#ffe270", g: "#34d9b8", w: "#ffffff" };
+    const rows = [
+      "...g......g...",
+      "..gg.dddd.gg..",
+      ".gwwdmmmmddww.",
+      "gwwdmbbggbmwwg",
+      ".ggdmbgwwgbmd.",
+      "...dmmggggmmd.",
+      "..ddmbbbbbmdd.",
+      "...dmbbwwbmdd.",
+      "....dmbbmmd...",
+      ".....dddd.....",
+    ];
+    drawSpriteGrid(ctx, rows, pal, 2, 0, 2);
+    return;
+  }
+
+  // 15. Kim Chung Tráo -> Bọ Hung Chuông Vàng Bất Hoại
+  if (id === "kim_chung_trao") {
+    const pal = { d: "#5c3f08", m: "#bd8b1a", b: "#ffd257", w: "#fff6cc", g: "#ff5c4d" };
+    const rows = [
+      ".....dddd.....",
+      "...ddmmmmdd...",
+      "..dmbbwwbbmd..",
+      ".dmbwbbbbwbmd.",
+      ".dmbmggggmbmd.",
+      ".dmbbmmmmbbmd.",
+      ".dmmbbwwbbmmd.",
+      "..ddmbbbbmdd..",
+      "....dddddd....",
+    ];
+    drawSpriteGrid(ctx, rows, pal, 2, 0, 2);
+    return;
+  }
+
+  // 16. Đệ Nhị Không Khiếu & Mặc định -> Bọ Hung Thần Khiếu Vòng Đôi
   const pal = {
     d: "#4d320b",
     m: "#b37d24",

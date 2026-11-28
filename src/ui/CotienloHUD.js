@@ -10,11 +10,29 @@ import { VirtualJoystick } from "../input/VirtualJoystick.js";
 import { getKillerMovePixelImgHtml } from "./PixelGuIcons.js";
 import { getGuIconSvg, getItemIconSvg, getUiIconSvg } from "./XianxiaIcons.js";
 
+const HUD_LAYOUT_STORAGE_KEY = "ctl_hud_layout_v1";
+
+function createDefaultHudLayout() {
+  return {
+    skillStyle: "moba",
+    handedness: "right",
+    alwaysShowJoystick: false,
+    joystick: { xPct: null, yPct: null, scale: 1 },
+    skills: { xPct: null, yPct: null, scale: 1 },
+    aux: { xPct: null, yPct: null, scale: 1 },
+  };
+}
+
+function clampHudVal(val, min, max, fallback) {
+  const n = Number(val);
+  return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+}
+
 /**
  * Giao diện HUD In-Game Cổ Phong Chuẩn Cổ Tiên Lộ (cotienlo.com):
- * - Sử dụng 100% Vector SVG cổ phong & Avatar 88x88 sắc nét (không còn emoji thô).
- * - Vòng cung Cổ Trùng hiển thị biểu tượng SVG từng loài + Tooltip thông tin khi trỏ chuột.
- * - Mini-map chi tiết (đường đi, bãi cát, hồ nước, cổng, NPC, quái vật).
+ * - Sử dụng 100% Pixel Icon sắc nét & Avatar 88x88 (không dùng SVG thô).
+ * - Hỗ trợ Cụm Chiêu MOBA xoay cung tròn ngón cái + Thanh Kỹ Năng PC truyền thống.
+ * - Tùy biến kéo-thả vị trí Joystick / Cụm Chiêu / Phím Phụ và chỉnh tỷ lệ trong Cài đặt.
  */
 export class CotienloHUD {
   constructor({
@@ -27,6 +45,7 @@ export class CotienloHUD {
     onAbsorbStart,
     onAbsorbEnd,
     onInteract,
+    onCycleTarget,
     onTriggerSurge,
     onRitualChoice,
     onQuestClick,
@@ -48,6 +67,7 @@ export class CotienloHUD {
     this.onAbsorbStart = onAbsorbStart;
     this.onAbsorbEnd = onAbsorbEnd;
     this.onInteract = onInteract;
+    this.onCycleTarget = onCycleTarget;
     this.onTriggerSurge = onTriggerSurge;
     this.onRitualChoice = onRitualChoice;
     this.onQuestClick = onQuestClick;
@@ -72,8 +92,11 @@ export class CotienloHUD {
     } catch {
       this.uiMode = "auto";
     }
+    this.hudLayout = this._loadHudLayout();
+    this.isEditingHud = false;
     this.mobileMenuOpen = false;
     this._wasMobileUi = false;
+    this._lastPlayerRef = null;
     this.chatTab = "all";
     this.chatCollapsed = false;
     this.chatMuted = false;
@@ -96,7 +119,44 @@ export class CotienloHUD {
     this._cacheElements();
     this._bindEvents(getDefaultAngle);
     this.setQuestCollapsed(this.questCollapsed, false);
+    this.applyHudLayout();
     this.syncViewportMode();
+  }
+
+  _loadHudLayout() {
+    const def = createDefaultHudLayout();
+    try {
+      const raw = JSON.parse(localStorage.getItem(HUD_LAYOUT_STORAGE_KEY) || "null");
+      if (!raw || typeof raw !== "object") return def;
+      return this._normalizeHudLayout(raw);
+    } catch {
+      return def;
+    }
+  }
+
+  _normalizeHudLayout(raw = {}) {
+    const def = createDefaultHudLayout();
+    const normWidget = (src) => ({
+      xPct: src?.xPct === null || src?.xPct === undefined ? null : clampHudVal(src.xPct, 1, 86, null),
+      yPct: src?.yPct === null || src?.yPct === undefined ? null : clampHudVal(src.yPct, 4, 86, null),
+      scale: clampHudVal(src?.scale, 0.7, 1.4, 1),
+    });
+    return {
+      skillStyle: raw.skillStyle === "bar" ? "bar" : "moba",
+      handedness: raw.handedness === "left" ? "left" : "right",
+      alwaysShowJoystick: Boolean(raw.alwaysShowJoystick === true || raw.alwaysShowJoystick === "always"),
+      joystick: normWidget(raw.joystick ?? def.joystick),
+      skills: normWidget(raw.skills ?? def.skills),
+      aux: normWidget(raw.aux ?? def.aux),
+    };
+  }
+
+  _saveHudLayout() {
+    try {
+      localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, JSON.stringify(this.hudLayout));
+    } catch {
+      // Bỏ qua nếu trình duyệt chặn storage
+    }
   }
 
   _buildMarkup() {
@@ -381,13 +441,131 @@ export class CotienloHUD {
         <button type="button" class="ctl-util-btn" data-panel="settings" title="Cài đặt & Tài khoản"><span class="ctl-svg-wrap">${getUiIconSvg("settings")}</span><em>Cài đặt</em></button>
       </div>
 
-      <div id="joystick-zone" class="touch-only" aria-label="Joystick">
+      <div id="joystick-zone" class="touch-only" data-hud-widget="joystick" aria-label="Joystick">
+        <span class="ctl-edit-tag">Joystick · Kéo để dời</span>
         <div id="joystick-base" class="joystick-base">
           <div class="joystick-ring"></div>
           <div id="joystick-knob" class="joystick-knob"></div>
         </div>
       </div>
-      <div id="skill-cancel-zone" class="skill-cancel-zone">HỦY</div>
+
+      <!-- CỤM NÚT CHIÊU THỨC KIỂU MOBA (VÒNG CUNG NGÓN CÁI) -->
+      <div id="hud-moba-pad" class="ctl-moba-pad" data-hud-widget="skills">
+        <span class="ctl-edit-tag">Cụm Chiêu MOBA · Kéo để dời</span>
+
+        <div id="moba-sec-row" class="moba-sec-row">
+          ${[3, 4, 5, 6]
+            .map(
+              (idx) => `
+          <button type="button" class="moba-btn moba-slot-btn moba-slot-btn--${idx}" data-moba-slot="${idx}" title="Ô Cổ ${idx + 1}">
+            <span class="arch-icon"></span>
+            <span class="moba-cd-mask ctl-cd-mask"></span>
+            <span class="moba-cd-num ctl-cd-num"></span>
+            <span class="moba-key">${idx + 1}</span>
+          </button>`
+            )
+            .join("")}
+        </div>
+
+        <button type="button" id="moba-km-1" class="moba-btn moba-km-btn moba-km-btn--1" title="Sát chiêu E">
+          <span id="moba-km-icon-1" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">E</span>
+        </button>
+
+        <button type="button" id="moba-km-0" class="moba-btn moba-km-btn moba-km-btn--0" title="Sát chiêu Q">
+          <span id="moba-km-icon-0" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">Q</span>
+        </button>
+
+        ${[0, 1, 2]
+          .map(
+            (idx) => `
+        <button type="button" class="moba-btn moba-slot-btn moba-slot-btn--${idx}" data-moba-slot="${idx}" title="Ô Cổ ${idx + 1}">
+          <span class="arch-icon"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">${idx + 1}</span>
+        </button>`
+          )
+          .join("")}
+
+        <button type="button" id="moba-vital-btn" class="moba-btn moba-vital-btn" title="Cổ Bản Mệnh (RMB)">
+          <span id="moba-vital-icon" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">RMB</span>
+        </button>
+
+        <button type="button" id="moba-target-btn" class="moba-btn moba-target-btn" title="Đổi mục tiêu (Tab)">
+          ${getUiIconSvg("combat")}
+          <span class="moba-key">Tab</span>
+        </button>
+
+        <button type="button" id="moba-basic-btn" class="moba-btn moba-basic-btn" title="Đánh thường (LMB)">
+          ${getUiIconSvg("attack")}
+          <span class="moba-basic-lbl">Đánh</span>
+        </button>
+      </div>
+
+      <!-- CỤM PHÍM PHỤ (PHÉP BỔ TRỢ MOBA) -->
+      <div id="hud-aux-pad" class="ctl-aux-pad" data-hud-widget="aux">
+        <span class="ctl-edit-tag">Phím Phụ · Kéo để dời</span>
+        <button type="button" id="aux-dash-btn" class="aux-btn aux-dash-btn" title="Lướt né (Space)">
+          <span class="aux-lbl">Lướt</span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span class="moba-key">Spc</span>
+        </button>
+        <button type="button" id="aux-absorb-btn" class="aux-btn aux-absorb-btn" title="Giữ R để Hấp Thu Nguyên Thạch">
+          ${getUiIconSvg("absorb")}
+          <span class="moba-key">R</span>
+        </button>
+        <button type="button" class="aux-btn aux-qi-btn" data-moba-qi="0" title="Vật phẩm nhanh Z">
+          <span id="aux-qi-icon-0" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span id="aux-qcnt-0" class="ctl-sq-cnt">0</span>
+          <span class="moba-key">Z</span>
+        </button>
+        <button type="button" class="aux-btn aux-qi-btn" data-moba-qi="1" title="Vật phẩm nhanh G">
+          <span id="aux-qi-icon-1" class="moba-icon-box"></span>
+          <span class="moba-cd-mask ctl-cd-mask"></span>
+          <span class="moba-cd-num ctl-cd-num"></span>
+          <span id="aux-qcnt-1" class="ctl-sq-cnt">0</span>
+          <span class="moba-key">G</span>
+        </button>
+        <button type="button" id="aux-auto-btn" class="aux-btn aux-auto-btn" title="Tự đánh (T)">
+          <span id="aux-auto-lbl">Tự Đánh</span>
+        </button>
+      </div>
+
+      <!-- THANH CHẾ ĐỘ CHỈNH BỐ CỤC HUD -->
+      <div id="hud-editor-bar" class="ctl-hud-editor-bar">
+        <div class="ctl-editor-title">KÉO THẢ VỊ TRÍ JOYSTICK / CỤM CHIÊU / PHÍM PHỤ</div>
+        <div class="ctl-editor-controls">
+          <span class="ctl-ed-grp">
+            <span>Joystick:</span>
+            <button type="button" id="hud-ed-joy-minus" class="ctl-parch-btn">-</button>
+            <strong id="hud-ed-joy-val">100%</strong>
+            <button type="button" id="hud-ed-joy-plus" class="ctl-parch-btn">+</button>
+          </span>
+          <span class="ctl-ed-grp">
+            <span>Chiêu:</span>
+            <button type="button" id="hud-ed-sk-minus" class="ctl-parch-btn">-</button>
+            <strong id="hud-ed-sk-val">100%</strong>
+            <button type="button" id="hud-ed-sk-plus" class="ctl-parch-btn">+</button>
+          </span>
+          <button type="button" id="hud-ed-swap" class="ctl-parch-btn">Đảo Trái ⇄ Phải</button>
+          <button type="button" id="hud-ed-reset" class="ctl-parch-btn">Mặc Định</button>
+          <button type="button" id="hud-ed-done" class="ctl-btn-jade">Lưu &amp; Xong</button>
+        </div>
+      </div>
+
+      <div id="skill-cancel-zone" class="skill-cancel-zone">✕ HỦY CHIÊU</div>
     `;
   }
 
@@ -459,6 +637,17 @@ export class CotienloHUD {
     this.ttTitle = this.hudRoot.querySelector("#hud-tt-title");
     this.ttMeta = this.hudRoot.querySelector("#hud-tt-meta");
     this.ttDesc = this.hudRoot.querySelector("#hud-tt-desc");
+
+    this.joystickZoneEl = this.hudRoot.querySelector("#joystick-zone");
+    this.mobaPadEl = this.hudRoot.querySelector("#hud-moba-pad");
+    this.auxPadEl = this.hudRoot.querySelector("#hud-aux-pad");
+    this.mobaVitalBtn = this.hudRoot.querySelector("#moba-vital-btn");
+    this.mobaVitalIcon = this.hudRoot.querySelector("#moba-vital-icon");
+    this.auxAutoBtn = this.hudRoot.querySelector("#aux-auto-btn");
+    this.auxAutoLbl = this.hudRoot.querySelector("#aux-auto-lbl");
+    this.auxAbsorbBtn = this.hudRoot.querySelector("#aux-absorb-btn");
+    this.edJoyVal = this.hudRoot.querySelector("#hud-ed-joy-val");
+    this.edSkVal = this.hudRoot.querySelector("#hud-ed-sk-val");
   }
 
   _showTooltip(title, meta, desc) {
@@ -475,7 +664,7 @@ export class CotienloHUD {
 
   _bindEvents(getDefaultAngle) {
     this.joystick = new VirtualJoystick(
-      this.hudRoot.querySelector("#joystick-zone"),
+      this.joystickZoneEl,
       this.hudRoot.querySelector("#joystick-base"),
       this.hudRoot.querySelector("#joystick-knob"),
       { maxRadius: 42, deadzone: 0.12 }
@@ -484,8 +673,110 @@ export class CotienloHUD {
       slots: {},
       cancelZoneEl: this.hudRoot.querySelector("#skill-cancel-zone"),
       getDefaultAngle,
+      externalCooldowns: true,
+      canCast: (slotId) => {
+        if (this.isEditingHud) return false;
+        const p = this._lastPlayerRef;
+        if (!p) return true;
+        if (slotId === "dash") return true;
+        if (slotId === "vital") return Boolean(p.getVitalGu?.());
+        if (slotId === "km1") return Boolean(p.killerMoveIds?.[0]);
+        if (slotId === "km2") return Boolean(p.killerMoveIds?.[1]);
+        if (slotId.startsWith("slot_")) {
+          const idx = Number(slotId.slice(5));
+          return Boolean(p.getActiveGu?.(idx));
+        }
+        return true;
+      },
       onCast: (payload) => this.onCast?.(payload),
     });
+
+    const registerMobaAim = (btn, slotId) => {
+      if (!btn) return;
+      this.skillPad.registerButton(slotId, btn);
+    };
+    registerMobaAim(this.mobaVitalBtn, "vital");
+    for (let i = 0; i < 7; i++) {
+      const mBtn = this.hudRoot.querySelector(`[data-moba-slot="${i}"]`);
+      registerMobaAim(mBtn, `slot_${i}`);
+      mBtn?.addEventListener("mouseenter", () => {
+        const g = this.lastSlotData[i];
+        if (g) this._showTooltip(g.name, `Chuyển ${g.rank} · Tiêu hao ${g.mpCost} Chân nguyên · CD ${g.cooldown}s`, g.description);
+      });
+      mBtn?.addEventListener("mouseleave", () => this._hideTooltip());
+    }
+    registerMobaAim(this.hudRoot.querySelector("#moba-km-0"), "km1");
+    registerMobaAim(this.hudRoot.querySelector("#moba-km-1"), "km2");
+    registerMobaAim(this.hudRoot.querySelector("#aux-dash-btn"), "dash");
+
+    this.mobaVitalBtn?.addEventListener("mouseenter", () => {
+      const g = this.lastVitalData;
+      if (g) this._showTooltip(`${g.name} (Cổ Bản Mệnh)`, `Chuyển ${g.rank} · Chân nguyên ${g.mpCost}`, g.vitalResonanceDesc || g.description);
+    });
+    this.mobaVitalBtn?.addEventListener("mouseleave", () => this._hideTooltip());
+    [0, 1].forEach((idx) => {
+      const kmBtn = this.hudRoot.querySelector(`#moba-km-${idx}`);
+      kmBtn?.addEventListener("mouseenter", () => {
+        const km = this.lastKmData[idx];
+        if (km) this._showTooltip(`Sát Chiêu: ${km.name}`, `Cần ${km.thoughtCost} Thanh Niệm · ${km.mpCost} Chân nguyên`, km.desc);
+      });
+      kmBtn?.addEventListener("mouseleave", () => this._hideTooltip());
+    });
+
+    this.hudRoot.querySelector("#moba-basic-btn")?.addEventListener("pointerdown", (e) => {
+      if (this.isEditingHud) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
+      this.onBasicAttack?.();
+    });
+    this.hudRoot.querySelector("#moba-target-btn")?.addEventListener("pointerdown", (e) => {
+      if (this.isEditingHud) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
+      this.onCycleTarget?.();
+    });
+    this.hudRoot.querySelectorAll("[data-moba-qi]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!this.isEditingHud) this.onUseQuickItem?.(Number(btn.dataset.mobaQi));
+      });
+    });
+    this.auxAutoBtn?.addEventListener("click", () => {
+      if (!this.isEditingHud) this.onToggleAutoCombat?.();
+    });
+    if (this.auxAbsorbBtn) {
+      const stopAbs = () => {
+        this.auxAbsorbBtn.classList.remove("is-active");
+        this.onAbsorbEnd?.();
+      };
+      this.auxAbsorbBtn.addEventListener("pointerdown", (e) => {
+        if (this.isEditingHud) return;
+        e.preventDefault();
+        this.auxAbsorbBtn.classList.add("is-active");
+        this.onAbsorbStart?.();
+      });
+      this.auxAbsorbBtn.addEventListener("pointerup", stopAbs);
+      this.auxAbsorbBtn.addEventListener("pointerleave", stopAbs);
+      this.auxAbsorbBtn.addEventListener("pointercancel", stopAbs);
+    }
+
+    this.hudRoot.querySelector("#hud-ed-joy-minus")?.addEventListener("click", () => {
+      this.updateHudLayout({ joystick: { scale: (this.hudLayout.joystick?.scale ?? 1) - 0.1 } });
+    });
+    this.hudRoot.querySelector("#hud-ed-joy-plus")?.addEventListener("click", () => {
+      this.updateHudLayout({ joystick: { scale: (this.hudLayout.joystick?.scale ?? 1) + 0.1 } });
+    });
+    this.hudRoot.querySelector("#hud-ed-sk-minus")?.addEventListener("click", () => {
+      const next = (this.hudLayout.skills?.scale ?? 1) - 0.1;
+      this.updateHudLayout({ skills: { scale: next }, aux: { scale: next } });
+    });
+    this.hudRoot.querySelector("#hud-ed-sk-plus")?.addEventListener("click", () => {
+      const next = (this.hudLayout.skills?.scale ?? 1) + 0.1;
+      this.updateHudLayout({ skills: { scale: next }, aux: { scale: next } });
+    });
+    this.hudRoot.querySelector("#hud-ed-swap")?.addEventListener("click", () => this.swapHudHands());
+    this.hudRoot.querySelector("#hud-ed-reset")?.addEventListener("click", () => this.resetHudLayout());
+    this.hudRoot.querySelector("#hud-ed-done")?.addEventListener("click", () => this.closeHudEditor());
+    this._bindHudEditorDrag();
 
     this.hudRoot.querySelector("#hud-avatar-btn")?.addEventListener("click", () => this.onOpenPanel?.("char"));
     this.questToggleBtn?.addEventListener("click", () => this.setQuestCollapsed(!this.questCollapsed));
@@ -812,7 +1103,8 @@ export class CotienloHUD {
     const vw = window.innerWidth || 1280;
     const vh = window.innerHeight || 720;
     const coarse = Boolean(window.matchMedia?.("(pointer: coarse)")?.matches);
-    const autoMobile = (vw <= 932 && (vw <= 768 || vh <= 540)) || coarse;
+    const isNativeApp = Boolean(window.Capacitor?.isNativePlatform?.());
+    const autoMobile = isNativeApp || (vw <= 932 && (vw <= 768 || vh <= 540)) || coarse;
     const isMobile = this.uiMode === "mobile" || (this.uiMode === "auto" && autoMobile);
     const isPortrait = isMobile && vh > vw;
     const isLandscape = isMobile && vw >= vh;
@@ -828,6 +1120,156 @@ export class CotienloHUD {
       this.setMobileMenuOpen(false);
     }
     this._wasMobileUi = isMobile;
+  }
+
+  getHudLayout() {
+    return this._normalizeHudLayout(this.hudLayout);
+  }
+
+  updateHudLayout(patch = {}) {
+    const prev = this.hudLayout || createDefaultHudLayout();
+    this.hudLayout = this._normalizeHudLayout({
+      skillStyle: patch.skillStyle ?? prev.skillStyle,
+      handedness: patch.handedness ?? prev.handedness,
+      alwaysShowJoystick: patch.alwaysShowJoystick ?? prev.alwaysShowJoystick,
+      joystick: { ...prev.joystick, ...(patch.joystick || {}) },
+      skills: { ...prev.skills, ...(patch.skills || {}) },
+      aux: { ...prev.aux, ...(patch.aux || {}) },
+    });
+    this._saveHudLayout();
+    this.applyHudLayout();
+    return this.getHudLayout();
+  }
+
+  swapHudHands() {
+    const cur = this.hudLayout || createDefaultHudLayout();
+    const nextHand = cur.handedness === "left" ? "right" : "left";
+    const vw = window.innerWidth || 1280;
+    const mirrorPct = (widgetCfg, el) => {
+      if (widgetCfg?.xPct === null || widgetCfg?.xPct === undefined) return widgetCfg;
+      const wPct = el ? (el.getBoundingClientRect().width / Math.max(1, vw)) * 100 : 18;
+      return {
+        ...widgetCfg,
+        xPct: Math.round(clampHudVal(100 - wPct - widgetCfg.xPct, 1, 86, widgetCfg.xPct) * 10) / 10,
+      };
+    };
+    return this.updateHudLayout({
+      handedness: nextHand,
+      joystick: mirrorPct(cur.joystick, this.joystickZoneEl),
+      skills: mirrorPct(cur.skills, this.mobaPadEl),
+      aux: mirrorPct(cur.aux, this.auxPadEl),
+    });
+  }
+
+  resetHudLayout() {
+    this.hudLayout = createDefaultHudLayout();
+    this._saveHudLayout();
+    this.applyHudLayout();
+    return this.getHudLayout();
+  }
+
+  applyHudLayout() {
+    const l = this.hudLayout || createDefaultHudLayout();
+    document.body.classList.toggle("is-skill-moba", l.skillStyle !== "bar");
+    document.body.classList.toggle("is-skill-bar", l.skillStyle === "bar");
+    document.body.classList.toggle("is-left-handed", l.handedness === "left");
+    document.body.classList.toggle("is-joy-always", Boolean(l.alwaysShowJoystick));
+
+    const applyWidget = (el, cfg) => {
+      if (!el || !cfg) return;
+      el.style.setProperty("--ctl-widget-scale", String(cfg.scale ?? 1));
+      if (cfg.xPct !== null && cfg.yPct !== null) {
+        el.style.left = `${cfg.xPct}%`;
+        el.style.top = `${cfg.yPct}%`;
+        el.style.right = "auto";
+        el.style.bottom = "auto";
+        el.classList.add("is-custom-pos");
+      } else {
+        el.style.left = "";
+        el.style.top = "";
+        el.style.right = "";
+        el.style.bottom = "";
+        el.classList.remove("is-custom-pos");
+      }
+    };
+
+    applyWidget(this.joystickZoneEl, l.joystick);
+    applyWidget(this.mobaPadEl, l.skills);
+    applyWidget(this.auxPadEl, l.aux);
+
+    if (this.edJoyVal) this.edJoyVal.textContent = `${Math.round((l.joystick?.scale ?? 1) * 100)}%`;
+    if (this.edSkVal) this.edSkVal.textContent = `${Math.round((l.skills?.scale ?? 1) * 100)}%`;
+  }
+
+  openHudEditor() {
+    this.isEditingHud = true;
+    this.setMobileMenuOpen(false);
+    document.body.classList.add("is-editing-hud");
+    this.applyHudLayout();
+  }
+
+  closeHudEditor() {
+    this.isEditingHud = false;
+    document.body.classList.remove("is-editing-hud");
+    this.applyHudLayout();
+  }
+
+  _bindHudEditorDrag() {
+    const widgets = [
+      ["joystick", this.joystickZoneEl],
+      ["skills", this.mobaPadEl],
+      ["aux", this.auxPadEl],
+    ];
+    for (const [key, el] of widgets) {
+      if (!el) continue;
+      let dragState = null;
+      el.addEventListener("pointerdown", (e) => {
+        if (!this.isEditingHud) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = el.getBoundingClientRect();
+        try {
+          el.setPointerCapture(e.pointerId);
+        } catch {
+          // Bỏ qua nếu môi trường không hỗ trợ pointer capture
+        }
+        dragState = {
+          pointerId: e.pointerId,
+          offsetX: e.clientX - rect.left,
+          offsetY: e.clientY - rect.top,
+          w: rect.width,
+          h: rect.height,
+        };
+      });
+      const onMove = (e) => {
+        if (!dragState || e.pointerId !== dragState.pointerId || !this.isEditingHud) return;
+        e.preventDefault();
+        const vw = Math.max(1, window.innerWidth || 1280);
+        const vh = Math.max(1, window.innerHeight || 720);
+        const nextLeft = Math.max(4, Math.min(vw - Math.min(dragState.w, vw * 0.85) - 4, e.clientX - dragState.offsetX));
+        const nextTop = Math.max(48, Math.min(vh - Math.min(dragState.h, vh * 0.85) - 4, e.clientY - dragState.offsetY));
+        const xPct = Math.round(((nextLeft / vw) * 100) * 10) / 10;
+        const yPct = Math.round(((nextTop / vh) * 100) * 10) / 10;
+        dragState.xPct = xPct;
+        dragState.yPct = yPct;
+        el.style.left = `${xPct}%`;
+        el.style.top = `${yPct}%`;
+        el.style.right = "auto";
+        el.style.bottom = "auto";
+        el.classList.add("is-custom-pos");
+      };
+      const onUp = (e) => {
+        if (!dragState || e.pointerId !== dragState.pointerId) return;
+        const { xPct, yPct } = dragState;
+        dragState = null;
+        if (xPct !== undefined && yPct !== undefined) {
+          this.updateHudLayout({ [key]: { xPct, yPct } });
+        }
+      };
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerup", onUp);
+      el.addEventListener("pointercancel", onUp);
+    }
   }
 
   focusChatInput() {
@@ -862,6 +1304,7 @@ export class CotienloHUD {
   }
 
   syncState(player, world, onlineHub = null) {
+    this._lastPlayerRef = player;
     const stage = player.getStage();
     const apt = player.getAptitudeInfo();
     if (this.charNameEl) this.charNameEl.textContent = player.characterName;
@@ -1051,77 +1494,108 @@ export class CotienloHUD {
     }
     this._drawMinimap(player, world, mapDef);
 
-    // Vital Gu Pixel Icon & Cooldown
+    // Vital Gu Pixel Icon & Cooldown (PC Bar + MOBA Pad)
     const vital = player.getVitalGu();
     this.lastVitalData = vital;
-    if (this.vitalIcon && this.vitalBtn) {
-      const key = vital ? vital.id : "empty";
-      if (this.vitalIcon.dataset.key !== key) {
-        this.vitalIcon.dataset.key = key;
-        this.vitalIcon.innerHTML = getGuIconSvg(vital);
+    const vitalCd = player.getCooldownInfo("vital");
+    const vitalOom = Boolean(vital && player.mp < (vital.mpCost ?? 0));
+    const vitalKey = vital ? vital.id : "empty";
+    for (const [btnEl, iconEl] of [
+      [this.vitalBtn, this.vitalIcon],
+      [this.mobaVitalBtn, this.mobaVitalIcon],
+    ]) {
+      if (!btnEl || !iconEl) continue;
+      if (iconEl.dataset.key !== vitalKey) {
+        iconEl.dataset.key = vitalKey;
+        iconEl.innerHTML = getGuIconSvg(vital);
       }
-      this.vitalBtn.style.borderColor = vital ? vital.color : "#4de0c9";
-      this._updateSlotCooldownEl(this.vitalBtn, player.getCooldownInfo("vital"), Boolean(vital && player.mp < (vital.mpCost ?? 0)));
+      btnEl.style.borderColor = vital ? vital.color : "#4de0c9";
+      this._updateSlotCooldownEl(btnEl, vitalCd, vitalOom);
     }
 
-    // 7 Arch Gu Pixel Slots & Cooldowns
+    // 7 Arch Gu Pixel Slots & Cooldowns (PC Bar + MOBA Pad)
     for (let i = 0; i < 7; i++) {
-      const el = this.hudRoot.querySelector(`[data-arch-slot="${i}"]`);
-      if (!el) continue;
       const unlocked = i < stage.activeSlotsUnlocked;
       const g = player.getActiveGu(i);
       this.lastSlotData[i] = unlocked ? g : null;
-      el.classList.toggle("is-locked", !unlocked);
-      el.style.borderColor = unlocked && g ? g.color : "#485b75";
-      const iconHost = el.querySelector(".arch-icon");
       const nextKey = !unlocked ? "lock" : g ? g.id : "empty";
-      if (iconHost && iconHost.dataset.key !== nextKey) {
-        iconHost.dataset.key = nextKey;
-        iconHost.innerHTML = !unlocked ? getUiIconSvg("lock") : getGuIconSvg(g);
+      const cdInfo = player.getCooldownInfo(`slot_${i}`);
+      const isOom = Boolean(unlocked && g && player.mp < (g.mpCost ?? 0));
+      const color = unlocked && g ? g.color : "#485b75";
+      for (const selector of [`[data-arch-slot="${i}"]`, `[data-moba-slot="${i}"]`]) {
+        const el = this.hudRoot.querySelector(selector);
+        if (!el) continue;
+        el.classList.toggle("is-locked", !unlocked);
+        el.style.borderColor = color;
+        const iconHost = el.querySelector(".arch-icon");
+        if (iconHost && iconHost.dataset.key !== nextKey) {
+          iconHost.dataset.key = nextKey;
+          iconHost.innerHTML = !unlocked ? getUiIconSvg("lock") : getGuIconSvg(g);
+        }
+        this._updateSlotCooldownEl(el, cdInfo, isOom);
       }
-      this._updateSlotCooldownEl(el, player.getCooldownInfo(`slot_${i}`), Boolean(unlocked && g && player.mp < (g.mpCost ?? 0)));
     }
 
-    // Killer Moves Pixel Icons & Cooldowns
+    // Killer Moves Pixel Icons & Cooldowns (PC Bar + MOBA Pad)
     this.lastKmData = [
       KILLER_MOVES.find((k) => k.id === player.killerMoveIds[0]),
       KILLER_MOVES.find((k) => k.id === player.killerMoveIds[1]),
     ];
     for (let i = 0; i < 2; i++) {
-      const btn = this.hudRoot.querySelector(`#hud-km-${i}`);
       const km = this.lastKmData[i];
-      const iconHost = this.hudRoot.querySelector(`#hud-km-icon-${i}`);
-      if (iconHost && iconHost.dataset.key !== (km?.id || "none")) {
-        iconHost.dataset.key = km?.id || "none";
-        iconHost.innerHTML = getKillerMovePixelImgHtml(km);
-      }
       const cd = player.getCooldownInfo(i === 0 ? "km1" : "km2");
-      btn?.classList.toggle("is-ready", Boolean(km && player.thoughtGauge >= km.thoughtCost && cd.rem <= 0));
-      this._updateSlotCooldownEl(btn, cd, Boolean(km && (player.thoughtGauge < km.thoughtCost || player.mp < km.mpCost)));
+      const ready = Boolean(km && player.thoughtGauge >= km.thoughtCost && cd.rem <= 0);
+      const isOom = Boolean(km && (player.thoughtGauge < km.thoughtCost || player.mp < km.mpCost));
+      for (const [btnSel, iconSel] of [
+        [`#hud-km-${i}`, `#hud-km-icon-${i}`],
+        [`#moba-km-${i}`, `#moba-km-icon-${i}`],
+      ]) {
+        const btn = this.hudRoot.querySelector(btnSel);
+        const iconHost = this.hudRoot.querySelector(iconSel);
+        if (iconHost && iconHost.dataset.key !== (km?.id || "none")) {
+          iconHost.dataset.key = km?.id || "none";
+          iconHost.innerHTML = getKillerMovePixelImgHtml(km);
+        }
+        btn?.classList.toggle("is-ready", ready);
+        this._updateSlotCooldownEl(btn, cd, isOom);
+      }
     }
 
-    // Quick items Z/G & Cooldowns
+    // Quick items Z/G & Dash Cooldowns (PC Bar + Aux Pad)
     for (let i = 0; i < 2; i++) {
       const id = player.quickItemIds[i];
       const item = ITEMS_CATALOG[id];
-      const btn = this.hudRoot.querySelector(`[data-quick-item="${i}"]`);
-      const iconEl = this.hudRoot.querySelector(`#hud-qi-icon-${i}`);
-      if (iconEl && iconEl.dataset.key !== (id || "none")) {
-        iconEl.dataset.key = id || "none";
-        iconEl.innerHTML = item ? getItemIconSvg(item) : "+";
+      const cd = player.getCooldownInfo(`qi_${i}`);
+      const cntTxt = String(id ? player.getItemCount(id) : 0);
+      for (const [btnSel, iconSel, cntSel] of [
+        [`[data-quick-item="${i}"]`, `#hud-qi-icon-${i}`, `#hud-qcnt-${i}`],
+        [`[data-moba-qi="${i}"]`, `#aux-qi-icon-${i}`, `#aux-qcnt-${i}`],
+      ]) {
+        const btn = this.hudRoot.querySelector(btnSel);
+        const iconEl = this.hudRoot.querySelector(iconSel);
+        const cntEl = this.hudRoot.querySelector(cntSel);
+        if (iconEl && iconEl.dataset.key !== (id || "none")) {
+          iconEl.dataset.key = id || "none";
+          iconEl.innerHTML = item ? getItemIconSvg(item) : "+";
+        }
+        if (cntEl) cntEl.textContent = cntTxt;
+        this._updateSlotCooldownEl(btn, cd, false);
       }
-      this.hudRoot.querySelector(`#hud-qcnt-${i}`).textContent = id ? player.getItemCount(id) : 0;
-      this._updateSlotCooldownEl(btn, player.getCooldownInfo(`qi_${i}`), false);
     }
+    this._updateSlotCooldownEl(this.hudRoot.querySelector("#aux-dash-btn"), player.getCooldownInfo("dash"), false);
 
     // Auto Combat, Stealth & Downed Overlays
-    if (this.autoBtn) {
-      const activeAuto = Boolean(player.autoCombat);
-      const nextAutoKey = activeAuto ? "1" : "0";
-      if (this._lastAutoCombatKey !== nextAutoKey) {
-        this._lastAutoCombatKey = nextAutoKey;
+    const activeAuto = Boolean(player.autoCombat);
+    const nextAutoKey = activeAuto ? "1" : "0";
+    if (this._lastAutoCombatKey !== nextAutoKey) {
+      this._lastAutoCombatKey = nextAutoKey;
+      if (this.autoBtn) {
         this.autoBtn.classList.toggle("is-active", activeAuto);
         this.autoBtn.innerHTML = `${activeAuto ? "Đang Tự Đánh" : "Tự Đánh"}<span class="ctl-kb-hint"> [T]</span>`;
+      }
+      if (this.auxAutoBtn) {
+        this.auxAutoBtn.classList.toggle("is-active", activeAuto);
+        if (this.auxAutoLbl) this.auxAutoLbl.textContent = activeAuto ? "Đang Auto" : "Tự Đánh";
       }
     }
     this.stealthPill?.classList.toggle("is-visible", Boolean(player.isStealthed));

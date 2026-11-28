@@ -99,7 +99,7 @@ function createDefaultProfile() {
 export class AccountManager {
   constructor() {
     this.session = null;
-    this.guestMode = false;
+    this.guestMode = true;
     this.profile = createDefaultProfile();
     this.characters = [null, null, null];
     this.activeSlotIndex = null;
@@ -159,7 +159,7 @@ export class AccountManager {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (parsed.session) this.session = parsed.session;
-      if (parsed.guestMode) this.guestMode = Boolean(parsed.guestMode);
+      if (parsed.guestMode !== undefined) this.guestMode = Boolean(parsed.guestMode);
       if (parsed.profile) {
         this.profile = { ...createDefaultProfile(), ...parsed.profile };
         this.characters = normalizeCharactersArray(parsed.profile.characters);

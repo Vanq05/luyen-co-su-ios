@@ -125,7 +125,7 @@ export class OnlineHubClient {
   }
 
   async pollAll() {
-    if (this._busyPoll || !this.account.isConfigured()) return;
+    if (this._busyPoll || !this.account.isLoggedIn() || !this.account.isConfigured()) return;
     this._busyPoll = true;
     const authToken = this.account.session?.access_token || SUPABASE_KEY;
     const headers = {

@@ -187,6 +187,12 @@ export class GateScreens {
     else if (this.screen === "char_create" || this.screen === "appearance_mirror") {
       this._renderCustomizerScreen(this.screen === "appearance_mirror");
     }
+    this.root.querySelector(".ctl-novel-corner-link")?.addEventListener("click", (e) => {
+      if (window.Capacitor?.isNativePlatform?.()) {
+        e.preventDefault();
+        window.open(e.currentTarget.href, "_blank", "noopener,noreferrer");
+      }
+    });
     this._startBambooBackdrop();
   }
 
@@ -243,7 +249,7 @@ export class GateScreens {
                 ${this.authBusy ? "Đang kết nối..." : isReg ? "Đăng Ký & Bước Vào Nam Cương" : "Vào Giang Hồ"}
               </button>
               <button type="button" id="gate-guest-btn" class="ctl-btn-gold" ${this.authBusy ? "disabled" : ""}>
-                Chơi Ngay (Khách — Lưu Trên Máy)
+                Quay Lại Chơi Offline Trên Máy
               </button>
             </div>
           </form>
@@ -304,7 +310,7 @@ export class GateScreens {
     const isOnline = this.account.isLoggedIn();
     const accLabel = isOnline
       ? `Máy chủ Nam Cương · <b>${this.account.profile.username ?? "Đạo Hữu"}</b>`
-      : `Chế độ Khách (Lưu nội bộ trên trình duyệt)`;
+      : `Lưu Trực Tiếp Trên Máy (Chơi Offline Độc Lập)`;
 
     const slotsHtml = [0, 1, 2]
       .map((slotIdx) => {
@@ -364,7 +370,7 @@ export class GateScreens {
           </div>
           <div class="gate-topbar-right">
             <button type="button" id="gate-switch-acc-btn" class="mini-hud-btn">
-              ${isOnline ? "Đổi Tài Khoản" : "Đăng Nhập"}
+              ${isOnline ? "Đổi Tài Khoản" : "Đồng Bộ Đám Mây"}
             </button>
           </div>
         </div>

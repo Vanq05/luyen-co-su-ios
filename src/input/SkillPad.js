@@ -6,10 +6,12 @@
  * - Hỗ trợ kéo vào vùng "Hủy Chiêu" để hủy mà không mất hồi chiêu.
  */
 export class SkillPad {
-  constructor({ slots, cancelZoneEl, getDefaultAngle, onCast, onCancel }) {
+  constructor({ slots = {}, cancelZoneEl, getDefaultAngle, canCast = null, externalCooldowns = false, onCast, onCancel }) {
     this.slots = slots;
     this.cancelZoneEl = cancelZoneEl;
     this.getDefaultAngle = getDefaultAngle;
+    this.canCast = canCast;
+    this.externalCooldowns = externalCooldowns;
     this.onCast = onCast;
     this.onCancel = onCancel;
 
@@ -39,14 +41,19 @@ export class SkillPad {
     }
   }
 
-  registerButton(slotId, buttonEl, knobEl, cooldownEl, timerTextEl) {
+  registerButton(slotId, buttonEl, knobEl = null, cooldownEl = null, timerTextEl = null) {
+    if (!buttonEl) return;
     this.buttons.set(slotId, { buttonEl, knobEl, cooldownEl, timerTextEl });
 
     buttonEl.addEventListener("pointerdown", (e) => {
+      if (document.body.classList.contains("is-editing-hud")) return;
       e.preventDefault();
       if (this.activeAim.active) return;
 
-      if ((this.cooldowns.get(slotId) ?? 0) > 0) {
+      const blocked = this.externalCooldowns
+        ? Boolean(this.canCast && !this.canCast(slotId))
+        : (this.cooldowns.get(slotId) ?? 0) > 0;
+      if (blocked) {
         buttonEl.classList.remove("is-denied");
         void buttonEl.offsetWidth;
         buttonEl.classList.add("is-denied");
@@ -76,7 +83,7 @@ export class SkillPad {
       };
 
       buttonEl.classList.add("is-aiming");
-      this.cancelZoneEl.classList.add("is-visible");
+      this.cancelZoneEl?.classList.add("is-visible");
       this._updateDrag(e.clientX, e.clientY);
     });
 
@@ -111,16 +118,20 @@ export class SkillPad {
       aim.distanceRatio = 0.7;
     }
 
-    const cancelRect = this.cancelZoneEl.getBoundingClientRect();
-    const pad = 8;
-    const overCancel =
-      clientX >= cancelRect.left - pad &&
-      clientX <= cancelRect.right + pad &&
-      clientY >= cancelRect.top - pad &&
-      clientY <= cancelRect.bottom + pad;
+    let overCancel = false;
+    if (this.cancelZoneEl) {
+      const cancelRect = this.cancelZoneEl.getBoundingClientRect();
+      const pad = 8;
+      overCancel =
+        cancelRect.width > 0 &&
+        clientX >= cancelRect.left - pad &&
+        clientX <= cancelRect.right + pad &&
+        clientY >= cancelRect.top - pad &&
+        clientY <= cancelRect.bottom + pad;
+      this.cancelZoneEl.classList.toggle("is-hover", overCancel);
+    }
 
     aim.isCanceling = overCancel;
-    this.cancelZoneEl.classList.toggle("is-hover", overCancel);
 
     const ui = this.buttons.get(aim.slotId);
     if (ui) {
@@ -145,7 +156,7 @@ export class SkillPad {
         ui.knobEl.style.transform = "translate3d(0px, 0px, 0)";
       }
     }
-    this.cancelZoneEl.classList.remove("is-visible", "is-hover");
+    this.cancelZoneEl?.classList.remove("is-visible", "is-hover");
 
     const canceled = forceCancel || aim.isCanceling;
     const payload = {
@@ -176,9 +187,11 @@ export class SkillPad {
   }
 
   triggerCast({ slotId, angle, distanceRatio = 0.7, quickTap = true }) {
-    if ((this.cooldowns.get(slotId) ?? 0) > 0) return false;
-    const maxCd = this.maxCooldowns.get(slotId) ?? 2;
-    this.cooldowns.set(slotId, maxCd);
+    if (!this.externalCooldowns) {
+      if ((this.cooldowns.get(slotId) ?? 0) > 0) return false;
+      const maxCd = this.maxCooldowns.get(slotId) ?? 2;
+      this.cooldowns.set(slotId, maxCd);
+    }
     this.onCast?.({ slotId, angle, distanceRatio, quickTap });
     return true;
   }

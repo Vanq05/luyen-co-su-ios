@@ -1245,6 +1245,8 @@ export const WORLD_MAPS = {
     gatherNodes: [
       { id: "mine_bl_1", kind: "mine", label: "Mỏ Đá Bắc Lĩnh", item: "mao_thach_trung", x: 350, y: 460 },
       { id: "herb_bl_1", kind: "herb", label: "Linh Thảo Trăm Năm", item: "thao_duoc_tram_nam", x: 920, y: 480 },
+      { id: "wild_gu_kho_luc", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Khổ Lực Cổ", guId: "kho_luc", x: 380, y: 245 },
+      { id: "wild_gu_dien_nhan", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Điện Nhãn Cổ", guId: "dien_nhan", x: 930, y: 255 },
     ],
     monsterSpawns: [
       { type: "thiet_giap_bo_cap", x: 460, y: 360, respawn: 7 },
@@ -1326,7 +1328,10 @@ export const WORLD_MAPS = {
     npcs: [],
     gatherNodes: [
       { id: "fish_ht_1", kind: "fish", label: "Bãi Câu Đầm Hắc Thủy", x: 840, y: 430 },
-      { id: "wild_gu_thuy_trao", kind: "wild_gu", label: "Ổ Dã Cổ (Thủy Tráo)", guId: "thuy_trao", x: 240, y: 430 },
+      { id: "wild_gu_thuy_trao", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Thủy Tráo Cổ", guId: "thuy_trao", x: 240, y: 430 },
+      { id: "wild_gu_doc_hat", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Độc Hạt Cổ", guId: "doc_hat", x: 760, y: 690 },
+      { id: "wild_gu_phe_hon", kind: "wild_gu", label: "Ổ Dã Cổ [C3]: Phệ Hồn Thiềm", guId: "phe_hon_thiem", x: 460, y: 255 },
+      { id: "wild_gu_van_doc", kind: "wild_gu", label: "Kỳ Ngộ [C5]: Vạn Độc Vương Cổ", guId: "van_doc_vuong", x: 525, y: 175 },
     ],
     monsterSpawns: [
       { type: "coc_doc_hac_thuy", x: 950, y: 310, respawn: 7 },
@@ -1422,6 +1427,8 @@ export const WORLD_MAPS = {
     gatherNodes: [
       { id: "herb_st_1", kind: "herb", label: "Sương Trúc Linh Lộ", item: "suong_truc_linh_lo", x: 480, y: 310 },
       { id: "mine_st_1", kind: "mine", label: "Hoàng Thổ Tinh Sa", item: "hoang_tho_tinh_sa", x: 880, y: 590 },
+      { id: "wild_gu_xoan_cot", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Xoắn Cốt Thương", guId: "xoan_oc_cot_thuong", x: 265, y: 655 },
+      { id: "wild_gu_ngan_nguyet", kind: "wild_gu", label: "Ổ Dã Cổ [C3]: Ngân Trung Nguyệt", guId: "ngan_trung_nguyet", x: 1030, y: 245 },
     ],
     monsterSpawns: [
       { type: "hao_dien_lang", x: 480, y: 450, respawn: 7 },
@@ -1527,7 +1534,9 @@ export const WORLD_MAPS = {
     gatherNodes: [
       { id: "mine_tn_1", kind: "mine", label: "Mạch Nhũ Thạch", item: "mao_thach_trung", x: 350, y: 615 },
       { id: "mine_tn_2", kind: "mine", label: "Ngọc Khoáng Tinh", item: "ngoc_vun", x: 1085, y: 520 },
-      { id: "wild_gu_ngoc_bi", kind: "wild_gu", label: "Ổ Dã Cổ: Ngọc Bì Cổ", guId: "ngoc_bi", x: 245, y: 295 },
+      { id: "wild_gu_ngoc_bi", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Ngọc Bì Cổ", guId: "ngoc_bi", x: 245, y: 295 },
+      { id: "wild_gu_thiet_cot", kind: "wild_gu", label: "Ổ Dã Cổ [C2]: Thiết Cốt Cổ", guId: "thiet_cot", x: 365, y: 560 },
+      { id: "wild_gu_kim_chung", kind: "wild_gu", label: "Ổ Cổ Hiếm [C4]: Kim Chung Tráo", guId: "kim_chung_trao", x: 965, y: 240 },
     ],
     monsterSpawns: [
       { type: "thach_hau", x: 675, y: 505, respawn: 7 },
@@ -1616,6 +1625,9 @@ export const WORLD_MAPS = {
     gatherNodes: [
       { id: "mine_xn_1", kind: "mine", label: "Mạch Xích Nham Hỏa Tủy", item: "xich_nham_hoa_tuy", x: 460, y: 280 },
       { id: "mine_xn_2", kind: "mine", label: "Mao Thạch Thái Cổ", item: "mao_thach_cao", x: 980, y: 340 },
+      { id: "wild_gu_liet_diem", kind: "wild_gu", label: "Ổ Cổ Hiếm [C4]: Liệt Diễm Phần Thành", guId: "liet_diem_phan_thanh", x: 315, y: 365 },
+      { id: "wild_gu_long_tuong", kind: "wild_gu", label: "Ổ Cổ Hiếm [C4]: Long Tượng Lực Cổ", guId: "long_tuong_luc", x: 895, y: 545 },
+      { id: "wild_gu_huyet_tich_tu", kind: "wild_gu", label: "Kỳ Ngộ [C5]: Huyết Tích Tử Cổ", guId: "huyet_tich_tu", x: 845, y: 215 },
     ],
     monsterSpawns: [
       { type: "xich_viem_thu", x: 500, y: 420, respawn: 8 },
@@ -1724,6 +1736,10 @@ export const WORLD_MAPS = {
     ],
     gatherNodes: [
       { id: "mine_vd_1", kind: "mine", label: "Băng Tuyền Tinh", item: "bang_tuyen_tinh", x: 420, y: 280 },
+      { id: "wild_gu_bang_co", kind: "wild_gu", label: "Ổ Dã Cổ [C3]: Băng Cơ Ngọc Cốt", guId: "bang_co", x: 245, y: 365 },
+      { id: "wild_gu_tuyet_hoa", kind: "wild_gu", label: "Ổ Cổ Hiếm [C4]: Băng Phách Tuyết Hoa", guId: "bang_phach_tuyet_hoa", x: 870, y: 575 },
+      { id: "wild_gu_bang_phong", kind: "wild_gu", label: "Kỳ Ngộ [C5]: Băng Phong Thiên Lý", guId: "bang_phong_thien_ly", x: 335, y: 455 },
+      { id: "wild_gu_thien_kiem", kind: "wild_gu", label: "Kỳ Ngộ [C5]: Thiên Kiếm Tuyệt Ảnh", guId: "thien_kiem_tuyet_anh", x: 960, y: 240 },
     ],
     monsterSpawns: [
       { type: "soi_tuyet", x: 460, y: 520, respawn: 8 },

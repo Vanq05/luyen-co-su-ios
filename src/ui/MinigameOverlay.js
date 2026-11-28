@@ -152,22 +152,29 @@ export class MinigameOverlay {
     this.rafId = requestAnimationFrame(tick);
   }
 
-  _runRefine({ guName, onSuccess, onFail }) {
-    const state = { timer: 8.0, progress: 30, needle: 50, zone: 50, holding: false };
+  _runRefine({ guName, guRank = 1, onSuccess, onFail }) {
+    const rank = Math.max(1, Math.min(5, Number(guRank) || 1));
+    const zoneWidth = [28, 28, 22, 18, 14, 11.5][rank] || 20;
+    const halfZone = zoneWidth * 0.5;
+    const gainRate = [32, 32, 27, 23, 20, 18][rank] || 24;
+    const drainRate = [10, 10, 14, 18, 23, 28][rank] || 15;
+    const needleUp = [58, 58, 62, 66, 70, 74][rank] || 60;
+    const needleDown = [44, 44, 48, 54, 60, 66][rank] || 46;
+    const state = { timer: 7.5 + rank * 0.85, progress: rank >= 4 ? 18 : 28, needle: 50, zone: 50, holding: false };
     this.root.innerHTML = `
       <div class="ctl-mg-card">
         <div class="ctl-mg-head">
-          <span>🪲 Luyện Hóa: ${guName}</span>
-          <span id="mg-time">8.0s</span>
+          <span>Luyện Hóa: ${guName}</span>
+          <span id="mg-time">${state.timer.toFixed(1)}s</span>
           <button type="button" id="mg-close" class="ctl-mini-circle">×</button>
         </div>
-        <div class="ctl-mg-label">Tiến độ thu phục: <b id="mg-prog-pct">30%</b></div>
+        <div class="ctl-mg-label">Tiến độ thu phục (Độ khó C${rank}): <b id="mg-prog-pct">${state.progress}%</b></div>
         <div class="ctl-mg-tension-bar">
-          <div id="mg-zone" class="ctl-mg-safe-zone" style="width:28%"></div>
+          <div id="mg-zone" class="ctl-mg-safe-zone" style="width:${zoneWidth}%"></div>
           <div id="mg-ptr" class="ctl-mg-ptr"></div>
         </div>
         <div class="ctl-mg-hint">Giữ R hoặc nhấn nút để giữ kim Thần Thức trong vùng ngọc xanh!</div>
-        <button type="button" id="mg-hold" class="ctl-btn-jade" style="width:100%;margin-top:8px">🔥 Giữ Quán Chú Chân Nguyên (R)</button>
+        <button type="button" id="mg-hold" class="ctl-btn-jade" style="width:100%;margin-top:8px">Quán Chú Chân Nguyên (R)</button>
       </div>
     `;
     this.root.querySelector("#mg-close")?.addEventListener("click", () => { this.close(); onFail?.(); });
@@ -190,13 +197,16 @@ export class MinigameOverlay {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       state.timer -= dt;
-      state.zone = 50 + Math.sin(now * 0.0022) * 24;
-      state.needle = Math.max(4, Math.min(96, state.needle + (state.holding ? 58 : -44) * dt));
-      if (Math.abs(state.needle - state.zone) <= 14) state.progress += 30 * dt;
-      else state.progress -= 10 * dt;
+      const freq1 = 0.002 + rank * 0.00055;
+      const freq2 = 0.0034 + rank * 0.0008;
+      const amp2 = rank >= 3 ? rank * 2.8 : 0;
+      state.zone = Math.max(15, Math.min(85, 50 + Math.sin(now * freq1) * (22 + rank * 1.8) + Math.cos(now * freq2) * amp2));
+      state.needle = Math.max(4, Math.min(96, state.needle + (state.holding ? needleUp : -needleDown) * dt));
+      if (Math.abs(state.needle - state.zone) <= halfZone) state.progress += gainRate * dt;
+      else state.progress = Math.max(0, state.progress - drainRate * dt);
 
       this.root.querySelector("#mg-time").textContent = `${Math.max(0, state.timer).toFixed(1)}s`;
-      this.root.querySelector("#mg-zone").style.left = `${state.zone - 14}%`;
+      this.root.querySelector("#mg-zone").style.left = `${state.zone - halfZone}%`;
       this.root.querySelector("#mg-ptr").style.left = `${state.needle}%`;
       this.root.querySelector("#mg-prog-pct").textContent = `${Math.min(100, Math.max(0, Math.round(state.progress)))}%`;
 
