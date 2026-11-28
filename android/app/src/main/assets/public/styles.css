@@ -2046,8 +2046,8 @@ body {
 }
 
 .create-preview-box {
-  width: 104px;
-  height: 104px;
+  width: 140px;
+  height: 150px;
   display: grid;
   place-items: center;
   border-radius: 8px;

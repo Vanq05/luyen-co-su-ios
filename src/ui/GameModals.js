@@ -174,7 +174,7 @@ export class GameModals {
       tabsHtml = [
         ["story", `Chính Tuyến (${MAIN_QUESTS.length} Chương)`],
         ["main", "Gia Tộc (Nguyên Thạch)"],
-        ["gu_quests", "Tầm Cổ (1–3 Chuyển)"],
+        ["gu_quests", "Tầm Cổ (1–5 Chuyển)"],
       ]
         .map(([id, lbl]) => `<button type="button" class="tab-btn ${this.subTab === id ? "is-active" : ""}" data-subtab="${id}">${lbl}</button>`)
         .join("");
@@ -254,7 +254,7 @@ export class GameModals {
     return `
       <div class="ctl-grid-2">
         <div class="ctl-box" style="text-align:center">
-          <canvas id="modal-char-canvas" width="90" height="90"></canvas>
+          <canvas id="modal-char-canvas" width="128" height="140"></canvas>
           <div style="font-weight:800;font-size:13px">${p.characterName}</div>
           <div style="color:${stage.essenceColor};font-weight:700;font-size:11px">${stage.title} (${stage.essenceName})</div>
           <div class="ctl-sub-txt">Tu Vi: ${p.cultivationExp}/${prog.need || "Max"} (${Math.round(prog.pct * 100)}%)</div>

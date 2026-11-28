@@ -320,7 +320,7 @@ export class GateScreens {
             <div class="pedestal-card pedestal-card--empty">
               <div class="pedestal-slot-badge">Ô Nhân Vật #${slotIdx + 1}</div>
               <div class="pedestal-altar-empty">
-                <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="80" height="80"></canvas>
+                <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="128" height="136"></canvas>
                 <div class="pedestal-empty-hint">Chưa Tạo Cổ Sư</div>
               </div>
               <button type="button" class="ctl-btn-jade pedestal-create-btn" data-create-slot="${slotIdx}">
@@ -345,7 +345,7 @@ export class GateScreens {
               </button>
             </div>
             <div class="pedestal-hero-wrap">
-              <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="80" height="80"></canvas>
+              <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="128" height="136"></canvas>
             </div>
             <div class="pedestal-name">${ch.name}</div>
             <div class="pedestal-realm">${stage.title} · ${stones} Nguyên thạch</div>
@@ -498,7 +498,7 @@ export class GateScreens {
         <form id="cust-form" class="gate-create-grid">
           <div class="gate-create-left">
             <div class="create-preview-box create-preview-box--lg">
-              <canvas id="cust-preview-canvas" width="96" height="96"></canvas>
+              <canvas id="cust-preview-canvas" width="128" height="140"></canvas>
             </div>
             <div class="pose-btn-row">
               ${[
@@ -509,6 +509,7 @@ export class GateScreens {
               ]
                 .map(([id, lbl]) => `<button type="button" class="floor-pill ${this.previewPose === id ? "is-selected" : ""}" data-pose="${id}">${lbl}</button>`)
                 .join("")}
+              <button type="button" id="btn-preset-ref" class="floor-pill">Nguyên Tác</button>
               <button type="button" id="btn-random-look" class="floor-pill">Ngẫu Nhiên</button>
             </div>
             <label class="acc-field" style="width:100%">
@@ -539,7 +540,7 @@ export class GateScreens {
       drawCustomCharacterPreview(previewCanvas, this.draftAppearance, {
         animState: this.previewPose,
         timeSec: (now - startTs) / 1000,
-        scale: 2.5,
+        scale: 2,
       });
       this._previewRaf = requestAnimationFrame(tickPreview);
     };
@@ -557,6 +558,11 @@ export class GateScreens {
       } else {
         this.openCharSelect();
       }
+    });
+
+    this.root.querySelector("#btn-preset-ref")?.addEventListener("click", () => {
+      this.draftAppearance = createDefaultAppearance();
+      this.render();
     });
 
     this.root.querySelector("#btn-random-look")?.addEventListener("click", () => {

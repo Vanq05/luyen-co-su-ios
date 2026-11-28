@@ -2192,8 +2192,8 @@ export class WorldSimulation {
 
     ctx.save();
     ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
-    drawCrispPixelText(ctx, npc.name, npc.x, npc.y - 31, "#5fbf8a", "#06080d");
-    drawCrispPixelText(ctx, "!", npc.x, npc.y - 40, "#ffd15c", "#06080d");
+    drawCrispPixelText(ctx, npc.name, npc.x, npc.y - 62, "#5fbf8a", "#06080d");
+    drawCrispPixelText(ctx, "!", npc.x, npc.y - 73, "#ffd15c", "#06080d");
     ctx.restore();
   }
 
@@ -2255,7 +2255,7 @@ export class WorldSimulation {
     drawSheetFrame(ctx, rpSheet, fi, rp.x, rp.y, { flipX: Math.cos(rp.facing ?? 0) < -0.15 });
     ctx.save();
     ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
-    drawCrispPixelText(ctx, rp.name, rp.x, rp.y - 31, "#e4ebf5", "#06080d");
+    drawCrispPixelText(ctx, rp.name, rp.x, rp.y - 62, "#e4ebf5", "#06080d");
     ctx.restore();
   }
 
@@ -2286,15 +2286,15 @@ export class WorldSimulation {
     if (this.player.isStealthed) {
       ctx.save();
       ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, "Ẩn Thân", this.player.x, this.player.y - 44, "#80ffcf", "#06080d");
+      drawCrispPixelText(ctx, "Ẩn Thân", this.player.x, this.player.y - 75, "#80ffcf", "#06080d");
       ctx.restore();
     }
 
     // Cổ Bản Mệnh bay cạnh vai trái nhân vật (pixel diamond + core)
     const vital = this.player.getVitalGu();
     if (vital) {
-      const gx = Math.round(this.player.x - 13 + Math.sin(this.time * 3) * 1.5);
-      const gy = Math.round(this.player.y - 20 + Math.cos(this.time * 4) * 1.5);
+      const gx = Math.round(this.player.x - 19 + Math.sin(this.time * 3) * 1.5);
+      const gy = Math.round(this.player.y - 40 + Math.cos(this.time * 4) * 1.5);
       plotRect(ctx, gx - 3, gy - 3, 6, 6, "#07090d");
       plotRect(ctx, gx - 2, gy - 2, 4, 4, vital.color || "#5ef2d6");
       plotRect(ctx, gx - 1, gy - 1, 2, 2, "#ffffff");
@@ -2303,19 +2303,20 @@ export class WorldSimulation {
     const mpRatio = this.player.mp / Math.max(1, this.player.maxMp);
     this._renderPlayerArc(ctx, mpRatio, this.player.isAbsorbingStone ? "#5ef2d6" : auraColor);
 
-    // Chỉ hiển thị tên nhân vật sắc nét trên đầu (0 danh hiệu gây rối/đè chữ)
+    // Hiển thị [Chuyển · Tư Chất] Tên Nhân Vật sắc nét phía trên đầu (không che tóc & trâm ngọc)
     const px = Math.round(this.player.x);
     const py = Math.round(this.player.y);
+    const overheadRank = this.player.hasAwakened ? `[${stage.shortRank} · ${apt.short}]` : "[Phàm Nhân]";
     ctx.save();
-    ctx.font = "700 9px 'Be Vietnam Pro', sans-serif";
-    drawCrispPixelText(ctx, this.player.characterName, px, py - 30, "#f1ebd8", "#05070b");
+    ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
+    drawCrispPixelText(ctx, `${overheadRank} ${this.player.characterName}`, px, py - 63, "#f4efe2", "#05070b");
     ctx.restore();
   }
 
   _renderPlayerArc(ctx, ratio, color) {
     // 5 nấc Chân Nguyên dọc bên phải nhân vật bằng pixel nguyên (0 ctx.arc)
-    const bx = Math.round(this.player.x + 20);
-    const by = Math.round(this.player.y - 26);
+    const bx = Math.round(this.player.x + 25);
+    const by = Math.round(this.player.y - 44);
     for (let i = 0; i < 5; i++) {
       const segY = by + (4 - i) * 5;
       const segX = bx + (i === 2 ? 2 : i === 1 || i === 3 ? 1 : 0);

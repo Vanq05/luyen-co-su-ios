@@ -1484,32 +1484,35 @@
 
   // src/character/CharacterSpriteBuilder.js
   var SKIN_TONES = [
-    { id: "bach_ngoc", name: "B\u1EA1ch Ng\u1ECDc", base: "#f5dec8", shadow: "#cfa888", highlight: "#fff3e6" },
-    { id: "phan_hong", name: "Ph\u1EA5n H\u1ED3ng", base: "#f2cabe", shadow: "#c49084", highlight: "#ffe6de" },
-    { id: "dong_co", name: "\u0110\u1ED3ng C\u1ED5", base: "#d49e72", shadow: "#9c6b43", highlight: "#ebbc94" },
-    { id: "bang_tuyet", name: "B\u0103ng Tuy\u1EBFt", base: "#dfe8f4", shadow: "#a1b3cc", highlight: "#f6faff" },
-    { id: "huyen_mach", name: "Huy\u1EC1n M\u1EA1ch", base: "#8c7268", shadow: "#59453e", highlight: "#b3968a" }
+    { id: "tai_bach", name: "T\xE1i B\u1EA1ch C\u1ED5 Phong", base: "#f6e4dc", mid: "#e4dad3", shadow: "#cda39a", highlight: "#ffffff" },
+    { id: "bach_ngoc", name: "B\u1EA1ch Ng\u1ECDc", base: "#f5dec8", mid: "#e6c7ad", shadow: "#cfa888", highlight: "#fff3e6" },
+    { id: "phan_hong", name: "Ph\u1EA5n H\u1ED3ng", base: "#f2cabe", mid: "#deae9e", shadow: "#c49084", highlight: "#ffe6de" },
+    { id: "dong_co", name: "\u0110\u1ED3ng C\u1ED5", base: "#d49e72", mid: "#ba855a", shadow: "#9c6b43", highlight: "#ebbc94" },
+    { id: "bang_tuyet", name: "B\u0103ng Tuy\u1EBFt", base: "#dfe8f4", mid: "#c1cfe3", shadow: "#a1b3cc", highlight: "#f6faff" },
+    { id: "huyen_mach", name: "Huy\u1EC1n M\u1EA1ch", base: "#8c7268", mid: "#735b52", shadow: "#59453e", highlight: "#b3968a" }
   ];
   var HAIR_STYLES = [
-    { id: "hiep_khach", name: "T\xF3c Bu\u1ED9c Cao" },
+    { id: "co_nguyet_phat", name: "Tr\u01B0\u1EDDng Ph\xE1t X\xF5a R\u1ED1i (Nguy\xEAn T\xE1c)" },
     { id: "tien_phong", name: "Tr\u01B0\u1EDDng Ph\xE1t X\xF5a" },
+    { id: "hiep_khach", name: "T\xF3c Bu\u1ED9c Cao" },
     { id: "kiem_khach", name: "T\xF3c Ng\u1EAFn Ki\u1EBFm Kh\xE1ch" },
     { id: "linh_dong", name: "Song Ho\xE0n Linh \u0110\u1ED3ng" },
     { id: "cuong_ma", name: "Cu\u1ED3ng Ph\xE1t T\xE0 V\u01B0\u01A1ng" },
     { id: "kho_tu", name: "\u0110\u1EA7u Tr\u1EA7n Chu Sa" }
   ];
   var HAIR_COLORS = [
-    { id: "den_huyen", name: "\u0110en Huy\u1EC1n", base: "#1f1d29", dark: "#0f0e16", light: "#3f3b52" },
-    { id: "bach_phat", name: "B\u1EA1ch Ph\xE1t", base: "#dde4f0", dark: "#96a2b8", light: "#ffffff" },
-    { id: "do_huyet", name: "\u0110\u1ECF Huy\u1EBFt", base: "#c92845", dark: "#781326", light: "#ff6680" },
-    { id: "xanh_bang", name: "Xanh B\u0103ng", base: "#3db8d9", dark: "#1d6b87", light: "#94ecff" },
-    { id: "tim_u_minh", name: "T\xEDm U Minh", base: "#8c42d6", dark: "#4c1d82", light: "#c88cff" },
-    { id: "vang_kim", name: "Ho\xE0ng Kim", base: "#e0b038", dark: "#8f6814", light: "#ffe484" },
-    { id: "luc_doc", name: "L\u1EE5c \u0110\u1ED9c", base: "#47bd6b", dark: "#206e39", light: "#8ff2ab" },
-    { id: "hong_dao", name: "H\u1ED3ng \u0110\xE0o", base: "#e374a8", dark: "#913863", light: "#ffb8d9" }
+    { id: "den_huyen", name: "\u0110en Huy\u1EC1n M\u1EB7c", base: "#24232d", dark: "#13121a", light: "#3b3847", tip: "#4d495c" },
+    { id: "bach_phat", name: "B\u1EA1ch Ph\xE1t", base: "#dde4f0", dark: "#96a2b8", light: "#f4f7ff", tip: "#ffffff" },
+    { id: "do_huyet", name: "\u0110\u1ECF Huy\u1EBFt", base: "#c92845", dark: "#781326", light: "#eb4c68", tip: "#ff8096" },
+    { id: "xanh_bang", name: "Xanh B\u0103ng", base: "#3db8d9", dark: "#1d6b87", light: "#6fd4f0", tip: "#b0f2ff" },
+    { id: "tim_u_minh", name: "T\xEDm U Minh", base: "#8c42d6", dark: "#4c1d82", light: "#ad69f0", tip: "#d6adff" },
+    { id: "vang_kim", name: "Ho\xE0ng Kim", base: "#e0b038", dark: "#8f6814", light: "#f2ca5e", tip: "#ffeaa3" },
+    { id: "luc_doc", name: "L\u1EE5c \u0110\u1ED9c", base: "#47bd6b", dark: "#206e39", light: "#6dd98e", tip: "#a8f7c0" },
+    { id: "hong_dao", name: "H\u1ED3ng \u0110\xE0o", base: "#e374a8", dark: "#913863", light: "#f59bc5", tip: "#ffcce4" }
   ];
   var HEADGEARS = [
     { id: "none", name: "Kh\xF4ng \u0110\u1ED9i" },
+    { id: "tram_ngoc", name: "Tr\xE2m Ng\u1ECDc B\xEDch Nh\u1EA1t" },
     { id: "ngoc_quan", name: "Ng\u1ECDc Qu\xE1n \u0110\u1EA1o S\u01B0" },
     { id: "dau_lap", name: "\u0110\u1EA5u L\u1EA1p Giang H\u1ED3" },
     { id: "anh_sat", name: "Kh\u0103n B\u1ECBt M\u1EB7t \u1EA2nh" },
@@ -1517,13 +1520,14 @@
     { id: "kim_co", name: "V\xF2ng Kim C\xF4" }
   ];
   var OUTFIT_STYLES = [
+    { id: "hac_bao_co", name: "H\u1EAFc B\xE0o X\u1EBB V\u1EA1t C\u1ED5 Trang" },
     { id: "truong_bao", name: "Tr\u01B0\u1EDDng B\xE0o C\u1ED5 S\u01B0" },
     { id: "doan_y", name: "\u0110o\u1EA3n Y Th\xEDch Kh\xE1ch" },
     { id: "chien_giap", name: "Chi\u1EBFn Gi\xE1p Thi\u1EBFt C\u1ED1t" },
     { id: "ta_tu", name: "\xC1o Cho\xE0ng T\xE0 Tu" }
   ];
   var OUTFIT_COLORS = [
-    { id: "huyen_hac", name: "Huy\u1EC1n H\u1EAFc", base: "#22202b", dark: "#121018", light: "#3f3b4f" },
+    { id: "huyen_hac", name: "Huy\u1EC1n H\u1EAFc C\u1ED5 Trang", base: "#282730", dark: "#15141c", light: "#3b3947" },
     { id: "thanh_ngoc", name: "Thanh Ng\u1ECDc", base: "#216e5a", dark: "#123d32", light: "#42a88c" },
     { id: "huyet_sat", name: "Huy\u1EBFt S\xE1t", base: "#8a1c33", dark: "#4d0d1b", light: "#c93856" },
     { id: "xich_viem", name: "X\xEDch Vi\xEAm", base: "#a84419", dark: "#5e2209", light: "#e37036" },
@@ -1533,14 +1537,15 @@
     { id: "lam_bang", name: "Lam B\u0103ng", base: "#235c8f", dark: "#123354", light: "#4791cf" }
   ];
   var TRIM_COLORS = [
+    { id: "bac_sang", name: "B\u1EA1c S\xE1ng & B\u1EA1ch Ng\u1ECDc", base: "#d6d8de", light: "#f6f6f7" },
     { id: "vang_dong", name: "V\xE0ng \u0110\u1ED3ng", base: "#d9b25f", light: "#ffe6a6" },
     { id: "ngoc_bich", name: "Ng\u1ECDc B\xEDch", base: "#5fbf8a", light: "#b5ffe4" },
     { id: "do_tham", name: "Chu \u0110\u1ECF", base: "#d0573c", light: "#ff9e8a" },
-    { id: "bac_sang", name: "B\u1EA1c S\xE1ng", base: "#dce4f2", light: "#ffffff" },
     { id: "tim_ma", name: "T\u1EED Tinh", base: "#b84dff", light: "#e2b3ff" },
     { id: "cam_lua", name: "Cam H\u1ECFa", base: "#ff8c3a", light: "#ffd0a6" }
   ];
   var EYE_COLORS = [
+    { id: "han_mac", name: "H\xE0n M\u1EB7c U S\u1EA7u", hex: "#857d66" },
     { id: "ngoc_bich", name: "M\u1EAFt Ng\u1ECDc B\xEDch", hex: "#5fbf8a" },
     { id: "huyet_dong", name: "M\u1EAFt Huy\u1EBFt \u0110\u1ED3ng", hex: "#d0573c" },
     { id: "ho_phach", name: "M\u1EAFt H\u1ED5 Ph\xE1ch", hex: "#ffd15c" },
@@ -1549,28 +1554,32 @@
   ];
   var BACK_ITEMS = [
     { id: "none", name: "Kh\xF4ng \u0110eo" },
-    { id: "ho_lo", name: "H\u1ED3 L\xF4 Luy\u1EC7n C\u1ED5" },
     { id: "co_kiem", name: "Tr\u01B0\u1EDDng Ki\u1EBFm C\u1ED5" },
+    { id: "ho_lo", name: "H\u1ED3 L\xF4 Luy\u1EC7n C\u1ED5" },
     { id: "nguyet_luan", name: "Nguy\u1EC7t Lu\xE2n Ho\xE0n" },
     { id: "huyet_duc", name: "Huy\u1EBFt D\u1EF1c Linh" }
   ];
   var byId = (list, id) => list.find((item) => item.id === id) ?? list[0];
   function createDefaultAppearance() {
     return {
-      skin: "bach_ngoc",
-      hairStyle: "hiep_khach",
+      skin: "tai_bach",
+      hairStyle: "co_nguyet_phat",
       hairColor: "den_huyen",
-      headgear: "none",
-      outfitStyle: "truong_bao",
+      headgear: "tram_ngoc",
+      outfitStyle: "hac_bao_co",
       outfitColor: "huyen_hac",
-      trimColor: "vang_dong",
-      eyeColor: "ngoc_bich",
-      backItem: "co_kiem"
+      trimColor: "bac_sang",
+      eyeColor: "han_mac",
+      backItem: "none",
+      appearanceVersion: 2
     };
   }
   function normalizeAppearance(raw) {
     const def = createDefaultAppearance();
     if (!raw || typeof raw !== "object") return def;
+    if (!raw.appearanceVersion && raw.hairStyle === "hiep_khach" && raw.outfitStyle === "truong_bao" && raw.outfitColor === "huyen_hac") {
+      return def;
+    }
     return {
       skin: byId(SKIN_TONES, raw.skin).id,
       hairStyle: byId(HAIR_STYLES, raw.hairStyle).id,
@@ -1580,7 +1589,8 @@
       outfitColor: byId(OUTFIT_COLORS, raw.outfitColor).id,
       trimColor: byId(TRIM_COLORS, raw.trimColor).id,
       eyeColor: byId(EYE_COLORS, raw.eyeColor).id,
-      backItem: byId(BACK_ITEMS, raw.backItem).id
+      backItem: byId(BACK_ITEMS, raw.backItem).id,
+      appearanceVersion: 2
     };
   }
   function randomizeAppearance() {
@@ -1594,7 +1604,8 @@
       outfitColor: pick(OUTFIT_COLORS),
       trimColor: pick(TRIM_COLORS),
       eyeColor: pick(EYE_COLORS),
-      backItem: pick(BACK_ITEMS)
+      backItem: pick(BACK_ITEMS),
+      appearanceVersion: 2
     };
   }
   function getAppearanceKey(appearance) {
@@ -1611,278 +1622,399 @@
       a.backItem
     ].join("|");
   }
-  function makeSurface(width, height) {
-    if (typeof document !== "undefined" && typeof document.createElement === "function") {
-      const c = document.createElement("canvas");
-      c.width = width;
-      c.height = height;
-      const ctx = c.getContext("2d");
-      ctx.imageSmoothingEnabled = false;
-      return { canvas: c, ctx };
-    }
-    return { canvas: { width, height, isHeadlessMock: true }, ctx: null };
-  }
-  function drawCharacterFrame(ctx, ox, oy, resolved, state, frameIdx) {
-    if (!ctx) return;
+  function drawCharacterFrame64(targetCtx, ox, oy, resolved, state, frameIdx) {
+    if (!targetCtx) return;
     const { skin, hairStyle, hairColor, headgear, outfitStyle, outfitColor, trimColor, eyeColor, backItem } = resolved;
-    const px = (x, y, col, w = 1, h = 1) => {
-      ctx.fillStyle = col;
-      ctx.fillRect(ox + x, oy + y, w, h);
-    };
-    const outline = "#100d14";
+    const outlineDark = "#0d0a10";
+    const outlineLit = "#141018";
+    const isClassicHair = hairStyle === "co_nguyet_phat" || hairStyle === "tien_phong" || hairStyle === "cuong_ma";
+    const isClassicRobe = outfitStyle === "hac_bao_co" || outfitStyle === "truong_bao" || outfitStyle === "ta_tu";
     let bobY = 0;
+    let headBob = 0;
     let leanX = 0;
     let leftLegY = 0;
     let rightLegY = 0;
     let leftArmY = 0;
     let rightArmY = 0;
-    let capeSway = 0;
+    let hairSway = 0;
+    let robeSway = 0;
     if (state === "idle") {
       bobY = frameIdx === 1 || frameIdx === 2 ? 1 : 0;
-      capeSway = frameIdx === 2 ? 1 : 0;
+      headBob = frameIdx === 2 ? 1 : 0;
+      hairSway = frameIdx === 2 ? 1 : 0;
+      robeSway = frameIdx === 1 ? -1 : frameIdx === 3 ? 1 : 0;
     } else if (state === "run") {
       const cycle = [
-        { b: 0, ll: -2, rl: 1, la: 1, ra: -1, sw: 1 },
-        { b: -1, ll: -1, rl: 0, la: 0, ra: -1, sw: 1 },
-        { b: 0, ll: 1, rl: -1, la: -1, ra: 1, sw: 0 },
-        { b: 0, ll: 1, rl: -2, la: -1, ra: 1, sw: -1 },
-        { b: -1, ll: 0, rl: -1, la: 0, ra: 0, sw: -1 },
-        { b: 0, ll: -1, rl: 1, la: 1, ra: -1, sw: 0 }
+        { b: 0, ll: -2, rl: 1, la: 2, ra: -2, sw: -1 },
+        { b: -1, ll: -1, rl: 0, la: 1, ra: -1, sw: -2 },
+        { b: 0, ll: 1, rl: -1, la: -1, ra: 1, sw: -1 },
+        { b: 0, ll: 1, rl: -2, la: -2, ra: 2, sw: 0 },
+        { b: -1, ll: 0, rl: -1, la: -1, ra: 1, sw: -1 },
+        { b: 0, ll: -1, rl: 1, la: 1, ra: -1, sw: -1 }
       ][frameIdx % 6];
       bobY = cycle.b;
+      headBob = cycle.b;
       leftLegY = cycle.ll;
       rightLegY = cycle.rl;
       leftArmY = cycle.la;
       rightArmY = cycle.ra;
-      capeSway = cycle.sw;
+      hairSway = cycle.sw;
+      robeSway = cycle.sw;
       leanX = 1;
     } else if (state === "attack") {
       leanX = frameIdx === 1 || frameIdx === 2 ? 2 : 0;
       bobY = frameIdx === 1 ? 1 : 0;
-      rightArmY = frameIdx === 1 ? -3 : frameIdx === 2 ? -1 : 0;
-      capeSway = frameIdx === 1 ? -1 : 0;
+      headBob = bobY;
+      rightArmY = frameIdx === 1 ? -5 : frameIdx === 2 ? -3 : 0;
+      leftArmY = frameIdx === 1 ? 1 : 0;
+      hairSway = frameIdx === 1 ? -2 : 0;
+      robeSway = frameIdx === 1 ? -1 : 0;
     } else if (state === "sit") {
-      bobY = frameIdx === 1 ? 3 : 4;
+      bobY = frameIdx === 1 || frameIdx === 2 ? 6 : 7;
+      headBob = bobY;
+      hairSway = frameIdx % 2 === 0 ? 0 : 1;
     } else if (state === "fish") {
       bobY = frameIdx === 1 ? 1 : 0;
-      rightArmY = -1;
+      headBob = bobY;
+      rightArmY = -3;
     } else if (state === "dash") {
-      leanX = 2;
+      leanX = 3;
       bobY = 1;
-      capeSway = -2;
-      ctx.save();
-      ctx.globalAlpha = 0.35;
-      px(4 - frameIdx, 10, trimColor.base, 5, 12);
-      px(2 - frameIdx, 13, outfitColor.light, 4, 8);
-      ctx.restore();
+      headBob = 1;
+      hairSway = -3;
+      robeSway = -2;
     } else if (state === "hurt") {
-      leanX = -1;
+      leanX = -2;
       bobY = frameIdx === 0 ? -1 : 0;
+      headBob = bobY;
     } else if (state === "death") {
-      if (frameIdx === 0) bobY = 2;
-      else if (frameIdx === 1) bobY = 5;
-      else {
-        px(7, 23, outline, 18, 5);
-        px(8, 24, outfitColor.dark, 15, 3);
-        px(10, 23, outfitColor.base, 11, 3);
-        px(13, 24, trimColor.base, 5, 2);
-        px(19, 23, skin.base, 4, 3);
+      if (frameIdx === 0) {
+        bobY = 3;
+        headBob = 3;
+      } else if (frameIdx === 1) {
+        bobY = 9;
+        headBob = 9;
+      } else {
+        const tmp2 = createPixelCanvas(64, 64);
+        const g2 = tmp2.ctx;
+        const dp = (x, y, col, w = 1, h = 1) => {
+          g2.fillStyle = col;
+          g2.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+        };
+        dp(15, 49, outfitColor.dark, 28, 7);
+        dp(17, 50, outfitColor.base, 22, 5);
+        dp(24, 51, "#e4dad3", 5, 3);
+        dp(39, 46, hairColor.dark, 11, 10);
+        dp(41, 47, skin.base, 6, 7);
+        dp(43, 46, hairColor.base, 6, 3);
+        applySelectiveOutline(g2, 64, 64, outlineLit, outlineDark);
+        fillPixelEllipse(targetCtx, ox + 32, oy + 57, 18, 4, "rgba(4, 6, 10, 0.46)", true);
+        targetCtx.drawImage(tmp2.canvas, ox, oy);
         if (frameIdx === 3) {
-          px(15, 16, eyeColor.hex, 2, 3);
-          px(16, 13, "#ffffff", 1, 2);
+          plotRect(targetCtx, ox + 30, oy + 40, 2, 4, "#8ebbae");
+          plotRect(targetCtx, ox + 31, oy + 35, 1, 3, "#ffffff");
         }
         return;
       }
     } else if (state === "tau-hoa") {
       bobY = frameIdx % 2 === 0 ? -1 : 0;
-      capeSway = frameIdx % 2 === 0 ? 1 : -1;
+      headBob = bobY;
+      hairSway = frameIdx % 2 === 0 ? 1 : -1;
     }
+    fillPixelEllipse(targetCtx, ox + 32, oy + 59, state === "sit" ? 15 : 12, 4, "rgba(5, 7, 12, 0.45)", true);
+    if (state === "sit") {
+      targetCtx.save();
+      targetCtx.globalAlpha = frameIdx % 2 === 0 ? 0.52 : 0.78;
+      plotPixelEllipse(targetCtx, ox + 32, oy + 58, 18, 6, "#8ebbae", 3, frameIdx);
+      targetCtx.restore();
+    }
+    if (state === "dash") {
+      targetCtx.save();
+      targetCtx.globalAlpha = 0.34;
+      plotRect(targetCtx, ox + 12 - frameIdx * 2, oy + 20, 12, 26, outfitColor.light);
+      plotRect(targetCtx, ox + 10 - frameIdx * 2, oy + 26, 8, 16, "#8ebbae");
+      targetCtx.restore();
+    }
+    const tmp = createPixelCanvas(64, 64);
+    const g = tmp.ctx;
+    const p = (x, y, col, w = 1, h = 1) => {
+      if (!g || w <= 0 || h <= 0) return;
+      g.fillStyle = col;
+      g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+    };
     const bx = leanX;
     const by = bobY;
-    ctx.save();
-    ctx.globalAlpha = 0.38;
-    px(9, 26, "#060807", 14, 2);
-    px(11, 25, "#060807", 10, 4);
-    ctx.restore();
-    if (state === "sit") {
-      ctx.save();
-      ctx.globalAlpha = frameIdx === 0 ? 0.5 : 0.72;
-      plotPixelEllipse(ctx, ox + 16, oy + 26, 11, 4, "#5fbf8a", 2, frameIdx);
-      ctx.restore();
-    }
-    if (backItem === "nguyet_luan") {
-      px(7, 6 + by, trimColor.base, 18, 1);
-      px(7, 19 + by, trimColor.base, 18, 1);
-      px(6, 7 + by, trimColor.light, 1, 12);
-      px(25, 7 + by, trimColor.light, 1, 12);
-    } else if (backItem === "huyet_duc") {
-      const wingLift = frameIdx % 2 === 0 ? 0 : -1;
-      px(4, 9 + by + wingLift, "#5e0f24", 6, 8);
-      px(5, 10 + by + wingLift, "#d0573c", 4, 5);
-      px(22, 9 + by + wingLift, "#5e0f24", 6, 8);
-      px(23, 10 + by + wingLift, "#d0573c", 4, 5);
-    } else if (backItem === "co_kiem") {
-      px(8, 4 + by, outline, 3, 18);
-      px(9, 5 + by, trimColor.light, 1, 3);
-      px(7, 7 + by, trimColor.base, 5, 1);
-      px(9, 8 + by, "#8fa0b8", 1, 13);
+    const hx = leanX;
+    const hy = headBob;
+    const innerWhite = "#f6f6f7";
+    const innerSoft = "#e4dad3";
+    const innerShade = "#a7a08d";
+    const sashDark = "#121118";
+    const sashMid = "#22202b";
+    if (backItem === "co_kiem") {
+      p(19 + bx, 14 + by, trimColor.light, 2, 4);
+      p(17 + bx, 18 + by, trimColor.base, 6, 2);
+      p(19 + bx, 20 + by, "#8fa0b8", 2, 22);
     } else if (backItem === "ho_lo") {
-      px(6, 11 + by, outline, 5, 9);
-      px(7, 12 + by, "#d4943b", 3, 3);
-      px(7, 15 + by, "#d0573c", 3, 1);
-      px(6, 16 + by, "#c27d29", 5, 3);
+      p(16 + bx, 24 + by, "#b87a2e", 5, 5);
+      p(15 + bx, 29 + by, "#8c571d", 7, 7);
+      p(16 + bx, 28 + by, "#d0573c", 5, 2);
+    } else if (backItem === "nguyet_luan") {
+      p(16 + bx, 16 + by, trimColor.base, 32, 2);
+      p(16 + bx, 38 + by, trimColor.base, 32, 2);
+      p(15 + bx, 18 + by, trimColor.light, 2, 20);
+      p(47 + bx, 18 + by, trimColor.light, 2, 20);
+    } else if (backItem === "huyet_duc") {
+      const wl = frameIdx % 2 === 0 ? 0 : -2;
+      p(11 + bx, 22 + by + wl, "#75172e", 9, 14);
+      p(13 + bx, 24 + by + wl, "#cf3852", 5, 9);
+      p(44 + bx, 22 + by + wl, "#75172e", 9, 14);
+      p(46 + bx, 24 + by + wl, "#cf3852", 5, 9);
     }
-    if (outfitStyle === "ta_tu" || outfitStyle === "truong_bao") {
-      px(8 + capeSway, 16 + by, outline, 16, 9);
-      px(9 + capeSway, 17 + by, outfitColor.dark, 14, 7);
-      px(10 + capeSway, 23 + by, trimColor.base, 2, 1);
-      px(20 + capeSway, 23 + by, trimColor.base, 2, 1);
-    }
-    if (state === "sit") {
-      px(10 + bx, 22 + by, outline, 12, 4);
-      px(11 + bx, 23 + by, outfitColor.base, 10, 2);
-    } else {
-      px(11 + bx, 23 + leftLegY, outline, 4, 4);
-      px(12 + bx, 23 + leftLegY, "#231e30", 2, 3);
-      px(17 + bx, 23 + rightLegY, outline, 4, 4);
-      px(18 + bx, 23 + rightLegY, "#231e30", 2, 3);
-    }
-    px(10 + bx, 15 + by, outline, 12, 9);
-    px(11 + bx, 16 + by, outfitColor.base, 10, 7);
-    px(11 + bx, 16 + by, outfitColor.light, 3, 6);
-    px(18 + bx, 16 + by, outfitColor.dark, 3, 6);
-    if (outfitStyle === "truong_bao") {
-      px(10 + bx, 21 + by, outline, 12, 3);
-      px(11 + bx, 21 + by, outfitColor.base, 10, 2);
-      px(14 + bx, 16 + by, trimColor.base, 2, 7);
-      px(11 + bx, 19 + by, trimColor.base, 10, 2);
-      px(15 + bx, 19 + by, trimColor.light, 2, 2);
-    } else if (outfitStyle === "doan_y") {
-      px(11 + bx, 18 + by, trimColor.base, 10, 2);
-      px(13 + bx, 16 + by, trimColor.light, 1, 2);
-      px(18 + bx, 16 + by, trimColor.light, 1, 2);
-    } else if (outfitStyle === "chien_giap") {
-      px(8 + bx, 15 + by, outline, 4, 4);
-      px(20 + bx, 15 + by, outline, 4, 4);
-      px(9 + bx, 16 + by, trimColor.base, 3, 2);
-      px(20 + bx, 16 + by, trimColor.base, 3, 2);
-      px(13 + bx, 17 + by, "#b8c2d6", 6, 4);
-      px(15 + bx, 18 + by, trimColor.light, 2, 2);
-    } else {
-      px(12 + bx, 16 + by, trimColor.base, 2, 7);
-      px(18 + bx, 16 + by, trimColor.base, 2, 7);
-      px(14 + bx, 18 + by, trimColor.light, 4, 2);
-    }
-    px(8 + bx, 17 + by + leftArmY, outline, 3, 5);
-    px(9 + bx, 17 + by + leftArmY, outfitColor.dark, 2, 3);
-    px(9 + bx, 20 + by + leftArmY, skin.base, 2, 2);
-    px(21 + bx, 17 + by + rightArmY, outline, 3, 5);
-    px(21 + bx, 17 + by + rightArmY, outfitColor.light, 2, 3);
-    px(21 + bx, 20 + by + rightArmY, skin.base, 2, 2);
-    if (state === "fish") {
-      px(23 + bx, 14 + by, "#8f6532", 7, 1);
-      px(28 + bx, 12 + by, "#b08046", 4, 1);
-      px(31 + bx, 13 + by, "#ffffff", 1, 9);
-    }
-    if (state === "attack" && (frameIdx === 1 || frameIdx === 2)) {
-      ctx.save();
-      ctx.globalAlpha = 0.85;
-      px(23 + bx, 12 + by, trimColor.light, 3, 9);
-      px(25 + bx, 14 + by, "#ffffff", 2, 6);
-      ctx.restore();
-    }
-    if (hairStyle === "tien_phong" || hairStyle === "cuong_ma") {
-      px(8 + bx - capeSway, 8 + by, outline, 16, 10);
-      px(9 + bx - capeSway, 9 + by, hairColor.dark, 14, 8);
-    }
-    px(9 + bx, 5 + by, outline, 14, 11);
-    px(10 + bx, 6 + by, skin.base, 12, 9);
-    px(10 + bx, 6 + by, skin.highlight, 4, 6);
-    px(20 + bx, 7 + by, skin.shadow, 2, 7);
-    const eyeHex = state === "tau-hoa" ? "#ff244c" : eyeColor.hex;
-    px(12 + bx, 10 + by, "#120f1a", 2, 3);
-    px(18 + bx, 10 + by, "#120f1a", 2, 3);
-    px(13 + bx, 11 + by, eyeHex, 1, 2);
-    px(19 + bx, 11 + by, eyeHex, 1, 2);
-    px(12 + bx, 10 + by, "#ffffff", 1, 1);
-    px(18 + bx, 10 + by, "#ffffff", 1, 1);
-    if (headgear === "anh_sat") {
-      px(10 + bx, 12 + by, "#1a1726", 12, 3);
-      px(11 + bx, 13 + by, trimColor.base, 10, 1);
-    }
-    if (hairStyle === "kho_tu") {
-      px(15 + bx, 8 + by, trimColor.base, 2, 1);
-    } else {
-      px(9 + bx, 4 + by, outline, 14, 5);
-      px(10 + bx, 5 + by, hairColor.base, 12, 4);
-      px(11 + bx, 5 + by, hairColor.light, 6, 1);
-      px(9 + bx, 8 + by, hairColor.dark, 2, 6);
-      px(21 + bx, 8 + by, hairColor.dark, 2, 6);
-      if (hairStyle === "hiep_khach") {
-        px(13 + bx, 1 + by, outline, 6, 4);
-        px(14 + bx, 2 + by, hairColor.base, 4, 3);
-        px(14 + bx, 4 + by, trimColor.base, 4, 1);
-        px(11 + bx - capeSway, 2 + by, hairColor.dark, 3, 3);
-      } else if (hairStyle === "linh_dong") {
-        px(7 + bx, 4 + by, outline, 4, 4);
-        px(8 + bx, 5 + by, hairColor.base, 2, 2);
-        px(21 + bx, 4 + by, outline, 4, 4);
-        px(22 + bx, 5 + by, hairColor.base, 2, 2);
-      } else if (hairStyle === "cuong_ma") {
-        px(8 + bx, 2 + by, hairColor.base, 3, 3);
-        px(14 + bx, 1 + by, hairColor.light, 4, 4);
-        px(21 + bx, 2 + by, hairColor.base, 3, 3);
-      } else if (hairStyle === "kiem_khach") {
-        px(11 + bx, 3 + by, hairColor.light, 10, 2);
+    if (hairStyle !== "kho_tu") {
+      if (isClassicHair) {
+        p(21 + hx + hairSway, 13 + hy, hairColor.dark, 22, 18);
+        p(19 + hx + hairSway, 17 + hy, hairColor.dark, 5, 19);
+        p(40 + hx + hairSway, 17 + hy, hairColor.dark, 5, 19);
+        p(20 + hx + hairSway, 24 + hy, hairColor.base, 3, 12);
+        p(41 + hx + hairSway, 24 + hy, hairColor.base, 3, 12);
+        p(20 + hx + hairSway, 36 + hy, hairColor.dark, 2, 3);
+        p(23 + hx + hairSway, 35 + hy, hairColor.dark, 2, 3);
+        p(41 + hx + hairSway, 36 + hy, hairColor.dark, 2, 4);
+        p(39 + hx + hairSway, 35 + hy, hairColor.dark, 2, 3);
+        p(18 + hx + hairSway, 16 + hy, hairColor.base, 2, 2);
+        p(44 + hx + hairSway, 18 + hy, hairColor.base, 2, 2);
+        p(19 + hx + hairSway, 27 + hy, hairColor.base, 1, 3);
+        p(44 + hx + hairSway, 28 + hy, hairColor.base, 1, 3);
+      } else {
+        p(22 + hx + hairSway, 13 + hy, hairColor.dark, 20, 11);
       }
     }
-    if (headgear === "ngoc_quan") {
-      px(13 + bx, 1 + by, outline, 6, 4);
-      px(14 + bx, 2 + by, trimColor.base, 4, 3);
-      px(15 + bx, 2 + by, "#5fbf8a", 2, 2);
-      px(12 + bx, 3 + by, trimColor.light, 8, 1);
-    } else if (headgear === "dau_lap") {
-      px(4 + bx, 5 + by, outline, 24, 3);
-      px(7 + bx, 3 + by, outline, 18, 3);
-      px(12 + bx, 1 + by, outline, 8, 3);
-      px(5 + bx, 6 + by, "#b89352", 22, 1);
-      px(8 + bx, 4 + by, "#d9b25f", 16, 2);
-      px(13 + bx, 2 + by, trimColor.base, 6, 2);
-    } else if (headgear === "sung_ma") {
-      px(8 + bx, 1 + by, "#5c0f22", 3, 4);
-      px(7 + bx, 0 + by, "#d0573c", 2, 3);
-      px(21 + bx, 1 + by, "#5c0f22", 3, 4);
-      px(23 + bx, 0 + by, "#d0573c", 2, 3);
-    } else if (headgear === "kim_co") {
-      px(9 + bx, 6 + by, "#ffd86e", 14, 2);
-      px(15 + bx, 5 + by, "#d0573c", 2, 2);
+    if (state === "sit") {
+      p(21 + bx, 46 + by, outfitColor.dark, 22, 6);
+      p(23 + bx, 47 + by, outfitColor.base, 18, 4);
+      p(25 + bx, 49 + by, innerSoft, 3, 2);
+      p(36 + bx, 49 + by, innerSoft, 3, 2);
+      p(26 + bx, 50 + by, "#1b1a24", 12, 2);
+    } else {
+      p(25 + bx, 53 + leftLegY, "#191822", 5, 6);
+      p(24 + bx, 56 + leftLegY, "#23212e", 6, 3);
+      p(25 + bx, 58 + leftLegY, "#111017", 5, 1);
+      p(34 + bx, 53 + rightLegY, "#191822", 5, 6);
+      p(34 + bx, 56 + rightLegY, "#23212e", 6, 3);
+      p(34 + bx, 58 + rightLegY, "#111017", 5, 1);
     }
-    if (state === "hurt" && frameIdx === 0) {
-      ctx.save();
-      ctx.globalAlpha = 0.45;
-      px(8 + bx, 4 + by, "#ff4a66", 16, 21);
-      ctx.restore();
+    if (state !== "sit") {
+      p(24 + bx + robeSway, 39 + by, outfitColor.dark, 16, 15);
+      p(25 + bx + robeSway, 40 + by, outfitColor.base, 14, 13);
+      p(26 + bx + robeSway, 40 + by, outfitColor.light, 4, 12);
+      if (isClassicRobe) {
+        p(27 + bx + robeSway, 46 + by, innerShade, 1, 7);
+        p(28 + bx + robeSway, 48 + by, innerSoft, 1, 5);
+        p(35 + bx + robeSway, 43 + by, innerWhite, 1, 11);
+        p(36 + bx + robeSway, 45 + by, innerSoft, 2, 8);
+        p(37 + bx + robeSway, 48 + by, innerShade, 1, 5);
+        p(25 + bx + robeSway, 53 + by, innerSoft, 3, 1);
+        p(33 + bx + robeSway, 53 + by, innerSoft, 4, 1);
+      } else if (outfitStyle === "doan_y") {
+        p(25 + bx, 40 + by, outfitColor.base, 14, 7);
+        p(27 + bx, 45 + by, trimColor.base, 10, 2);
+      } else if (outfitStyle === "chien_giap") {
+        p(25 + bx, 40 + by, "#4f5666", 14, 9);
+        p(29 + bx, 41 + by, trimColor.base, 6, 7);
+      }
+    }
+    p(25 + bx, 28 + by, outfitColor.dark, 14, 12);
+    p(26 + bx, 28 + by, outfitColor.base, 12, 11);
+    p(26 + bx, 29 + by, outfitColor.light, 4, 7);
+    p(30 + bx, 27 + by, skin.shadow, 4, 2);
+    p(31 + bx, 27 + by, skin.base, 2, 2);
+    if (isClassicRobe) {
+      p(29 + bx, 28 + by, innerWhite, 2, 2);
+      p(33 + bx, 28 + by, innerWhite, 2, 2);
+      p(30 + bx, 30 + by, innerSoft, 4, 2);
+      p(31 + bx, 32 + by, innerWhite, 2, 2);
+      p(32 + bx, 31 + by, "#16151e", 1, 1);
+      p(35 + bx, 31 + by, "#c9c8c6", 3, 1);
+      p(35 + bx, 33 + by, "#9da0a8", 3, 1);
+      p(25 + bx, 36 + by, sashDark, 14, 4);
+      p(26 + bx, 37 + by, sashMid, 12, 2);
+      p(28 + bx, 37 + by, outfitColor.light, 7, 1);
+    } else {
+      p(29 + bx, 28 + by, trimColor.light, 6, 2);
+      p(31 + bx, 30 + by, trimColor.base, 2, 6);
+      p(25 + bx, 36 + by, trimColor.base, 14, 3);
+    }
+    const drawSleeve = (isLeft, armDy) => {
+      const sx = isLeft ? 20 + bx : 38 + bx;
+      const sy = 29 + by + armDy;
+      const widen = isLeft ? -1 : 1;
+      p(sx + (isLeft ? 2 : 0), sy, outfitColor.base, 4, 6);
+      p(sx + (isLeft ? 1 : 0), sy + 5, outfitColor.dark, 5, 5);
+      p(sx + (isLeft ? 0 : 1), sy + 9, outfitColor.base, 6, 4);
+      p(sx + (isLeft ? 1 : 2), sy + 6, outfitColor.light, 2, 6);
+      p(sx + (isLeft ? 0 : 1), sy + 13, innerWhite, 2, 1);
+      p(sx + (isLeft ? 3 : 4), sy + 13, innerWhite, 2, 1);
+      p(sx + (isLeft ? 2 : 3), sy + 13, outfitColor.dark, 1, 1);
+      p(sx + (isLeft ? 2 : 2), sy + 14, skin.base, 2, 2);
+      p(sx + (isLeft ? 2 : 3), sy + 15, skin.shadow, 1, 1);
+      p(sx + (isLeft ? 0 : 3), sy + 15, innerSoft, 3, 2);
+      p(sx + (isLeft ? 0 : 3) + widen * 0, sy + 17, innerShade, 2, 2);
+      p(sx + (isLeft ? 1 : 4), sy + 19, innerShade, 1, 1);
+    };
+    if (state === "sit") {
+      p(22 + bx, 31 + by, outfitColor.base, 5, 11);
+      p(37 + bx, 31 + by, outfitColor.base, 5, 11);
+      p(25 + bx, 40 + by, outfitColor.dark, 14, 5);
+      p(26 + bx, 42 + by, innerWhite, 3, 1);
+      p(35 + bx, 42 + by, innerWhite, 3, 1);
+      p(29 + bx, 41 + by, skin.base, 6, 3);
+      p(30 + bx, 42 + by, frameIdx % 2 === 0 ? "#8ebbae" : "#b8d9ca", 4, 2);
+    } else {
+      drawSleeve(true, leftArmY);
+      drawSleeve(false, rightArmY);
+    }
+    if (state === "fish") {
+      p(42 + bx, 34 + by, "#8f6532", 14, 2);
+      p(54 + bx, 31 + by, "#b88a4a", 5, 2);
+      p(58 + bx, 33 + by, "#e6f5f0", 1, 17);
+    }
+    p(22 + hx, 18 + hy, skin.shadow, 2, 3);
+    p(23 + hx, 18 + hy, skin.base, 1, 2);
+    p(40 + hx, 18 + hy, skin.shadow, 2, 3);
+    p(40 + hx, 18 + hy, skin.base, 1, 2);
+    p(24 + hx, 14 + hy, skin.base, 16, 11);
+    p(25 + hx, 25 + hy, skin.base, 14, 1);
+    p(27 + hx, 26 + hy, skin.base, 10, 1);
+    p(29 + hx, 27 + hy, skin.mid, 6, 1);
+    p(24 + hx, 15 + hy, skin.mid, 2, 9);
+    p(38 + hx, 15 + hy, skin.mid, 2, 9);
+    p(25 + hx, 22 + hy, skin.shadow, 2, 3);
+    p(37 + hx, 22 + hy, skin.shadow, 2, 3);
+    p(28 + hx, 15 + hy, skin.highlight, 8, 2);
+    const isCrimsonFrenzy = state === "tau-hoa";
+    const irisCol = isCrimsonFrenzy ? "#ff2e4c" : eyeColor.hex;
+    p(25 + hx, 17 + hy, "#382c2c", 4, 1);
+    p(35 + hx, 17 + hy, "#382c2c", 4, 1);
+    p(25 + hx, 18 + hy, outlineDark, 5, 1);
+    p(34 + hx, 18 + hy, outlineDark, 5, 1);
+    p(25 + hx, 19 + hy, skin.shadow, 1, 1);
+    p(26 + hx, 19 + hy, irisCol, 2, 1);
+    p(28 + hx, 19 + hy, "#181620", 1, 1);
+    p(29 + hx, 19 + hy, irisCol, 1, 1);
+    p(34 + hx, 19 + hy, irisCol, 1, 1);
+    p(35 + hx, 19 + hy, "#181620", 1, 1);
+    p(36 + hx, 19 + hy, irisCol, 2, 1);
+    p(38 + hx, 19 + hy, skin.shadow, 1, 1);
+    p(26 + hx, 20 + hy, innerWhite, 3, 1);
+    p(35 + hx, 20 + hy, innerWhite, 3, 1);
+    p(25 + hx, 21 + hy, skin.shadow, 2, 1);
+    p(37 + hx, 21 + hy, skin.shadow, 2, 1);
+    if (headgear === "anh_sat") {
+      p(24 + hx, 21 + hy, "#181622", 16, 5);
+      p(25 + hx, 23 + hy, trimColor.base, 14, 1);
+    }
+    if (hairStyle === "kho_tu") {
+      p(31 + hx, 14 + hy, "#c93842", 2, 2);
+    } else {
+      p(26 + hx, 5 + hy, hairColor.dark, 12, 2);
+      p(23 + hx, 7 + hy, hairColor.dark, 18, 2);
+      p(21 + hx, 9 + hy, hairColor.base, 22, 6);
+      p(20 + hx, 11 + hy, hairColor.dark, 2, 6);
+      p(42 + hx, 11 + hy, hairColor.dark, 2, 6);
+      p(25 + hx, 8 + hy, hairColor.light, 5, 2);
+      p(33 + hx, 8 + hy, hairColor.light, 4, 2);
+      p(23 + hx, 10 + hy, hairColor.tip, 2, 2);
+      p(30 + hx, 10 + hy, hairColor.light, 3, 1);
+      p(36 + hx, 11 + hy, hairColor.tip, 2, 1);
+      p(23 + hx, 13 + hy, hairColor.base, 4, 4);
+      p(24 + hx, 16 + hy, hairColor.dark, 2, 3);
+      p(28 + hx, 13 + hy, hairColor.dark, 2, 3);
+      p(31 + hx, 12 + hy, hairColor.base, 2, 6);
+      p(31 + hx, 18 + hy, hairColor.dark, 1, 1);
+      p(34 + hx, 13 + hy, hairColor.base, 3, 4);
+      p(38 + hx, 13 + hy, hairColor.base, 3, 5);
+      p(22 + hx, 15 + hy, hairColor.dark, 2, 11);
+      p(40 + hx, 15 + hy, hairColor.dark, 2, 11);
+      p(20 + hx + hairSway, 13 + hy, hairColor.base, 2, 2);
+      p(42 + hx + hairSway, 14 + hy, hairColor.base, 2, 2);
+      if (hairStyle === "hiep_khach") {
+        p(28 + hx, 2 + hy, hairColor.base, 8, 4);
+        p(27 + hx, 5 + hy, trimColor.base, 10, 1);
+      } else if (hairStyle === "linh_dong") {
+        p(19 + hx, 7 + hy, hairColor.base, 4, 4);
+        p(41 + hx, 7 + hy, hairColor.base, 4, 4);
+      } else if (hairStyle === "cuong_ma") {
+        p(22 + hx, 4 + hy, hairColor.light, 3, 3);
+        p(30 + hx, 2 + hy, hairColor.tip, 4, 4);
+        p(39 + hx, 4 + hy, hairColor.light, 3, 3);
+      }
+    }
+    if (headgear === "tram_ngoc" || headgear === "none" && hairStyle === "co_nguyet_phat") {
+      p(38 + hx, 9 + hy, "#334c4f", 4, 4);
+      p(38 + hx, 9 + hy, "#b8d9ca", 2, 2);
+      p(39 + hx, 10 + hy, "#8ebbae", 2, 2);
+      p(40 + hx, 11 + hy, "#72a193", 2, 2);
+      p(41 + hx, 9 + hy, "#b8d9ca", 1, 1);
+      p(41 + hx, 12 + hy, "#8ebbae", 1, 1);
+    } else if (headgear === "ngoc_quan") {
+      p(28 + hx, 2 + hy, trimColor.base, 8, 4);
+      p(30 + hx, 3 + hy, "#72a193", 4, 2);
+      p(27 + hx, 4 + hy, trimColor.light, 10, 1);
+    } else if (headgear === "dau_lap") {
+      p(17 + hx, 8 + hy, "#8a6d3b", 30, 3);
+      p(22 + hx, 5 + hy, "#b89352", 20, 3);
+      p(27 + hx, 3 + hy, "#d9b25f", 10, 2);
+    } else if (headgear === "sung_ma") {
+      p(21 + hx, 3 + hy, "#631426", 3, 5);
+      p(19 + hx, 1 + hy, "#d0573c", 2, 3);
+      p(40 + hx, 3 + hy, "#631426", 3, 5);
+      p(43 + hx, 1 + hy, "#d0573c", 2, 3);
+    } else if (headgear === "kim_co") {
+      p(22 + hx, 10 + hy, "#ffd86e", 20, 2);
+      p(31 + hx, 9 + hy, "#d0573c", 2, 2);
+    }
+    applySelectiveOutline(g, 64, 64, outlineLit, outlineDark);
+    targetCtx.drawImage(tmp.canvas, ox, oy);
+    if (state === "attack" && (frameIdx === 1 || frameIdx === 2)) {
+      const aura = trimColor.light === "#f6f6f7" ? "#8ebbae" : trimColor.light;
+      plotRect(targetCtx, ox + 45 + bx, oy + 26 + by, 4, 14, "#133330");
+      plotRect(targetCtx, ox + 46 + bx, oy + 27 + by, 4, 11, aura);
+      plotRect(targetCtx, ox + 48 + bx, oy + 29 + by, 3, 7, "#ffffff");
+      plotRect(targetCtx, ox + 51 + bx, oy + 31 + by, 2, 3, "#b8d9ca");
+    } else if (state === "sit") {
+      const moteY = 46 - frameIdx * 4;
+      plotRect(targetCtx, ox + 20, oy + moteY, 2, 2, "#b8d9ca");
+      plotRect(targetCtx, ox + 42, oy + moteY - 2, 2, 2, "#5ef2d6");
+      if (frameIdx % 2 === 1) {
+        plotRect(targetCtx, ox + 31, oy + 38 - frameIdx, 2, 2, "#ffffff");
+      }
+    } else if (state === "hurt" && frameIdx === 0) {
+      targetCtx.save();
+      targetCtx.globalAlpha = 0.4;
+      plotRect(targetCtx, ox + 20, oy + 10, 24, 44, "#ff4a66");
+      targetCtx.restore();
     } else if (state === "tau-hoa") {
-      const sparkCol = frameIdx % 2 === 0 ? "#d45eff" : "#ff244c";
-      px(5, 8 + frameIdx % 3 * 3, sparkCol, 2, 3);
-      px(25, 10 + (frameIdx + 1) % 3 * 3, sparkCol, 2, 3);
+      const spCol = frameIdx % 2 === 0 ? "#d45eff" : "#ff244c";
+      plotRect(targetCtx, ox + 15, oy + 16 + frameIdx % 3 * 6, 3, 4, spCol);
+      plotRect(targetCtx, ox + 46, oy + 20 + (frameIdx + 1) % 3 * 6, 3, 4, spCol);
     }
   }
   function buildStateSheet(resolved, state, frameCount, fps, loop) {
-    const fw = 32;
-    const fh = 32;
-    const { canvas: canvas2, ctx } = makeSurface(fw * frameCount, fh);
+    const fw = 64;
+    const fh = 64;
+    const { canvas: canvas2, ctx } = createPixelCanvas(fw * frameCount, fh);
     const frames = [];
     for (let i = 0; i < frameCount; i++) {
-      drawCharacterFrame(ctx, i * fw, 0, resolved, state, i);
+      drawCharacterFrame64(ctx, i * fw, 0, resolved, state, i);
       frames.push({ frame: { x: i * fw, y: 0, w: fw, h: fh } });
     }
     return {
-      key: `custom/${state}`,
+      key: `custom64/${state}`,
       image: canvas2,
       frames,
       meta: { size: { w: fw * frameCount, h: fh } },
-      pixelfx: { fps, loop, pivot: [16, 26] }
+      pixelfx: { fps, loop, pivot: [32, 59] }
     };
   }
   var SHEET_CACHE = /* @__PURE__ */ new Map();
@@ -1905,11 +2037,11 @@
     const bundle = {
       appearance: norm,
       cacheKey,
-      idle: buildStateSheet(resolved, "idle", 4, 6, true),
-      run: buildStateSheet(resolved, "run", 6, 11, true),
+      idle: buildStateSheet(resolved, "idle", 4, 5, true),
+      run: buildStateSheet(resolved, "run", 6, 10, true),
       attack: buildStateSheet(resolved, "attack", 4, 14, false),
       dash: buildStateSheet(resolved, "dash", 3, 14, false),
-      sit: buildStateSheet(resolved, "sit", 2, 3, true),
+      sit: buildStateSheet(resolved, "sit", 4, 4, true),
       fish: buildStateSheet(resolved, "fish", 2, 3, true),
       hurt: buildStateSheet(resolved, "hurt", 2, 10, false),
       death: buildStateSheet(resolved, "death", 4, 6, false),
@@ -1929,10 +2061,10 @@
     ctx.clearRect(0, 0, w, h);
     ctx.imageSmoothingEnabled = false;
     const cx = Math.floor(w * 0.5);
-    const footY = Math.floor(h * 0.82);
+    const footY = Math.floor(h * 0.89);
     if (!appearance) {
-      fillPixelEllipse(ctx, cx, footY, 20, 6, "rgba(217, 178, 95, 0.14)");
-      plotPixelEllipse(ctx, cx, footY, 20, 6, "rgba(217, 178, 95, 0.45)");
+      fillPixelEllipse(ctx, cx, footY, 22, 6, "rgba(217, 178, 95, 0.14)");
+      plotPixelEllipse(ctx, cx, footY, 22, 6, "rgba(217, 178, 95, 0.45)");
       return;
     }
     const sheets = getCharacterSheets(appearance);
@@ -1941,9 +2073,10 @@
     const auraColor = opts.pathColor || trim.base;
     const state = opts.animState || "idle";
     const timeSec = opts.timeSec ?? 0;
-    const scale = opts.scale ?? Math.max(2, Math.floor(w / 34));
-    fillPixelEllipse(ctx, cx, footY, 20, 6, "rgba(18, 22, 18, 0.88)");
-    plotPixelEllipse(ctx, cx, footY, 20, 6, auraColor);
+    const maxFitScale = Math.max(1, Math.floor((h - 10) / 56));
+    const scale = Math.max(1, Math.min(maxFitScale, Math.floor(opts.scale ?? maxFitScale)));
+    fillPixelEllipse(ctx, cx, footY, 22, 6, "rgba(18, 22, 18, 0.88)");
+    plotPixelEllipse(ctx, cx, footY, 22, 6, auraColor);
     const sheet = sheets[state] ?? sheets.idle;
     const fi = getSheetFrameIndex(sheet, timeSec, true);
     drawSheetFrame(ctx, sheet, fi, cx, footY - 2, { scale });
@@ -1959,79 +2092,74 @@
     const skin = byId(SKIN_TONES, norm.skin);
     const hair = byId(HAIR_COLORS, norm.hairColor);
     const outfit = byId(OUTFIT_COLORS, norm.outfitColor);
-    const trim = byId(TRIM_COLORS, norm.trimColor);
     const eye = byId(EYE_COLORS, norm.eyeColor);
-    plotRect(ctx, 0, 0, w, h, "#090c09");
-    plotRect(ctx, 4, 4, w - 8, h - 8, "#111b15");
-    plotRect(ctx, 10, 8, w - 20, h - 16, opts.bgTint || "#20392c");
+    plotRect(ctx, 0, 0, w, h, "#090c0f");
+    plotRect(ctx, 4, 4, w - 8, h - 8, "#101720");
+    plotRect(ctx, 9, 7, w - 18, h - 14, opts.bgTint || "#19292e");
     const sx = w / 44;
     const sy = h / 44;
     const r = (x, y, rw, rh, col) => {
       ctx.fillStyle = col;
       ctx.fillRect(Math.round(x * sx), Math.round(y * sy), Math.max(1, Math.round(rw * sx)), Math.max(1, Math.round(rh * sy)));
     };
-    plotPixelEllipse(ctx, Math.round(w * 0.5), Math.round(h * 0.46), Math.round(w * 0.34), Math.round(h * 0.34), "rgba(217, 178, 95, 0.35)");
+    plotPixelEllipse(ctx, Math.round(w * 0.5), Math.round(h * 0.46), Math.round(w * 0.36), Math.round(h * 0.36), "rgba(142, 187, 174, 0.32)");
     if (norm.hairStyle !== "kho_tu") {
-      r(11, 10, 22, 26, "#0d0c12");
-      r(12, 11, 20, 24, hair.dark);
-      r(10, 15, 3, 18, hair.dark);
-      r(31, 15, 3, 18, hair.dark);
+      r(10, 9, 24, 28, "#0d0a10");
+      r(11, 10, 22, 26, hair.dark);
+      r(9, 15, 3, 19, hair.dark);
+      r(32, 15, 3, 19, hair.dark);
     }
-    r(8, 31, 28, 13, "#0e0c12");
+    r(8, 31, 28, 13, "#0d0a10");
     r(9, 32, 26, 12, outfit.base);
-    r(10, 32, 8, 12, outfit.light);
-    r(26, 32, 8, 12, outfit.dark);
-    r(15, 31, 14, 5, skin.shadow);
-    r(18, 30, 8, 4, skin.base);
-    r(14, 32, 3, 11, trim.base);
-    r(27, 32, 3, 11, trim.base);
-    r(16, 35, 3, 8, trim.light);
-    r(25, 35, 3, 8, trim.light);
-    r(19, 37, 6, 7, outfit.dark);
-    r(13, 12, 18, 19, "#120f18");
+    r(10, 32, 7, 12, outfit.light);
+    r(27, 32, 7, 12, outfit.dark);
+    r(18, 30, 8, 5, skin.base);
+    r(17, 32, 3, 7, "#f6f6f7");
+    r(24, 32, 3, 7, "#f6f6f7");
+    r(19, 36, 6, 5, "#eceae7");
+    r(21, 38, 2, 6, "#14131b");
+    r(28, 36, 4, 1, "#c9c8c6");
+    r(28, 39, 4, 1, "#9da0a8");
+    r(13, 12, 18, 19, "#0d0a10");
     r(14, 13, 16, 16, skin.base);
     r(16, 29, 12, 2, skin.base);
     r(18, 30, 8, 1, skin.shadow);
-    r(14, 14, 5, 13, skin.highlight);
-    r(27, 14, 3, 14, skin.shadow);
-    r(15, 24, 3, 2, "#f0a8a0");
-    r(26, 24, 3, 2, "#f0a8a0");
-    r(20, 26, 4, 1, "#c47e74");
-    r(15, 19, 5, 5, "#100e17");
-    r(24, 19, 5, 5, "#100e17");
-    r(16, 20, 4, 4, "#ffffff");
-    r(24, 20, 4, 4, "#ffffff");
-    r(17, 20, 3, 4, eye.hex);
-    r(24, 20, 3, 4, eye.hex);
-    r(18, 21, 2, 2, "#120f1a");
-    r(25, 21, 2, 2, "#120f1a");
-    r(16, 20, 1, 1, "#ffffff");
-    r(24, 20, 1, 1, "#ffffff");
-    r(15, 17, 5, 1, hair.dark);
-    r(24, 17, 5, 1, hair.dark);
+    r(14, 14, 2, 13, skin.mid || skin.shadow);
+    r(28, 14, 2, 14, skin.mid || skin.shadow);
+    r(15, 24, 2, 3, skin.shadow);
+    r(27, 24, 2, 3, skin.shadow);
+    r(15, 18, 5, 1, "#382c2c");
+    r(24, 18, 5, 1, "#382c2c");
+    r(15, 19, 5, 1, "#0d0a10");
+    r(24, 19, 5, 1, "#0d0a10");
+    r(16, 20, 3, 1, eye.hex);
+    r(17, 20, 1, 1, "#14121c");
+    r(25, 20, 3, 1, eye.hex);
+    r(26, 20, 1, 1, "#14121c");
+    r(16, 21, 3, 1, "#f6f6f7");
+    r(25, 21, 3, 1, "#f6f6f7");
     if (norm.hairStyle !== "kho_tu") {
-      r(12, 7, 20, 9, "#0d0c12");
-      r(13, 8, 18, 7, hair.base);
-      r(15, 9, 12, 2, hair.light);
-      r(14, 13, 3, 5, hair.base);
-      r(19, 12, 4, 5, hair.base);
-      r(26, 13, 4, 5, hair.base);
+      r(11, 6, 22, 10, "#0d0a10");
+      r(12, 7, 20, 8, hair.base);
+      r(15, 8, 6, 2, hair.light);
+      r(24, 8, 5, 2, hair.light);
+      r(13, 13, 3, 5, hair.base);
+      r(20, 12, 3, 6, hair.base);
+      r(27, 13, 4, 5, hair.base);
       r(12, 15, 2, 12, hair.dark);
       r(30, 15, 2, 12, hair.dark);
-      if (norm.hairStyle === "hiep_khach") {
-        r(18, 2, 8, 6, "#0d0c12");
-        r(19, 3, 6, 5, hair.base);
-        r(18, 6, 8, 2, trim.base);
+      if (norm.headgear === "tram_ngoc" || norm.headgear === "none" && norm.hairStyle === "co_nguyet_phat") {
+        r(29, 8, 4, 5, "#334c4f");
+        r(29, 8, 2, 2, "#b8d9ca");
+        r(30, 9, 2, 3, "#8ebbae");
+        r(32, 8, 2, 1, "#b8d9ca");
+        r(32, 11, 2, 1, "#72a193");
+      } else if (norm.headgear === "ngoc_quan") {
+        r(18, 2, 8, 5, "#d9b25f");
+        r(20, 3, 4, 3, "#72a193");
       }
     } else {
-      r(21, 14, 2, 2, trim.base);
-    }
-    if (norm.headgear === "ngoc_quan") {
-      r(18, 3, 8, 5, trim.base);
-      r(20, 4, 4, 3, "#5fbf8a");
-    } else if (norm.headgear === "kim_co") {
-      r(13, 12, 18, 2, "#ffd86e");
-      r(21, 11, 2, 2, "#d0573c");
+      r(21, 14, 2, 2, "#d0573c");
     }
   }
 
@@ -17875,8 +18003,8 @@
       drawSheetFrame(ctx, sheets.idle, fi, npc.x, npc.y);
       ctx.save();
       ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, npc.name, npc.x, npc.y - 31, "#5fbf8a", "#06080d");
-      drawCrispPixelText(ctx, "!", npc.x, npc.y - 40, "#ffd15c", "#06080d");
+      drawCrispPixelText(ctx, npc.name, npc.x, npc.y - 62, "#5fbf8a", "#06080d");
+      drawCrispPixelText(ctx, "!", npc.x, npc.y - 73, "#ffd15c", "#06080d");
       ctx.restore();
     }
     _renderSinglePhantom(ctx, ph) {
@@ -17925,7 +18053,7 @@
       drawSheetFrame(ctx, rpSheet, fi, rp.x, rp.y, { flipX: Math.cos(rp.facing ?? 0) < -0.15 });
       ctx.save();
       ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, rp.name, rp.x, rp.y - 31, "#e4ebf5", "#06080d");
+      drawCrispPixelText(ctx, rp.name, rp.x, rp.y - 62, "#e4ebf5", "#06080d");
       ctx.restore();
     }
     _renderMainPlayer(ctx) {
@@ -17951,13 +18079,13 @@
       if (this.player.isStealthed) {
         ctx.save();
         ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-        drawCrispPixelText(ctx, "\u1EA8n Th\xE2n", this.player.x, this.player.y - 44, "#80ffcf", "#06080d");
+        drawCrispPixelText(ctx, "\u1EA8n Th\xE2n", this.player.x, this.player.y - 75, "#80ffcf", "#06080d");
         ctx.restore();
       }
       const vital = this.player.getVitalGu();
       if (vital) {
-        const gx = Math.round(this.player.x - 13 + Math.sin(this.time * 3) * 1.5);
-        const gy = Math.round(this.player.y - 20 + Math.cos(this.time * 4) * 1.5);
+        const gx = Math.round(this.player.x - 19 + Math.sin(this.time * 3) * 1.5);
+        const gy = Math.round(this.player.y - 40 + Math.cos(this.time * 4) * 1.5);
         plotRect(ctx, gx - 3, gy - 3, 6, 6, "#07090d");
         plotRect(ctx, gx - 2, gy - 2, 4, 4, vital.color || "#5ef2d6");
         plotRect(ctx, gx - 1, gy - 1, 2, 2, "#ffffff");
@@ -17966,14 +18094,15 @@
       this._renderPlayerArc(ctx, mpRatio, this.player.isAbsorbingStone ? "#5ef2d6" : auraColor);
       const px = Math.round(this.player.x);
       const py = Math.round(this.player.y);
+      const overheadRank = this.player.hasAwakened ? `[${stage.shortRank} \xB7 ${apt.short}]` : "[Ph\xE0m Nh\xE2n]";
       ctx.save();
-      ctx.font = "700 9px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, this.player.characterName, px, py - 30, "#f1ebd8", "#05070b");
+      ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
+      drawCrispPixelText(ctx, `${overheadRank} ${this.player.characterName}`, px, py - 63, "#f4efe2", "#05070b");
       ctx.restore();
     }
     _renderPlayerArc(ctx, ratio, color) {
-      const bx = Math.round(this.player.x + 20);
-      const by = Math.round(this.player.y - 26);
+      const bx = Math.round(this.player.x + 25);
+      const by = Math.round(this.player.y - 44);
       for (let i = 0; i < 5; i++) {
         const segY = by + (4 - i) * 5;
         const segX = bx + (i === 2 ? 2 : i === 1 || i === 3 ? 1 : 0);
@@ -21091,7 +21220,7 @@
         tabsHtml = [
           ["story", `Ch\xEDnh Tuy\u1EBFn (${MAIN_QUESTS.length} Ch\u01B0\u01A1ng)`],
           ["main", "Gia T\u1ED9c (Nguy\xEAn Th\u1EA1ch)"],
-          ["gu_quests", "T\u1EA7m C\u1ED5 (1\u20133 Chuy\u1EC3n)"]
+          ["gu_quests", "T\u1EA7m C\u1ED5 (1\u20135 Chuy\u1EC3n)"]
         ].map(([id, lbl]) => `<button type="button" class="tab-btn ${this.subTab === id ? "is-active" : ""}" data-subtab="${id}">${lbl}</button>`).join("");
         bodyHtml = this.subTab === "story" ? this._buildMainStoryBody() : this.subTab === "gu_quests" ? this._buildRankGuQuestsBody() : this._buildClanQuestsBody();
       } else if (this.panel === "mail") {
@@ -21155,7 +21284,7 @@
       return `
       <div class="ctl-grid-2">
         <div class="ctl-box" style="text-align:center">
-          <canvas id="modal-char-canvas" width="90" height="90"></canvas>
+          <canvas id="modal-char-canvas" width="128" height="140"></canvas>
           <div style="font-weight:800;font-size:13px">${p.characterName}</div>
           <div style="color:${stage.essenceColor};font-weight:700;font-size:11px">${stage.title} (${stage.essenceName})</div>
           <div class="ctl-sub-txt">Tu Vi: ${p.cultivationExp}/${prog.need || "Max"} (${Math.round(prog.pct * 100)}%)</div>
@@ -22572,7 +22701,7 @@
             <div class="pedestal-card pedestal-card--empty">
               <div class="pedestal-slot-badge">\xD4 Nh\xE2n V\u1EADt #${slotIdx + 1}</div>
               <div class="pedestal-altar-empty">
-                <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="80" height="80"></canvas>
+                <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="128" height="136"></canvas>
                 <div class="pedestal-empty-hint">Ch\u01B0a T\u1EA1o C\u1ED5 S\u01B0</div>
               </div>
               <button type="button" class="ctl-btn-jade pedestal-create-btn" data-create-slot="${slotIdx}">
@@ -22595,7 +22724,7 @@
               </button>
             </div>
             <div class="pedestal-hero-wrap">
-              <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="80" height="80"></canvas>
+              <canvas class="pedestal-canvas" data-slot-canvas="${slotIdx}" width="128" height="136"></canvas>
             </div>
             <div class="pedestal-name">${ch.name}</div>
             <div class="pedestal-realm">${stage.title} \xB7 ${stones} Nguy\xEAn th\u1EA1ch</div>
@@ -22723,7 +22852,7 @@
         <form id="cust-form" class="gate-create-grid">
           <div class="gate-create-left">
             <div class="create-preview-box create-preview-box--lg">
-              <canvas id="cust-preview-canvas" width="96" height="96"></canvas>
+              <canvas id="cust-preview-canvas" width="128" height="140"></canvas>
             </div>
             <div class="pose-btn-row">
               ${[
@@ -22732,6 +22861,7 @@
         ["attack", "\u0110\xE1nh"],
         ["sit", "B\u1EBF Quan"]
       ].map(([id, lbl]) => `<button type="button" class="floor-pill ${this.previewPose === id ? "is-selected" : ""}" data-pose="${id}">${lbl}</button>`).join("")}
+              <button type="button" id="btn-preset-ref" class="floor-pill">Nguy\xEAn T\xE1c</button>
               <button type="button" id="btn-random-look" class="floor-pill">Ng\u1EABu Nhi\xEAn</button>
             </div>
             <label class="acc-field" style="width:100%">
@@ -22761,7 +22891,7 @@
         drawCustomCharacterPreview(previewCanvas, this.draftAppearance, {
           animState: this.previewPose,
           timeSec: (now - startTs) / 1e3,
-          scale: 2.5
+          scale: 2
         });
         this._previewRaf = requestAnimationFrame(tickPreview);
       };
@@ -22777,6 +22907,10 @@
         } else {
           this.openCharSelect();
         }
+      });
+      this.root.querySelector("#btn-preset-ref")?.addEventListener("click", () => {
+        this.draftAppearance = createDefaultAppearance();
+        this.render();
       });
       this.root.querySelector("#btn-random-look")?.addEventListener("click", () => {
         this.draftAppearance = randomizeAppearance();
