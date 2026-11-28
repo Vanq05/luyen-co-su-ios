@@ -9,6 +9,13 @@ import {
   plotRect,
 } from "../engine/PixelSpriteBaker.js";
 import { getGuPixelCanvas } from "../ui/PixelGuIcons.js";
+import {
+  getBanLongFloorTileSet,
+  getBanLongFormationDais,
+  getBanLongGateSprite,
+  getBanLongMistSprite,
+  getBanLongPropFrames,
+} from "./BanLongAssets.js";
 import { getBiomeTerrainSet, getPropSprite } from "./PixelMapArt.js";
 import {
   distToSegment,
@@ -101,10 +108,10 @@ const BIOME_PALETTES = {
     path: "#313642", pathEdge: "#1b1e26",
   },
   abyss: {
-    grass1: "#0e1a1f", grass2: "#091217", grass3: "#14262e", grassDark: "#050b0e",
-    grassShort: "#122128", grassDeep: "#070f12",
-    dirt1: "#18262b", dirt2: "#0f191d", moss1: "#0c1c20", moss2: "#061013",
-    path: "#1e3036", pathEdge: "#19f0c8",
+    grass1: "#141b24", grass2: "#0e131a", grass3: "#1d2633", grassDark: "#080b10",
+    grassShort: "#19222e", grassDeep: "#0b1017",
+    dirt1: "#232b38", dirt2: "#151b24", moss1: "#13291f", moss2: "#0b1913",
+    path: "#263040", pathEdge: "#141a24",
   },
 };
 
@@ -164,6 +171,20 @@ const TERRACE_THEMES = {
     tread: "#5b635c",
     riser: "#1c211d",
     inlay: "#2f5233",
+  },
+  abyss: {
+    slabs: ["#1d2738", "#161e2c", "#253247", "#111824"],
+    mortar: "#080c12",
+    hi: "#394b66",
+    curb: "#2c3b52",
+    curbDark: "#090d14",
+    wallTop: "#2f3f57",
+    wallFaceA: "#1a2333",
+    wallFaceB: "#121926",
+    wallOut: "#06090e",
+    tread: "#2b3a50",
+    riser: "#0b1018",
+    inlay: "#785729",
   },
 };
 
@@ -329,15 +350,18 @@ export class MapRenderer {
     }
 
     // 2. Đại lộ lát đá phiến cổ rêu phong (Pass A bó vỉa -> Pass B nền đá hợp nhất ngã tư)
+    const isAbyss = mapDef.biome === "abyss";
     const isBluestone = mapDef.biome === "stone_dream" || mapDef.biome === "snow";
-    const slabs = isBluestone
-      ? ["#485159", "#3f474f", "#535c66", "#373e45"]
-      : ["#635f56", "#57534b", "#6e6a60", "#4d4a43"];
-    const mortar = isBluestone ? "#21272e" : "#2b2a26";
-    const curbA = isBluestone ? "#5e6770" : "#5c574e";
-    const curbB = isBluestone ? "#485059" : "#4a463f";
-    const curbOut = isBluestone ? "#191e24" : "#21201d";
-    const runnerCol = isBluestone ? "#636f7a" : "#706b60";
+    const slabs = isAbyss
+      ? ["#1e293b", "#172030", "#26344a", "#121926"]
+      : isBluestone
+        ? ["#485159", "#3f474f", "#535c66", "#373e45"]
+        : ["#635f56", "#57534b", "#6e6a60", "#4d4a43"];
+    const mortar = isAbyss ? "#080c12" : isBluestone ? "#21272e" : "#2b2a26";
+    const curbA = isAbyss ? "#314259" : isBluestone ? "#5e6770" : "#5c574e";
+    const curbB = isAbyss ? "#222f42" : isBluestone ? "#485059" : "#4a463f";
+    const curbOut = isAbyss ? "#070a0f" : isBluestone ? "#191e24" : "#21201d";
+    const runnerCol = isAbyss ? "#2b3b52" : isBluestone ? "#636f7a" : "#706b60";
 
     // Pass A: Đổ bóng cỏ & dải bó vỉa đá 2 bên đường
     for (const p of pavedPaths) {
@@ -893,12 +917,24 @@ export class MapRenderer {
     const terrainSet = getBiomeTerrainSet(mapDef.biome, pal);
     const seed = mapDef.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
 
-    // 1. Nền cỏ vừa liền mạch
-    const midCols = Math.ceil(mapDef.width / 16);
-    const midRows = Math.ceil(mapDef.height / 16);
-    for (let r = 0; r < midRows; r++) {
-      for (let c = 0; c < midCols; c++) {
-        ctx.drawImage(terrainSet.midGrass[this._hash(c, r) % terrainSet.midGrass.length], c * 16, r * 16);
+    // 1. Nền địa hình (Khu Bàn Long ghép từ tileset đá cổ 64x64 6 sắc độ + rêu trầm)
+    if (mapDef.biome === "abyss") {
+      const banLongTiles = getBanLongFloorTileSet();
+      const cols = Math.ceil(mapDef.width / 64);
+      const rows = Math.ceil(mapDef.height / 64);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const tile = banLongTiles[this._hash(c + seed, r + seed) % banLongTiles.length];
+          ctx.drawImage(tile, c * 64, r * 64);
+        }
+      }
+    } else {
+      const midCols = Math.ceil(mapDef.width / 16);
+      const midRows = Math.ceil(mapDef.height / 16);
+      for (let r = 0; r < midRows; r++) {
+        for (let c = 0; c < midCols; c++) {
+          ctx.drawImage(terrainSet.midGrass[this._hash(c, r) % terrainSet.midGrass.length], c * 16, r * 16);
+        }
       }
     }
 
@@ -939,23 +975,6 @@ export class MapRenderer {
     // 1c. Vách đá tầng bậc 2.5D
     for (const ledge of mapDef.cliffLedges ?? []) {
       this._drawCliffLedge(ctx, ledge, pal);
-    }
-
-    // Vực Vạn Thủ — Hố Đấu Trận Cổ Ngữ Bàn Long (100% Pixel Nguyên)
-    if (mapDef.biome === "abyss") {
-      const cx = Math.round(mapDef.width * 0.5);
-      const cy = Math.round(mapDef.height * 0.54);
-      plotRect(ctx, 0, 0, mapDef.width, mapDef.height, "#060a0d");
-      fillPixelEllipse(ctx, cx, cy + 32, 420, 228, "#0a1c22", true);
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2;
-        plotPixelLine(ctx, cx + Math.cos(a) * 80, cy + Math.sin(a) * 44, cx + Math.cos(a) * 410, cy + Math.sin(a) * 220, "rgba(25, 240, 200, 0.28)", 2);
-      }
-      fillPixelEllipse(ctx, cx, cy + 32, 396, 212, "#141d24", false);
-      plotPixelEllipse(ctx, cx, cy + 32, 396, 212, "#19f0c8");
-      fillPixelEllipse(ctx, cx, cy + 32, 308, 162, "#19262e", false);
-      plotPixelEllipse(ctx, cx, cy + 32, 308, 162, "#9c7a3e");
-      plotPixelEllipse(ctx, cx, cy + 32, 190, 100, "#248f82", 3, 0);
     }
 
     // 2. Đường lát đá có bó vỉa & Đường đất mòn
@@ -1307,9 +1326,18 @@ export class MapRenderer {
     return c;
   }
 
-  renderMapBase(ctx, mapDef, time, runtimeNodes = null, playerGarden = null, highlightGuId = null) {
+  renderMapBase(ctx, mapDef, time, runtimeNodes = null, playerGarden = null, highlightGuId = null, breathWarn = 0) {
     const terrain = this._getTerrainCanvas(mapDef);
     ctx.drawImage(terrain, 0, 0);
+
+    // Cổ Trận Bàn Long Bát Giác (384x244, 4 frame hoạt ảnh mạch linh khí)
+    if (mapDef.biome === "abyss") {
+      const fIdx = Math.floor(time * 4.5) % 4;
+      const dais = getBanLongFormationDais(fIdx, breathWarn > 0);
+      if (dais) {
+        ctx.drawImage(dais.canvas, Math.round(640 - dais.anchorX), Math.round(295 - dais.anchorY));
+      }
+    }
 
     // Gợn sóng & tia sáng ngầm lăn tăn trên mặt Suối Nguyên Tuyền
     if (mapDef.ritualSpring) {
@@ -1705,9 +1733,12 @@ export class MapRenderer {
       return;
     }
 
-    if (prop.kind === "gate_mountain" || prop.kind === "gate_forest" || prop.kind === "gate_cave") {
+    if (prop.kind === "gate_mountain" || prop.kind === "gate_forest" || prop.kind === "gate_cave" || prop.kind === "gate_ban_long") {
       const fIdx = Math.floor(time * 4 + prop.x * 0.05) % 4;
-      const gateSpr = getPortalGateSprite(prop.kind, fIdx, prop.gateDir || "ns", prop.gateLayer || "full");
+      const gateSpr =
+        prop.kind === "gate_ban_long"
+          ? getBanLongGateSprite(fIdx)
+          : getPortalGateSprite(prop.kind, fIdx, prop.gateDir || "ns", prop.gateLayer || "full");
       if (gateSpr) {
         const dx = Math.round(prop.x - gateSpr.anchorX);
         const dy = Math.round(prop.y - gateSpr.anchorY);
@@ -1727,6 +1758,27 @@ export class MapRenderer {
           drawCrispPixelText(ctx, prop.label, bx + Math.round(pw * 0.5), by + 9, "#a6fff2", "#06080d");
           ctx.restore();
         }
+      }
+      return;
+    }
+
+    if (
+      prop.kind === "ban_long_statue" ||
+      prop.kind === "ban_long_brazier" ||
+      prop.kind === "ban_long_cloud_pillar" ||
+      prop.kind === "ban_long_ruin_wall"
+    ) {
+      const frames = getBanLongPropFrames(prop.kind);
+      const fIdx = Math.floor(time * 4.5 + prop.x * 0.05) % Math.max(1, frames.length);
+      const spr = frames[fIdx] ?? frames[0];
+      if (!spr) return;
+      ctx.drawImage(spr.canvas, Math.round(prop.x - spr.anchorX), Math.round(prop.y - spr.anchorY));
+      if (prop.kind === "ban_long_brazier") {
+        const glow = getDitherGlowSprite("#5ef2d6", 15, 0.34);
+        ctx.drawImage(glow, Math.round(prop.x - glow.width * 0.5), Math.round(prop.y - 58 - glow.height * 0.5));
+      } else if (prop.kind === "ban_long_statue") {
+        const glow = getDitherGlowSprite("#ffd06b", 10, 0.24);
+        ctx.drawImage(glow, Math.round(prop.x - glow.width * 0.5), Math.round(prop.y - 100 - glow.height * 0.5));
       }
       return;
     }
@@ -1914,6 +1966,22 @@ export class MapRenderer {
         plotRect(ctx, bx, labelY - 8, bw, 11, "rgba(6, 16, 15, 0.9)");
         plotRect(ctx, bx, labelY - 8, bw, 1, "rgba(94, 242, 214, 0.45)");
         drawCrispPixelText(ctx, lbl, mx, labelY, col, "#040a09");
+      }
+      ctx.restore();
+    }
+
+    // Sương mù pixel nhẹ trôi dưới chân tại Cổ Đàn Bàn Long
+    if (mapDef.biome === "abyss") {
+      ctx.save();
+      for (let i = 0; i < 12; i++) {
+        const spr = getBanLongMistSprite(i % 3);
+        const baseY = 175 + ((i * 53) % 520);
+        const speed = 9 + (i % 3) * 4;
+        const rawX = ((this._hash(i * 17, 31) % mapDef.width) + time * speed) % (mapDef.width + 160) - 80;
+        const mx = Math.round(rawX - spr.width * 0.5);
+        const my = Math.round(baseY + Math.sin(time * 0.65 + i) * 4 - spr.height * 0.5);
+        ctx.globalAlpha = 0.6;
+        ctx.drawImage(spr, mx, my);
       }
       ctx.restore();
     }

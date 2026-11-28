@@ -5,6 +5,8 @@
  *   rủ liễu, bụi cỏ ẩn thân, Nguyên Tuyền & Ruộng Linh Thảo đều dựng bằng pixel từng điểm.
  */
 
+import { getBanLongPropFrames } from "./BanLongAssets.js";
+
 const ATLAS_CACHE = new Map();
 
 function makeCanvas(w, h) {
@@ -3321,6 +3323,14 @@ export function getPropSprite(kind) {
     ctx.fillStyle = "#b8362a";
     ctx.fillRect(24, 16, 1, 2);
     result = { canvas, anchorX: 14, anchorY: 22, solidRadius: 0 };
+  } else if (
+    kind === "ban_long_statue" ||
+    kind === "ban_long_brazier" ||
+    kind === "ban_long_ruin_wall" ||
+    kind === "ban_long_cloud_pillar"
+  ) {
+    const frames = getBanLongPropFrames(kind);
+    if (frames?.[0]) result = frames[0];
   }
 
   if (result) ATLAS_CACHE.set(kind, result);

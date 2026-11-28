@@ -14,6 +14,7 @@ import {
   plotRect,
 } from "../engine/PixelSpriteBaker.js";
 import { drawSheetFrame, getSheetFrameIndex } from "../engine/SpriteSheet.js";
+import { drawBanLongMechanicPillar } from "../world/BanLongAssets.js";
 import { MapRenderer } from "../world/MapRenderer.js";
 import { getPropSprite } from "../world/PixelMapArt.js";
 import { findNavigationPath, resolveWorldMovement } from "../world/WorldGeometry.js";
@@ -187,6 +188,7 @@ export class WorldSimulation {
       hac_thuy_ho: "coc_doc_hac_thuy",
       xich_nham_coc: "xich_viem_thu",
       vuong_dinh: "soi_tuyet",
+      vuc_van_thu: "ban_long_thach_ve",
     };
     const minionType = minionMap[dungeonDef.mapId] ?? "lon_rung";
     this._spawnMonster(minionType, 520, 440);
@@ -298,8 +300,8 @@ export class WorldSimulation {
       { id: "p_blood_2", kind: "blood", label: "Huyết Mạch", x: 850, y: 360, hp: 900, maxHp: 900, alive: true },
       { id: "p_gold_1", kind: "gold", label: "Hoàng Kim Trụ", x: 490, y: 480, hp: 1100, maxHp: 1100, alive: true },
       { id: "p_gold_2", kind: "gold", label: "Hoàng Kim Trụ", x: 790, y: 480, hp: 1100, maxHp: 1100, alive: true },
-      { id: "p_stone_1", kind: "stone", label: "Cột Đá Che Chắn", x: 560, y: 540, hp: 99999, maxHp: 99999, alive: true },
-      { id: "p_stone_2", kind: "stone", label: "Cột Đá Che Chắn", x: 720, y: 540, hp: 99999, maxHp: 99999, alive: true },
+      { id: "p_stone_1", kind: "stone", label: "Cột Đá Che Chắn", x: 585, y: 505, hp: 99999, maxHp: 99999, alive: true },
+      { id: "p_stone_2", kind: "stone", label: "Cột Đá Che Chắn", x: 695, y: 505, hp: 99999, maxHp: 99999, alive: true },
     ];
     this.banLongBreathTimer = 26;
     this.banLongBreathWarn = 0;
@@ -2100,7 +2102,8 @@ export class WorldSimulation {
       this.time,
       this.gatherNodes,
       this.player.gardenPlots,
-      !this.player.vitalUid ? this.player.targetStarterGuId : null
+      !this.player.vitalUid ? this.player.targetStarterGuId : null,
+      this.banLongBreathWarn
     );
 
     // Vùng cảnh báo đỏ pixel của Tinh Anh / Boss (0 ctx.ellipse)
@@ -2179,63 +2182,7 @@ export class WorldSimulation {
   }
 
   _renderSingleBanLongPillar(ctx, p, boss) {
-    ctx.save();
-    const px = Math.round(p.x);
-    const py = Math.round(p.y);
-
-    if (p.kind === "blood" && boss) {
-      plotPixelLine(ctx, px, py - 28, boss.x, boss.y - 32, "rgba(255, 46, 76, 0.72)", 2);
-      for (let k = 0; k < 3; k++) {
-        const orbT = (this.time * 0.8 + k * 0.33) % 1;
-        const ox = Math.round(px + (boss.x - px) * orbT);
-        const oy = Math.round(py - 28 + (boss.y - 32 - (py - 28)) * orbT - Math.sin(orbT * Math.PI) * 14);
-        plotRect(ctx, ox - 2, oy - 2, 4, 4, "#ff8fa3");
-      }
-    }
-
-    plotRect(ctx, px - 14, py + 1, 28, 7, "rgba(0, 0, 0, 0.42)");
-
-    if (p.kind === "blood") {
-      plotRect(ctx, px - 13, py - 4, 26, 8, "#2b0d12");
-      plotRect(ctx, px - 11, py - 5, 22, 6, "#5c1b25");
-      plotRect(ctx, px - 9, py - 38, 18, 34, "#3b0a14");
-      plotRect(ctx, px - 5, py - 45, 10, 8, "#3b0a14");
-      plotRect(ctx, px - 7, py - 36, 14, 31, "#a81d34");
-      plotRect(ctx, px - 5, py - 41, 7, 26, "#ff4d6d");
-      plotRect(ctx, px - 2, py - 38, 2, 16, "#ffc2cd");
-    } else if (p.kind === "gold") {
-      plotPixelEllipse(ctx, px, py + 2, 18, 8, "rgba(255, 210, 87, 0.48)", 3, Math.floor(this.time * 4));
-      plotRect(ctx, px - 13, py - 4, 26, 8, "#38280b");
-      plotRect(ctx, px - 11, py - 5, 22, 6, "#a37c2e");
-      plotRect(ctx, px - 9, py - 40, 18, 36, "#4d3309");
-      plotRect(ctx, px - 7, py - 38, 14, 33, "#b8841e");
-      plotRect(ctx, px - 6, py - 38, 5, 31, "#ffd257");
-      plotRect(ctx, px - 3, py - 44, 6, 6, "#fff6bd");
-      plotRect(ctx, px - 4, py - 24, 8, 2, "#fff6bd");
-    } else {
-      if (this.banLongBreathWarn > 0) {
-        const pulse = 0.45 + Math.sin(this.time * 8) * 0.25;
-        ctx.globalAlpha = pulse * 0.4;
-        fillPixelEllipse(ctx, px, py + 18, 28, 13, "#5ef2d6", true);
-        ctx.globalAlpha = 1;
-        plotPixelEllipse(ctx, px, py + 18, 28, 13, "#5ef2d6");
-      }
-      plotRect(ctx, px - 14, py - 4, 28, 8, "#171c21");
-      plotRect(ctx, px - 11, py - 42, 22, 39, "#171c21");
-      plotRect(ctx, px - 9, py - 40, 18, 36, "#49545e");
-      plotRect(ctx, px - 9, py - 40, 6, 35, "#7b8b99");
-      plotRect(ctx, px - 2, py - 32, 4, 4, "#5ef2d6");
-      plotRect(ctx, px - 1, py - 24, 2, 8, "#5ef2d6");
-    }
-
-    if (p.kind !== "stone") {
-      const pct = Math.max(0, Math.min(1, p.hp / Math.max(1, p.maxHp)));
-      plotRect(ctx, px - 16, py - 52, 32, 4, "#0b0d0a");
-      plotRect(ctx, px - 15, py - 51, Math.round(30 * pct), 2, p.kind === "blood" ? "#ff4d6d" : "#ffd257");
-    }
-    ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-    drawCrispPixelText(ctx, p.label, px, py - 56, p.kind === "blood" ? "#ffb3c1" : p.kind === "gold" ? "#ffe680" : "#b8f7eb", "#0b0d0a");
-    ctx.restore();
+    drawBanLongMechanicPillar(ctx, p, boss, this.time, this.banLongBreathWarn);
   }
 
   _renderSingleNpc(ctx, npc) {
@@ -2265,7 +2212,7 @@ export class WorldSimulation {
     }
 
     if (e.typeId === "van_thu_ban_long") {
-      drawBanLongBossPixelArt(ctx, e, this.time);
+      drawBanLongBossPixelArt(ctx, e, this.time, this.banLongBreathWarn);
       return;
     }
 
@@ -2378,7 +2325,7 @@ export class WorldSimulation {
   }
 
   _renderBanLongSprite(ctx, boss) {
-    drawBanLongBossPixelArt(ctx, boss, this.time);
+    drawBanLongBossPixelArt(ctx, boss, this.time, this.banLongBreathWarn);
   }
 
   _renderProjectiles(ctx) {

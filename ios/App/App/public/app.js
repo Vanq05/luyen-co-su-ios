@@ -733,107 +733,6 @@
     MONSTER_64_CACHE.set(typeId, frames);
     return frames;
   }
-  function drawPixelBanLongBoss(ctx, boss, time) {
-    ctx.save();
-    const bx = Math.round(boss.x);
-    const by = Math.round(boss.y);
-    const frameRot = Math.floor(time * 5);
-    plotPixelEllipse(ctx, bx, by + 10, 92, 42, "rgba(25, 240, 200, 0.36)", 4, frameRot);
-    plotPixelEllipse(ctx, bx, by + 10, 68, 30, "rgba(217, 178, 95, 0.42)", 3, -frameRot);
-    for (let i = 0; i < 8; i++) {
-      const a = time * 0.25 + i / 8 * Math.PI * 2;
-      const rx = Math.round(bx + Math.cos(a) * 80);
-      const ry = Math.round(by + 10 + Math.sin(a) * 35);
-      plotRect(ctx, rx - 2, ry - 2, 4, 4, i % 2 === 0 ? "#19f0c8" : "#ffd65c");
-    }
-    fillPixelEllipse(ctx, bx, by + 20, 80, 22, "rgba(4, 10, 12, 0.54)", true);
-    for (let s = 12; s >= 1; s--) {
-      const t = s / 12;
-      const tx = Math.round(bx - 56 - t * 44 + Math.sin(time * 2.2 + t * 5) * 6);
-      const ty = Math.round(by + 6 - Math.sin(t * Math.PI) * 16 + Math.cos(time * 2 + t * 4) * 3);
-      const rad = Math.max(4, Math.round(13 * (1 - t * 0.68)));
-      plotRect(ctx, tx - rad - 1, ty - Math.round(rad * 0.6) - 1, rad * 2 + 2, Math.round(rad * 1.2) + 2, "#061013");
-      plotRect(ctx, tx - rad, ty - Math.round(rad * 0.6), rad * 2, Math.round(rad * 1.2), s % 2 === 0 ? "#102830" : "#183b47");
-      if (s % 2 === 0) plotRect(ctx, tx - 1, ty - Math.round(rad * 0.6) - 3, 2, 3, "#19f0c8");
-    }
-    const drawArmoredCoil = (cx, cy, rx, ry, scaleTop = true) => {
-      for (let dy = -ry; dy <= ry; dy++) {
-        const ratio = dy / ry;
-        const hw = Math.round(rx * Math.sqrt(Math.max(0, 1 - ratio * ratio)));
-        plotRect(ctx, cx - hw - 2, cy + dy, hw * 2 + 4, 2, "#061013");
-        for (let dx = -hw; dx <= hw; dx += 3) {
-          let col = "#15333d";
-          if (dy > ry * 0.25 && Math.abs(dx) < hw * 0.68) {
-            col = (dx + dy & 4) === 0 ? "#c89d54" : "#967133";
-            if (Math.abs(dx) < hw * 0.35 && dy > ry * 0.4) col = "#f5d37d";
-          } else if (dy < -ry * 0.3) col = "#2a6373";
-          else col = ((dx >> 2) + (dy >> 2) & 1) === 0 ? "#1c4452" : "#112930";
-          plotRect(ctx, cx + dx, cy + dy, 3, 1, col);
-        }
-      }
-      if (scaleTop) {
-        for (let sx = -rx + 14; sx <= rx - 14; sx += 11) {
-          const spineY = cy - ry + Math.round(sx * sx / (rx * rx) * 8);
-          plotRect(ctx, bx + sx - 2, spineY - 5, 5, 6, "#061013");
-          plotRect(ctx, bx + sx - 1, spineY - 4, 3, 4, "#19f0c8");
-        }
-      }
-    };
-    drawArmoredCoil(bx, by - 6, 62, 22, true);
-    drawArmoredCoil(bx + 4, by + 10, 74, 18, false);
-    const headThemes = [
-      { eye: "#46eb78", spine: "#46eb78", dark: "#11301d", mid: "#1d5733", lit: "#348a53", title: "\u0110\u1ED9c" },
-      { eye: "#6ee7ff", spine: "#6ee7ff", dark: "#122b3d", mid: "#1f4d6b", lit: "#3b84ad", title: "B\u0103ng" },
-      { eye: "#19f0c8", spine: "#19f0c8", dark: "#0f2c33", mid: "#1b525c", lit: "#2f8694", title: "Ch\u1EE7", isMain: true },
-      { eye: "#d98cff", spine: "#d98cff", dark: "#28153b", mid: "#47256b", lit: "#743da8", title: "L\xF4i" },
-      { eye: "#ff5c42", spine: "#ff5c42", dark: "#381212", mid: "#661e1c", lit: "#9e332b", title: "Vi\xEAm" }
-    ];
-    for (let i = 0; i < (boss.heads ?? []).length; i++) {
-      const h = boss.heads[i];
-      const theme = headThemes[i % headThemes.length];
-      const baseAx = bx + h.dx * 0.28;
-      const baseAy = by - 12;
-      const hx = Math.round(boss.x + h.dx + (h.alive ? Math.sin(time * 1.9 + i * 1.3) * 3 : 0));
-      const hy = Math.round(boss.y + (h.alive ? h.dy + Math.sin(time * 2.7 + i) * 4.5 : h.dy * 0.35 + 22));
-      for (let s = 0; s <= 16; s++) {
-        const t = s / 16;
-        const sway = h.alive ? Math.sin(t * Math.PI * 2 + time * 3.1 + i) * 6 : Math.sin(t * Math.PI) * 4;
-        const nx = Math.round(baseAx + (hx - baseAx) * t + sway);
-        const ny = Math.round(baseAy + (hy - baseAy) * t - Math.sin(t * Math.PI) * 6);
-        const half = Math.max(4, Math.round((theme.isMain ? 9 : 7) * (1 - t * 0.28)));
-        plotRect(ctx, nx - half - 1, ny - half + 1, half * 2 + 2, Math.round(half * 1.4) + 2, h.alive ? "#061013" : "#171717");
-        plotRect(ctx, nx - half, ny - half + 2, half * 2, Math.round(half * 1.3), h.alive ? s % 2 === 0 ? theme.mid : theme.dark : "#2a2c2e");
-        if (h.alive && s % 2 === 1) plotRect(ctx, nx - 1, ny - half - 1, 2, 3, theme.spine);
-      }
-      const sc = theme.isMain ? 1.18 : 1;
-      const drawOff = (dx, dy, w, ht, col) => plotRect(ctx, hx + dx * sc, hy + dy * sc, Math.max(1, w * sc), Math.max(1, ht * sc), col);
-      if (!h.alive) {
-        drawOff(-15, -10, 30, 20, "#141618");
-        drawOff(-13, -8, 26, 16, "#2c3034");
-        continue;
-      }
-      drawOff(-13, -19, 4, 9, "#3b2308");
-      drawOff(9, -19, 4, 9, "#3b2308");
-      drawOff(-12, -18, 3, 8, "#d9b25f");
-      drawOff(9, -18, 3, 8, "#d9b25f");
-      drawOff(-17, -12, 34, 22, "#061013");
-      drawOff(-15, -10, 30, 18, theme.dark);
-      drawOff(-14, -10, 28, 12, theme.mid);
-      drawOff(-11, -9, 22, 6, theme.lit);
-      drawOff(-10, -4, 5, 2, theme.eye);
-      drawOff(5, -4, 5, 2, theme.eye);
-      drawOff(-8, 4, 2, 4, "#ffffff");
-      drawOff(6, 4, 2, 4, "#ffffff");
-      const pct = Math.max(0, Math.round(h.hp / h.maxHp * 100));
-      const barY = Math.round(hy - 26 * sc);
-      plotRect(ctx, hx - 23, barY - 1, 46, 6, "#0b0d0a");
-      plotRect(ctx, hx - 22, barY, 44, 4, "#3b2c16");
-      plotRect(ctx, hx - 22, barY, Math.max(1, Math.round(44 * pct / 100)), 4, theme.eye);
-      ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, `${theme.title} ${pct}%`, hx, barY - 4, "#fff5d6", "#0b0d0a");
-    }
-    ctx.restore();
-  }
   var GATE_CACHE = /* @__PURE__ */ new Map();
   function getPortalGateSprite(variant = "gate_mountain", frameIdx = 0, dir = "ns", layer = "full") {
     const f = (frameIdx % 4 + 4) % 4;
@@ -6941,6 +6840,984 @@
     }
   };
 
+  // src/world/BanLongAssets.js
+  var FLOOR_TILES_CACHE = [];
+  var DAIS_CACHE = /* @__PURE__ */ new Map();
+  var BOSS_BODY_CACHE = [];
+  var BOSS_HEAD_CACHE = /* @__PURE__ */ new Map();
+  var PILLAR_CACHE = /* @__PURE__ */ new Map();
+  var PROP_FRAMES_CACHE = /* @__PURE__ */ new Map();
+  var BAN_LONG_GATE_CACHE = [];
+  var MIST_CACHE = [];
+  var SENTINEL_CACHE = null;
+  function hashBL(x, y) {
+    let h = (x | 0) * 374761393 + (y | 0) * 668265263 ^ 1542469173;
+    h = (h ^ h >> 13) * 1274126177;
+    return Math.abs(h ^ h >> 16);
+  }
+  var SLATE_RAMP = ["#06090e", "#0e131d", "#161f2d", "#212e40", "#2f4057", "#435873"];
+  var MOSS_RAMP = ["#08120d", "#102218", "#193525", "#244a34", "#336347"];
+  var BRONZE_RAMP = ["#26190c", "#4d3316", "#785124", "#a87638", "#d6a456", "#fae08c"];
+  var HORN_RAMP = ["#24180d", "#52391d", "#876132", "#ba8e4d", "#e3be78", "#fff0be"];
+  var SCALE_RAMP = ["#060b10", "#0f1c26", "#18303f", "#24475c", "#35637d", "#528aa6"];
+  function paintDitherPolygon(ctx, cx, cy, pts, palette, opts = {}) {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const [x, y] of pts) {
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    const rx = Math.max(1, (maxX - minX) * 0.5);
+    const ry = Math.max(1, (maxY - minY) * 0.5);
+    const n = pts.length;
+    for (let py = Math.floor(minY); py <= Math.ceil(maxY); py++) {
+      for (let px = Math.floor(minX); px <= Math.ceil(maxX); px++) {
+        let inside = false;
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+          const xi = pts[i][0];
+          const yi = pts[i][1];
+          const xj = pts[j][0];
+          const yj = pts[j][1];
+          const inter = yi > py !== yj > py && px < (xj - xi) * (py - yi) / (yj - yi || 1e-4) + xi;
+          if (inter) inside = !inside;
+        }
+        if (!inside) continue;
+        const nx = (px - cx) / rx;
+        const ny = (py - cy) / ry;
+        const shade = 0.54 - nx * 0.24 - ny * 0.34 + (opts.bias ?? 0);
+        const val = Math.max(0.05, Math.min(0.98, shade));
+        const maxIdx = palette.length - 1;
+        const exact = val * maxIdx;
+        const baseIdx = Math.min(maxIdx - 1, Math.max(0, Math.floor(exact)));
+        const frac = exact - baseIdx;
+        const idx = bayerThreshold(px, py) < frac ? Math.min(maxIdx, baseIdx + 1) : baseIdx;
+        ctx.fillStyle = palette[idx];
+        ctx.fillRect(px, py, 1, 1);
+      }
+    }
+  }
+  function fillPixelOctagon(ctx, cx, cy, rx, ry, col, bevelRatio = 0.42) {
+    const bx = Math.round(rx * (1 - bevelRatio));
+    const by = Math.round(ry * (1 - bevelRatio));
+    const top = Math.round(cy - ry);
+    const bot = Math.round(cy + ry);
+    ctx.fillStyle = col;
+    for (let y = top; y <= bot; y++) {
+      const dy = Math.abs(y - cy);
+      let hw = rx;
+      if (dy > by) {
+        const t = (dy - by) / Math.max(1, ry - by);
+        hw = Math.round(bx + (rx - bx) * (1 - t));
+      }
+      ctx.fillRect(Math.round(cx - hw), y, Math.max(1, hw * 2), 1);
+    }
+  }
+  function strokePixelOctagon(ctx, cx, cy, rx, ry, col, dashMod = 0, phase = 0, bevelRatio = 0.42) {
+    const bx = Math.round(rx * (1 - bevelRatio));
+    const by = Math.round(ry * (1 - bevelRatio));
+    const verts = [
+      [Math.round(cx - bx), Math.round(cy - ry)],
+      [Math.round(cx + bx), Math.round(cy - ry)],
+      [Math.round(cx + rx), Math.round(cy - by)],
+      [Math.round(cx + rx), Math.round(cy + by)],
+      [Math.round(cx + bx), Math.round(cy + ry)],
+      [Math.round(cx - bx), Math.round(cy + ry)],
+      [Math.round(cx - rx), Math.round(cy + by)],
+      [Math.round(cx - rx), Math.round(cy - by)]
+    ];
+    for (let e = 0; e < 8; e++) {
+      const [x0, y0] = verts[e];
+      const [x1, y1] = verts[(e + 1) % 8];
+      const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+      for (let s = 0; s <= steps; s++) {
+        if (dashMod > 0 && (s + phase + e * 3) % dashMod >= Math.ceil(dashMod * 0.6)) continue;
+        const t = steps > 0 ? s / steps : 0;
+        const px = Math.round(x0 + (x1 - x0) * t);
+        const py = Math.round(y0 + (y1 - y0) * t);
+        plotPixel(ctx, px, py, col);
+      }
+    }
+  }
+  function plotDitheredBlob(ctx, cx, cy, rx, ry, palette, opts = {}) {
+    const icx = Math.round(cx);
+    const icy = Math.round(cy);
+    const irx = Math.max(1, Math.round(rx));
+    const iry = Math.max(1, Math.round(ry));
+    for (let dy = -iry; dy <= iry; dy++) {
+      for (let dx = -irx; dx <= irx; dx++) {
+        const d2 = dx * dx / (irx * irx) + dy * dy / (iry * iry);
+        if (d2 > 1) continue;
+        const shade = 0.66 - d2 * 0.36 - dx / irx * 0.14 - dy / iry * 0.22 + (opts.bias ?? 0);
+        const val = Math.max(0.05, Math.min(0.98, shade));
+        const maxIdx = palette.length - 1;
+        const exact = val * maxIdx;
+        const baseIdx = Math.min(maxIdx - 1, Math.max(0, Math.floor(exact)));
+        const frac = exact - baseIdx;
+        const px = icx + dx;
+        const py = icy + dy;
+        const idx = bayerThreshold(px, py) < frac ? Math.min(maxIdx, baseIdx + 1) : baseIdx;
+        ctx.fillStyle = palette[idx];
+        ctx.fillRect(px, py, 1, 1);
+      }
+    }
+  }
+  function drawLayeredDragonScale(ctx, cx, cy, w, h, ramp, crestCol = null) {
+    const x = Math.round(cx);
+    const y = Math.round(cy);
+    const hw = Math.max(2, Math.floor(w * 0.5));
+    const hh = Math.max(2, Math.floor(h * 0.5));
+    plotRect(ctx, x - hw - 1, y - hh, w + 2, h, ramp[0]);
+    plotRect(ctx, x - hw, y - hh - 1, w, h + 2, ramp[0]);
+    plotRect(ctx, x - hw, y - hh, w, h, ramp[2]);
+    plotRect(ctx, x - hw + 1, y - hh + 1, Math.max(1, w - 2), Math.max(1, h - 2), ramp[3]);
+    plotRect(ctx, x - hw + 1, y - hh + 1, Math.max(1, Math.floor(w * 0.55)), Math.max(1, Math.floor(h * 0.5)), ramp[4]);
+    plotPixel(ctx, x - hw + 1, y - hh + 1, ramp[5]);
+    if (crestCol) {
+      plotPixel(ctx, x, y - hh - 1, crestCol);
+    }
+  }
+  function drawDragonClawFoot(ctx, x, y, facing = 1, clawCount = 4, ramp = SCALE_RAMP) {
+    const ix = Math.round(x);
+    const iy = Math.round(y);
+    plotRect(ctx, ix - 4, iy - 4, 9, 6, ramp[0]);
+    plotRect(ctx, ix - 3, iy - 3, 7, 4, ramp[3]);
+    plotPixel(ctx, ix - 2, iy - 2, ramp[4]);
+    for (let c = 0; c < clawCount; c++) {
+      const spread = c - (clawCount - 1) * 0.5;
+      const tx = Math.round(ix + facing * 3 + spread * 2.4);
+      const ty = Math.round(iy + 2 + c % 2);
+      plotPixelLine(ctx, ix + Math.round(spread), iy + 1, tx, ty, ramp[0], 2);
+      plotPixel(ctx, tx - facing, ty - 1, HORN_RAMP[3]);
+      plotPixel(ctx, tx, ty, HORN_RAMP[5]);
+    }
+  }
+  function getBanLongFloorTileSet() {
+    if (FLOOR_TILES_CACHE.length > 0) return FLOOR_TILES_CACHE;
+    for (let v = 0; v < 8; v++) {
+      const { canvas: canvas2, ctx } = createPixelCanvas(64, 64);
+      if (!ctx) {
+        FLOOR_TILES_CACHE.push(canvas2);
+        continue;
+      }
+      plotRect(ctx, 0, 0, 64, 64, SLATE_RAMP[1]);
+      for (let row = 0; row < 4; row++) {
+        const sy = row * 16;
+        const stag = (row & 1) * 16;
+        for (let col = -1; col < 3; col++) {
+          const sx = col * 32 + stag;
+          const bx = Math.max(0, sx + 1);
+          const bw = Math.min(64, sx + 31) - bx;
+          if (bw <= 0) continue;
+          const blockHash = hashBL(col + v * 7, row + v * 13);
+          const baseShade = 2 + blockHash % 2;
+          plotRect(ctx, Math.max(0, sx), sy, Math.min(32, 64 - sx), 16, SLATE_RAMP[0]);
+          plotRect(ctx, bx, sy + 1, bw, 14, SLATE_RAMP[baseShade]);
+          plotRect(ctx, bx, sy + 1, bw, 1, SLATE_RAMP[Math.min(5, baseShade + 2)]);
+          plotRect(ctx, bx, sy + 1, 1, 14, SLATE_RAMP[Math.min(5, baseShade + 1)]);
+          plotRect(ctx, bx, sy + 14, bw, 1, SLATE_RAMP[1]);
+          for (let py = sy + 2; py < sy + 14; py++) {
+            for (let px = bx + 1; px < bx + bw - 1; px++) {
+              const n = hashBL(px + v * 19, py + v * 23) % 100 / 100 * 0.45 + 0.25;
+              if (bayerThreshold(px, py) < n * 0.45) {
+                plotPixel(ctx, px, py, SLATE_RAMP[Math.min(4, baseShade + 1)]);
+              } else if (hashBL(px * 3, py * 5) % 17 === 0) {
+                plotPixel(ctx, px, py, SLATE_RAMP[1]);
+              }
+            }
+          }
+        }
+      }
+      const mossSeeds = 2 + v % 3;
+      for (let m = 0; m < mossSeeds; m++) {
+        const mx = 6 + hashBL(v + 3, m * 19) % 52;
+        const my = hashBL(m * 11, v + 5) % 4 * 16 + (hashBL(v, m) % 5 - 2);
+        const rx = 5 + hashBL(m, v * 3) % 7;
+        const ry = 3 + hashBL(v * 7, m) % 4;
+        for (let dy = -ry; dy <= ry; dy++) {
+          for (let dx = -rx; dx <= rx; dx++) {
+            const px = mx + dx;
+            const py = my + dy;
+            if (px < 0 || py < 0 || px >= 64 || py >= 64) continue;
+            const d = Math.hypot(dx / rx, dy / ry);
+            if (d > 1) continue;
+            const density = (1 - d) * 0.85;
+            if (bayerThreshold(px, py) < density) {
+              const mi = Math.min(4, Math.max(0, Math.floor(density * 5)));
+              plotPixel(ctx, px, py, MOSS_RAMP[mi]);
+            }
+          }
+        }
+      }
+      if (v === 1 || v === 3 || v === 5 || v === 7) {
+        const cx0 = 10 + hashBL(v, 41) % 18;
+        const cy0 = 8 + hashBL(43, v) % 20;
+        const cx1 = cx0 + 16 + v % 3 * 6;
+        const cy1 = cy0 + 14 + v % 2 * 8;
+        plotPixelLine(ctx, cx0, cy0, cx1, cy1, SLATE_RAMP[0], 1);
+        plotPixelLine(ctx, cx1, cy1, cx1 + 8, cy1 - 5, SLATE_RAMP[0], 1);
+        if (v === 3 || v === 7) {
+          plotPixelLine(ctx, cx0 + 1, cy0 + 1, cx1 - 2, cy1 - 1, v === 7 ? "#1e635d" : "#154745", 1);
+          plotPixel(ctx, cx1, cy1, "#3eb5a7");
+        }
+      }
+      FLOOR_TILES_CACHE.push(canvas2);
+    }
+    return FLOOR_TILES_CACHE;
+  }
+  function getBanLongFormationDais(frameIdx = 0, isBreathWarn = false) {
+    const f = (frameIdx % 4 + 4) % 4;
+    const warn = isBreathWarn ? 1 : 0;
+    const key = `${f}_${warn}`;
+    if (DAIS_CACHE.has(key)) return DAIS_CACHE.get(key);
+    const W = 384;
+    const H = 244;
+    const anchorX = 192;
+    const anchorY = 128;
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    if (!ctx) {
+      const stub = { canvas: canvas2, anchorX, anchorY };
+      DAIS_CACHE.set(key, stub);
+      return stub;
+    }
+    const cx = 192;
+    const cy = 116;
+    fillPixelOctagon(ctx, cx, cy + 12, 184, 102, "rgba(4, 6, 10, 0.52)");
+    fillPixelOctagon(ctx, cx, cy + 10, 178, 96, SLATE_RAMP[0]);
+    fillPixelOctagon(ctx, cx, cy + 6, 174, 93, SLATE_RAMP[2]);
+    fillPixelOctagon(ctx, cx, cy, 172, 91, SLATE_RAMP[3]);
+    strokePixelOctagon(ctx, cx, cy, 172, 91, SLATE_RAMP[5], 0, 0);
+    for (let y = cy - 90; y <= cy + 90; y += 2) {
+      for (let x = cx - 170; x <= cx + 170; x += 2) {
+        const dx = Math.abs(x - cx) / 170;
+        const dy = Math.abs(y - cy) / 90;
+        if (dx + dy > 1.42 || Math.max(dx, dy) > 1) continue;
+        if (dx + dy > 0.92) {
+          const h = hashBL(x >> 2, y >> 2);
+          if ((x & 15) === 0 || (y & 11) === 0) {
+            plotRect(ctx, x, y, 2, 1, SLATE_RAMP[1]);
+          } else if (h % 9 === 0 && bayerThreshold(x >> 1, y >> 1) < 0.6) {
+            plotRect(ctx, x, y, 2, 2, MOSS_RAMP[2]);
+          }
+        }
+      }
+    }
+    fillPixelOctagon(ctx, cx, cy + 4, 138, 74, SLATE_RAMP[0]);
+    fillPixelOctagon(ctx, cx, cy, 134, 71, SLATE_RAMP[2]);
+    strokePixelOctagon(ctx, cx, cy, 134, 71, BRONZE_RAMP[3], 0, 0);
+    strokePixelOctagon(ctx, cx, cy, 128, 67, BRONZE_RAMP[1], 0, 0);
+    const runeBase = warn ? "#5c1518" : "#123836";
+    const runeMid = warn ? "#ba292e" : "#226e68";
+    const runeBright = warn ? "#ff5c42" : "#5ef2d6";
+    const runePeak = warn ? "#ffd880" : "#d8fff6";
+    for (let i = 0; i < 16; i++) {
+      const a = i / 16 * Math.PI * 2;
+      const rx = Math.round(cx + Math.cos(a) * 149);
+      const ry = Math.round(cy + Math.sin(a) * 78);
+      drawLayeredDragonScale(ctx, rx, ry, 8, 6, i % 2 === 0 ? BRONZE_RAMP : SLATE_RAMP);
+    }
+    fillPixelOctagon(ctx, cx, cy, 102, 54, SLATE_RAMP[0]);
+    fillPixelOctagon(ctx, cx, cy, 98, 51, "#0b1118");
+    strokePixelOctagon(ctx, cx, cy, 98, 51, runeMid, 0, 0);
+    strokePixelOctagon(ctx, cx, cy, 62, 33, BRONZE_RAMP[2], 3, f);
+    for (let k = 0; k < 8; k++) {
+      const a = k / 8 * Math.PI * 2 + Math.PI / 8;
+      const xOut = Math.round(cx + Math.cos(a) * 124);
+      const yOut = Math.round(cy + Math.sin(a) * 65);
+      const xIn = Math.round(cx + Math.cos(a) * 24);
+      const yIn = Math.round(cy + Math.sin(a) * 14);
+      plotPixelLine(ctx, xOut, yOut, xIn, yIn, runeBase, 3);
+      plotPixelLine(ctx, xOut, yOut, xIn, yIn, runeMid, 1);
+      const prog = (f + k % 2 * 0.5) / 4;
+      const px = Math.round(xOut + (xIn - xOut) * prog);
+      const py = Math.round(yOut + (yIn - yOut) * prog);
+      plotRect(ctx, px - 2, py - 2, 4, 4, runeBright);
+      plotRect(ctx, px - 1, py - 1, 2, 2, runePeak);
+      const qx = Math.round(cx + Math.cos(a) * 112);
+      const qy = Math.round(cy + Math.sin(a) * 58);
+      for (let bar = -1; bar <= 1; bar++) {
+        const broken = (k + bar + 3) % 2 === 1;
+        if (broken) {
+          plotRect(ctx, qx - 5, qy + bar * 3, 4, 2, f === k % 4 ? runePeak : BRONZE_RAMP[4]);
+          plotRect(ctx, qx + 1, qy + bar * 3, 4, 2, f === k % 4 ? runePeak : BRONZE_RAMP[4]);
+        } else {
+          plotRect(ctx, qx - 5, qy + bar * 3, 10, 2, f === k % 4 ? runePeak : BRONZE_RAMP[4]);
+        }
+      }
+    }
+    for (let step = 0; step < 4; step++) {
+      const sw = 72 - step * 4;
+      const sy = cy + 90 + step * 5;
+      plotRect(ctx, Math.round(cx - sw * 0.5) - 2, sy - 1, sw + 4, 6, SLATE_RAMP[0]);
+      plotRect(ctx, Math.round(cx - sw * 0.5), sy, sw, 4, step % 2 === 0 ? SLATE_RAMP[4] : SLATE_RAMP[3]);
+      plotRect(ctx, Math.round(cx - sw * 0.5), sy, sw, 1, SLATE_RAMP[5]);
+    }
+    fillPixelOctagon(ctx, cx, cy, 34, 18, SLATE_RAMP[1]);
+    strokePixelOctagon(ctx, cx, cy, 34, 18, BRONZE_RAMP[4], 0, 0);
+    plotRect(ctx, cx - 8, cy - 4, 16, 8, f % 2 === 0 ? runeMid : runeBright);
+    plotRect(ctx, cx - 4, cy - 2, 8, 4, runePeak);
+    const res = { canvas: canvas2, anchorX, anchorY };
+    DAIS_CACHE.set(key, res);
+    return res;
+  }
+  function getBanLongBossFrames(isBreathWarn = false) {
+    const warn = isBreathWarn ? 1 : 0;
+    if (BOSS_BODY_CACHE[warn]?.length === 4) return BOSS_BODY_CACHE[warn];
+    const frames = [];
+    const W = 192;
+    const H = 192;
+    const anchorX = 96;
+    const anchorY = 154;
+    const emberCol = warn ? "#ff5c42" : "#24a89a";
+    const emberBright = warn ? "#ffd875" : "#78ffea";
+    for (let f = 0; f < 4; f++) {
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      if (!ctx) {
+        frames.push({ canvas: canvas2, anchorX, anchorY });
+        continue;
+      }
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const breathDy = f === 1 ? -1 : f === 2 ? -2 : f === 3 ? -1 : 0;
+      const tailPts = [];
+      for (let s = 0; s <= 18; s++) {
+        const t = s / 18;
+        const angle = t * Math.PI * 1.15;
+        const swayX = f === 1 ? 2 : f === 3 ? -2 : 0;
+        const tx = Math.round(78 - Math.sin(angle) * 56 + t * 14 + swayX * t);
+        const ty = Math.round(138 - Math.cos(angle * 0.8) * 18 - t * 44);
+        const rad = Math.max(3, Math.round(11 * (1 - t * 0.65)));
+        tailPts.push([tx, ty, rad, s]);
+      }
+      for (let i = tailPts.length - 1; i >= 0; i--) {
+        const [tx, ty, rad, s] = tailPts[i];
+        drawLayeredDragonScale(g, tx, ty, rad * 2, Math.max(4, Math.round(rad * 1.4)), SCALE_RAMP);
+        if (s % 2 === 0) {
+          const spCol = f === 0 && s > 10 ? emberBright : HORN_RAMP[4];
+          plotRect(g, tx - 1, ty - rad - 3, 2, 4, SCALE_RAMP[0]);
+          plotPixel(g, tx, ty - rad - 2, spCol);
+        }
+      }
+      const [tipX, tipY] = tailPts[tailPts.length - 1];
+      plotPixelLine(g, tipX, tipY, tipX - 9, tipY - 8, SCALE_RAMP[0], 3);
+      plotPixelLine(g, tipX, tipY, tipX - 8, tipY - 7, HORN_RAMP[4], 1);
+      plotRect(g, tipX - 6, tipY - 5, 5, 4, emberCol);
+      plotPixel(g, tipX - 5, tipY - 4, emberBright);
+      for (let s = 0; s <= 16; s++) {
+        const t = s / 16;
+        const cx = Math.round(44 + t * 104);
+        const cy = Math.round(92 + breathDy + Math.sin(t * Math.PI) * 14);
+        drawLayeredDragonScale(g, cx, cy, 18, 13, SCALE_RAMP, s % 2 === 0 ? f === 2 ? emberBright : emberCol : null);
+      }
+      fillPixelOctagon(g, 96, 152, 34, 14, SLATE_RAMP[0]);
+      fillPixelOctagon(g, 96, 149, 31, 12, SLATE_RAMP[3]);
+      plotRect(g, 79, 44, 34, 108, SLATE_RAMP[0]);
+      plotRect(g, 81, 46, 30, 104, SLATE_RAMP[2]);
+      plotRect(g, 81, 46, 9, 104, SLATE_RAMP[4]);
+      plotRect(g, 83, 48, 3, 100, SLATE_RAMP[5]);
+      plotRect(g, 106, 46, 5, 104, SLATE_RAMP[1]);
+      plotRect(g, 79, 39, 14, 7, SLATE_RAMP[3]);
+      plotRect(g, 98, 41, 14, 5, SLATE_RAMP[2]);
+      plotRect(g, 92, 66, 8, 12, SLATE_RAMP[0]);
+      plotRect(g, 93, 67, 6, 10, f % 2 === 0 ? emberCol : emberBright);
+      for (let s = 0; s <= 22; s++) {
+        const t = s / 22;
+        const cx = Math.round(148 - t * 106);
+        const cy = Math.round(134 + Math.sin(t * Math.PI) * 18 + Math.round(breathDy * 0.5));
+        const w = Math.round(18 + Math.sin(t * Math.PI) * 4);
+        const h = 14;
+        drawLayeredDragonScale(g, cx, cy, w, h, SCALE_RAMP);
+        if (t > 0.12 && t < 0.88) {
+          plotRect(g, cx - 5, cy + 2, 10, 6, BRONZE_RAMP[0]);
+          plotRect(g, cx - 4, cy + 3, 8, 4, BRONZE_RAMP[3]);
+          plotRect(g, cx - 3, cy + 3, 5, 2, BRONZE_RAMP[4]);
+          plotPixel(g, cx - 1, cy + 3, BRONZE_RAMP[5]);
+        }
+        if (s % 3 === 0) {
+          const pulseHere = f === 1 && s > 6 && s < 16 || f === 3 && s >= 14;
+          plotRect(g, cx - 1, cy - 9, 3, 4, SLATE_RAMP[0]);
+          plotRect(g, cx, cy - 8, 2, 3, pulseHere ? emberBright : HORN_RAMP[4]);
+        }
+      }
+      for (let s = 0; s <= 20; s++) {
+        const t = s / 20;
+        const cx = Math.round(46 + t * 98);
+        const cy = Math.round(108 - Math.sin(t * Math.PI) * 16 + breathDy);
+        const isLitSpine = f === 2 && s > 8 || f === 3;
+        drawLayeredDragonScale(g, cx, cy, 19, 14, SCALE_RAMP, isLitSpine ? emberBright : emberCol);
+        if (s % 2 === 1) {
+          plotRect(g, cx - 4, cy + 2, 8, 5, BRONZE_RAMP[2]);
+          plotRect(g, cx - 3, cy + 3, 6, 2, BRONZE_RAMP[4]);
+        }
+        if (s % 3 === 1) {
+          plotPixelLine(g, cx, cy - 6, cx - 2, cy - 12, SCALE_RAMP[0], 2);
+          plotPixel(g, cx - 1, cy - 11, isLitSpine ? emberBright : HORN_RAMP[5]);
+        }
+      }
+      plotDitheredBlob(g, 96, 94 + breathDy, 24, 16, SCALE_RAMP, { bias: 0.06 });
+      for (const [vx, vy] of [[88, 92], [96, 95], [104, 92]]) {
+        plotRect(g, vx - 4, vy + breathDy, 8, 5, BRONZE_RAMP[3]);
+        plotRect(g, vx - 2, vy + 1 + breathDy, 4, 2, BRONZE_RAMP[5]);
+      }
+      drawDragonClawFoot(g, 73, 102 + breathDy, -1, 5, SCALE_RAMP);
+      drawDragonClawFoot(g, 119, 102 + breathDy, 1, 5, SCALE_RAMP);
+      drawDragonClawFoot(g, 58, 150, -1, 4, SCALE_RAMP);
+      drawDragonClawFoot(g, 134, 150, 1, 4, SCALE_RAMP);
+      applySelectiveOutline(g, W, H, "#1e2e3d", "#05070b");
+      for (let dy = -16; dy <= 16; dy++) {
+        for (let dx = -68; dx <= 68; dx++) {
+          if (dx * dx / (68 * 68) + dy * dy / (16 * 16) > 1) continue;
+          if (bayerThreshold(dx, dy) < 0.56) {
+            ctx.fillStyle = "rgba(3, 5, 8, 0.52)";
+            ctx.fillRect(anchorX + dx, anchorY + dy + 6, 1, 1);
+          }
+        }
+      }
+      ctx.drawImage(tmp.canvas, 0, 0);
+      frames.push({ canvas: canvas2, anchorX, anchorY });
+    }
+    BOSS_BODY_CACHE[warn] = frames;
+    return frames;
+  }
+  var DRAGON_HEAD_THEMES = [
+    { key: "doc", title: "\u0110\u1ED9c", eye: "#5ceb8b", crest: "#2ab359", ramp: ["#07120b", "#122b1a", "#1c4529", "#2c663e", "#408a56", "#64b87c"] },
+    { key: "bang", title: "B\u0103ng", eye: "#70e8ff", crest: "#2da2cf", ramp: ["#071017", "#112536", "#1a3c54", "#275878", "#397a9e", "#5fa7cc"] },
+    { key: "chu", title: "Ch\u1EE7", isMain: true, eye: "#ffd257", crest: "#5ef2d6", ramp: ["#060d12", "#0f222b", "#183745", "#245263", "#367387", "#59a1b5"] },
+    { key: "loi", title: "L\xF4i", eye: "#d28cff", crest: "#944ce0", ramp: ["#0e0814", "#20132e", "#321e47", "#482c66", "#64408a", "#8a5eb8"] },
+    { key: "viem", title: "Vi\xEAm", eye: "#ff6448", crest: "#d93226", ramp: ["#140707", "#2b100e", "#451916", "#632520", "#87362e", "#b55147"] }
+  ];
+  function getDragonHeadSprite(themeIdx, frameIdx, alive = true) {
+    const f = (frameIdx % 4 + 4) % 4;
+    const key = `${themeIdx}_${alive ? f : "dead"}`;
+    if (BOSS_HEAD_CACHE.has(key)) return BOSS_HEAD_CACHE.get(key);
+    const theme = DRAGON_HEAD_THEMES[themeIdx % DRAGON_HEAD_THEMES.length];
+    const W = 58;
+    const H = 56;
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    if (!ctx) {
+      BOSS_HEAD_CACHE.set(key, canvas2);
+      return canvas2;
+    }
+    const tmp = createPixelCanvas(W, H);
+    const g = tmp.ctx;
+    const cx = 29;
+    const cy = 30;
+    if (!alive) {
+      paintDitherPolygon(g, cx, cy, [[cx - 12, cy - 9], [cx + 12, cy - 9], [cx + 14, cy + 5], [cx - 14, cy + 5]], SLATE_RAMP);
+      plotPixelLine(g, cx - 10, cy - 8, cx - 16, cy - 19, SLATE_RAMP[2], 2);
+      plotPixelLine(g, cx + 10, cy - 8, cx + 15, cy - 17, SLATE_RAMP[2], 2);
+      plotPixelLine(g, cx - 5, cy - 6, cx + 4, cy + 4, SLATE_RAMP[0], 1);
+      plotRect(g, cx - 9, cy + 1, 5, 4, MOSS_RAMP[2]);
+      applySelectiveOutline(g, W, H, "#192029", "#05070a");
+      ctx.drawImage(tmp.canvas, 0, 0);
+      BOSS_HEAD_CACHE.set(key, canvas2);
+      return canvas2;
+    }
+    const jawOpen = f === 3 ? 3 : f === 2 ? 2 : 1;
+    const maneShift = f === 1 ? -1 : f === 3 ? 1 : 0;
+    for (const dir of [-1, 1]) {
+      plotPixelLine(g, cx + dir * 7, cy - 8, cx + dir * 18, cy - 23, HORN_RAMP[1], 3);
+      plotPixelLine(g, cx + dir * 7, cy - 8, cx + dir * 18, cy - 23, HORN_RAMP[4], 1);
+      plotPixelLine(g, cx + dir * 13, cy - 16, cx + dir * 21, cy - 17, HORN_RAMP[5], 1);
+      plotPixelLine(g, cx + dir * 12, cy - 14, cx + dir * 12, cy - 24, HORN_RAMP[5], 1);
+      plotPixel(g, cx + dir * 18, cy - 23, HORN_RAMP[5]);
+    }
+    for (const dir of [-1, 1]) {
+      plotDitheredBlob(g, cx + dir * 12, cy - 1 + maneShift, 7, 8, [theme.ramp[0], theme.ramp[2], theme.ramp[4], theme.crest]);
+      plotPixelLine(g, cx + dir * 14, cy - 4 + maneShift, cx + dir * 23, cy - 8, theme.crest, 2);
+      plotPixelLine(g, cx + dir * 15, cy + 1 + maneShift, cx + dir * 24, cy + 2, theme.eye, 1);
+      plotPixel(g, cx + dir * 23, cy - 8, "#fff6d1");
+    }
+    paintDitherPolygon(
+      g,
+      cx,
+      cy - 4,
+      [
+        [cx - 11, cy - 11],
+        [cx + 11, cy - 11],
+        [cx + 14, cy - 1],
+        [cx + 9, cy + 5],
+        [cx - 9, cy + 5],
+        [cx - 14, cy - 1]
+      ],
+      theme.ramp,
+      { bias: 0.08 }
+    );
+    plotRect(g, cx - 4, cy - 11, 8, 12, theme.ramp[4]);
+    plotRect(g, cx - 2, cy - 10, 4, 9, theme.ramp[5]);
+    plotPixel(g, cx, cy - 13, theme.crest);
+    paintDitherPolygon(
+      g,
+      cx,
+      cy + 5,
+      [
+        [cx - 9, cy + 2],
+        [cx + 9, cy + 2],
+        [cx + 7, cy + 9],
+        [cx - 7, cy + 9]
+      ],
+      theme.ramp
+    );
+    plotRect(g, cx - 5, cy + 5, 2, 2, "#06080c");
+    plotRect(g, cx + 3, cy + 5, 2, 2, "#06080c");
+    for (const dir of [-1, 1]) {
+      const ex = cx + dir * 6;
+      const ey = cy - 4;
+      plotRect(g, ex - 3, ey - 2, 6, 4, "#06080c");
+      plotRect(g, ex - 2, ey - 1, 4, 2, theme.eye);
+      plotPixel(g, ex + (dir > 0 ? -1 : 1), ey - 1, "#ffffff");
+      plotPixelLine(g, cx + dir * 3, cy - 7, cx + dir * 10, cy - 9, theme.ramp[5], 1);
+    }
+    const jawY = cy + 9 + jawOpen;
+    plotRect(g, cx - 7, cy + 8, 14, 2 + jawOpen, "#1a080c");
+    if (f >= 2) {
+      plotRect(g, cx - 4, cy + 8, 8, jawOpen + 1, theme.eye);
+    }
+    plotRect(g, cx - 7, jawY, 14, 4, theme.ramp[2]);
+    plotRect(g, cx - 5, jawY + 1, 10, 2, theme.ramp[4]);
+    for (const nx of [-6, -2, 2, 5]) {
+      plotRect(g, cx + nx, cy + 8, 2, 3, "#d8e0eb");
+      plotPixel(g, cx + nx, cy + 10, "#ffffff");
+    }
+    plotPixel(g, cx - 4, jawY - 2, "#ffffff");
+    plotPixel(g, cx + 4, jawY - 2, "#ffffff");
+    for (const dir of [-1, 1]) {
+      const wx = cx + dir * 8;
+      const wy = cy + 7;
+      plotPixelLine(g, wx, wy, wx + dir * 10, wy + 5 + maneShift, HORN_RAMP[4], 1);
+      plotPixelLine(g, wx + dir * 10, wy + 5 + maneShift, wx + dir * 14, wy + 10, HORN_RAMP[5], 1);
+    }
+    applySelectiveOutline(g, W, H, "#233242", "#05070a");
+    ctx.drawImage(tmp.canvas, 0, 0);
+    BOSS_HEAD_CACHE.set(key, canvas2);
+    return canvas2;
+  }
+  function drawBanLongCoilingBoss(ctx, boss, time, breathWarn = 0) {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    const bx = Math.round(boss.x);
+    const by = Math.round(boss.y);
+    const f = Math.floor(time * 4.5) % 4;
+    const warn = breathWarn > 0;
+    const bodyFrames = getBanLongBossFrames(warn);
+    const bodySpr = bodyFrames[f] ?? bodyFrames[0];
+    if (bodySpr) {
+      if (boss.hurtFlash > 0) ctx.globalAlpha = 0.72;
+      ctx.drawImage(bodySpr.canvas, Math.round(bx - bodySpr.anchorX), Math.round(by - bodySpr.anchorY));
+      ctx.globalAlpha = 1;
+    }
+    const heads = boss.heads ?? [];
+    for (let i = 0; i < heads.length; i++) {
+      const h = heads[i];
+      const theme = DRAGON_HEAD_THEMES[i % DRAGON_HEAD_THEMES.length];
+      const neckSocketX = bx + h.dx * 0.22;
+      const neckSocketY = by - 58;
+      const hx = Math.round(bx + h.dx + (h.alive ? Math.sin(time * 1.9 + i * 1.25) * 3 : 0));
+      const hy = Math.round(by + (h.alive ? h.dy + Math.cos(time * 2.5 + i) * 4 : h.dy * 0.35 + 14));
+      const segs = 15;
+      for (let s = 0; s <= segs; s++) {
+        const t = s / segs;
+        const sway = h.alive ? Math.sin(t * Math.PI * 2 + time * 3 + i) * 7 : Math.sin(t * Math.PI) * 3;
+        const nx = Math.round(neckSocketX + (hx - neckSocketX) * t + sway);
+        const ny = Math.round(neckSocketY + (hy - neckSocketY) * t - Math.sin(t * Math.PI) * 8);
+        const w = Math.max(7, Math.round((theme.isMain ? 16 : 12) * (1 - t * 0.25)));
+        const ht = Math.max(6, Math.round(w * 0.72));
+        const neckRamp = h.alive ? theme.ramp : SLATE_RAMP;
+        const crestPulse = h.alive && s % 2 === 1 ? (f + s) % 4 === 0 ? theme.eye : theme.crest : null;
+        drawLayeredDragonScale(ctx, nx, ny, w, ht, neckRamp, crestPulse);
+        if (h.alive && t > 0.25 && t < 0.85 && s % 2 === 0) {
+          plotRect(ctx, nx - 3, ny + Math.floor(ht * 0.25), 6, 3, BRONZE_RAMP[3]);
+        }
+      }
+      const headCanvas = getDragonHeadSprite(i, f, Boolean(h.alive));
+      const hw = headCanvas.width;
+      const hh = headCanvas.height;
+      ctx.drawImage(headCanvas, Math.round(hx - hw * 0.5), Math.round(hy - hh * 0.52));
+      if (!h.alive) continue;
+      const pct = Math.max(0, Math.round(h.hp / Math.max(1, h.maxHp) * 100));
+      const barY = Math.round(hy - (theme.isMain ? 34 : 30));
+      plotRect(ctx, hx - 24, barY - 1, 48, 6, "#06080d");
+      plotRect(ctx, hx - 23, barY, 46, 4, "#241914");
+      plotRect(ctx, hx - 23, barY, Math.max(1, Math.round(46 * pct / 100)), 4, theme.eye);
+      ctx.font = "700 8.5px 'Be Vietnam Pro', sans-serif";
+      drawCrispPixelText(ctx, `${theme.title} ${pct}%`, hx, barY - 4, "#fff5d6", "#06080d");
+    }
+    const totalPct = Math.max(0, Math.min(1, boss.hp / Math.max(1, boss.maxHp)));
+    plotRect(ctx, bx - 64, by + 42, 128, 7, "#06080d");
+    plotRect(ctx, bx - 63, by + 43, 126, 5, "#2b161b");
+    plotRect(ctx, bx - 63, by + 43, Math.max(1, Math.round(126 * totalPct)), 5, warn ? "#ff5c42" : "#5ef2d6");
+    ctx.font = "700 9px 'Be Vietnam Pro', sans-serif";
+    drawCrispPixelText(ctx, boss.name || "V\u1EA0N TH\u1EE6 B\xC0N LONG", bx, by + 37, "#ffe49c", "#06080d");
+    ctx.restore();
+  }
+  function getBanLongPillarFrames(kind = "cloud") {
+    if (PILLAR_CACHE.has(kind)) return PILLAR_CACHE.get(kind);
+    const W = 64;
+    const H = 112;
+    const anchorX = 32;
+    const anchorY = 98;
+    const frames = [];
+    const accentRamp = kind === "blood" ? ["#26070d", "#5c111f", "#9e1c34", "#de354c", "#ff7085"] : kind === "gold" ? BRONZE_RAMP : kind === "stone" ? ["#0b2626", "#164f4d", "#248780", "#45c7ba", "#a6fff2"] : ["#0d1e21", "#1a3b40", "#295c63", "#468a91", "#85d6d0"];
+    const stoneBase = kind === "gold" ? BRONZE_RAMP : SLATE_RAMP;
+    for (let f = 0; f < 4; f++) {
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      if (!ctx) {
+        frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 15 });
+        continue;
+      }
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      fillPixelOctagon(g, 32, 96, 19, 8, stoneBase[0]);
+      fillPixelOctagon(g, 32, 93, 17, 7, stoneBase[3]);
+      plotRect(g, 18, 86, 28, 8, stoneBase[0]);
+      plotRect(g, 19, 87, 26, 6, stoneBase[4]);
+      plotRect(g, 22, 20, 20, 68, stoneBase[0]);
+      plotRect(g, 23, 21, 18, 66, stoneBase[2]);
+      plotRect(g, 24, 21, 7, 66, stoneBase[4]);
+      plotRect(g, 25, 22, 2, 64, stoneBase[5]);
+      plotRect(g, 37, 21, 4, 66, stoneBase[1]);
+      plotRect(g, 17, 14, 30, 8, stoneBase[0]);
+      plotRect(g, 18, 15, 28, 6, stoneBase[4]);
+      plotRect(g, 25, 7, 14, 8, accentRamp[0]);
+      plotRect(g, 26, 8, 12, 6, accentRamp[f % 2 === 0 ? 3 : 4]);
+      plotRect(g, 29, 9, 4, 3, "#fff8dc");
+      for (let s = 0; s <= 12; s++) {
+        const t = s / 12;
+        const sx = Math.round(32 + Math.sin(t * Math.PI * 2.6) * 11);
+        const sy = Math.round(82 - t * 52);
+        const litPulse = (f + Math.floor(s / 3)) % 4 === 0;
+        drawLayeredDragonScale(g, sx, sy, 9, 7, SCALE_RAMP, litPulse ? accentRamp[4] : accentRamp[2]);
+      }
+      plotRect(g, 21, 27, 15, 11, SLATE_RAMP[0]);
+      plotRect(g, 22, 28, 13, 9, SLATE_RAMP[4]);
+      plotRect(g, 20, 24, 3, 5, HORN_RAMP[4]);
+      plotRect(g, 33, 24, 3, 5, HORN_RAMP[4]);
+      plotRect(g, 25, 31, 3, 2, accentRamp[4]);
+      plotRect(g, 30, 31, 3, 2, accentRamp[4]);
+      plotRect(g, 19, 86, 6, 4, MOSS_RAMP[2]);
+      plotRect(g, 34, 70, 5, 6, MOSS_RAMP[3]);
+      applySelectiveOutline(g, W, H, "#1d2836", "#05070a");
+      for (let dy = -5; dy <= 5; dy++) {
+        for (let dx = -19; dx <= 19; dx++) {
+          if (dx * dx / 361 + dy * dy / 25 > 1) continue;
+          if (bayerThreshold(dx, dy) < 0.55) {
+            ctx.fillStyle = "rgba(4, 6, 10, 0.45)";
+            ctx.fillRect(anchorX + dx, anchorY + dy + 2, 1, 1);
+          }
+        }
+      }
+      ctx.drawImage(tmp.canvas, 0, 0);
+      frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 15 });
+    }
+    PILLAR_CACHE.set(kind, frames);
+    return frames;
+  }
+  function drawBanLongMechanicPillar(ctx, p, boss, time, breathWarn = 0) {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    const px = Math.round(p.x);
+    const py = Math.round(p.y);
+    const f = Math.floor(time * 4.5 + px * 0.05) % 4;
+    if (p.kind === "blood" && boss) {
+      plotPixelLine(ctx, px, py - 52, boss.x, boss.y - 46, "rgba(217, 45, 72, 0.65)", 2);
+      for (let k = 0; k < 4; k++) {
+        const orbT = (time * 0.85 + k * 0.25) % 1;
+        const ox = Math.round(px + (boss.x - px) * orbT);
+        const oy = Math.round(py - 52 + (boss.y - 46 - (py - 52)) * orbT - Math.sin(orbT * Math.PI) * 16);
+        plotRect(ctx, ox - 2, oy - 2, 4, 4, "#ff5c77");
+        plotRect(ctx, ox - 1, oy - 1, 2, 2, "#ffd1da");
+      }
+    }
+    if (p.kind === "stone" && breathWarn > 0) {
+      const pulse = 0.45 + Math.sin(time * 7) * 0.25;
+      ctx.globalAlpha = pulse * 0.5;
+      fillPixelOctagon(ctx, px, py + 16, 28, 13, "#1f7870");
+      ctx.globalAlpha = 0.92;
+      strokePixelOctagon(ctx, px, py + 16, 28, 13, "#6cf7e0", 3, f);
+      ctx.globalAlpha = 1;
+    } else if (p.kind === "gold") {
+      strokePixelOctagon(ctx, px, py + 2, 22, 10, "#e6b84c", 4, f);
+    }
+    const frames = getBanLongPillarFrames(p.kind);
+    const spr = frames[f] ?? frames[0];
+    if (spr) {
+      ctx.drawImage(spr.canvas, Math.round(px - spr.anchorX), Math.round(py - spr.anchorY));
+    }
+    if (p.kind !== "stone") {
+      const pct = Math.max(0, Math.min(1, p.hp / Math.max(1, p.maxHp)));
+      plotRect(ctx, px - 18, py - 98, 36, 5, "#06080d");
+      plotRect(ctx, px - 17, py - 97, 34, 3, "#211618");
+      plotRect(ctx, px - 17, py - 97, Math.max(1, Math.round(34 * pct)), 3, p.kind === "blood" ? "#ff4d6d" : "#ffd257");
+    }
+    ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
+    drawCrispPixelText(
+      ctx,
+      p.label,
+      px,
+      py - 103,
+      p.kind === "blood" ? "#ffb3c1" : p.kind === "gold" ? "#ffe680" : "#b8f7eb",
+      "#06080d"
+    );
+    ctx.restore();
+  }
+  function getBanLongPropFrames(kind) {
+    if (PROP_FRAMES_CACHE.has(kind)) return PROP_FRAMES_CACHE.get(kind);
+    if (kind === "ban_long_cloud_pillar") {
+      const f = getBanLongPillarFrames("cloud");
+      PROP_FRAMES_CACHE.set(kind, f);
+      return f;
+    }
+    const frames = [];
+    if (kind === "ban_long_statue") {
+      const W = 96;
+      const H = 144;
+      const anchorX = 48;
+      const anchorY = 128;
+      for (let f = 0; f < 4; f++) {
+        const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+        if (!ctx) {
+          frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 22 });
+          continue;
+        }
+        const tmp = createPixelCanvas(W, H);
+        const g = tmp.ctx;
+        fillPixelOctagon(g, 48, 126, 36, 12, SLATE_RAMP[0]);
+        fillPixelOctagon(g, 48, 122, 33, 10, SLATE_RAMP[3]);
+        fillPixelOctagon(g, 48, 114, 24, 8, SLATE_RAMP[4]);
+        plotRect(g, 36, 32, 24, 82, SLATE_RAMP[0]);
+        plotRect(g, 38, 34, 20, 78, SLATE_RAMP[2]);
+        plotRect(g, 38, 34, 7, 78, SLATE_RAMP[4]);
+        for (let s = 0; s <= 18; s++) {
+          const t = s / 18;
+          const sx = Math.round(48 + Math.sin(t * Math.PI * 2.5) * 18);
+          const sy = Math.round(112 - t * 68);
+          drawLayeredDragonScale(g, sx, sy, 13, 10, SLATE_RAMP, s % 3 === 0 ? MOSS_RAMP[3] : null);
+        }
+        paintDitherPolygon(g, 48, 32, [[32, 22], [64, 22], [66, 38], [30, 38]], SLATE_RAMP, { bias: 0.1 });
+        plotPixelLine(g, 37, 23, 25, 11, SLATE_RAMP[5], 2);
+        plotPixelLine(g, 59, 23, 71, 11, SLATE_RAMP[5], 2);
+        plotPixelLine(g, 30, 16, 31, 9, SLATE_RAMP[5], 1);
+        plotPixelLine(g, 66, 16, 65, 9, SLATE_RAMP[5], 1);
+        const eyeC = f === 1 || f === 2 ? "#ffd257" : "#9c742b";
+        plotRect(g, 39, 28, 4, 2, eyeC);
+        plotRect(g, 53, 28, 4, 2, eyeC);
+        plotRect(g, 28, 108, 12, 7, MOSS_RAMP[2]);
+        plotRect(g, 52, 88, 9, 8, MOSS_RAMP[3]);
+        applySelectiveOutline(g, W, H, "#1f2b38", "#05070a");
+        ctx.fillStyle = "rgba(4, 6, 10, 0.45)";
+        fillPixelOctagon(ctx, anchorX, anchorY + 2, 34, 9, "rgba(4, 6, 10, 0.45)");
+        ctx.drawImage(tmp.canvas, 0, 0);
+        frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 22 });
+      }
+    } else if (kind === "ban_long_brazier") {
+      const W = 64;
+      const H = 96;
+      const anchorX = 32;
+      const anchorY = 80;
+      for (let f = 0; f < 4; f++) {
+        const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+        if (!ctx) {
+          frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 15 });
+          continue;
+        }
+        const tmp = createPixelCanvas(W, H);
+        const g = tmp.ctx;
+        fillPixelOctagon(g, 32, 76, 20, 8, SLATE_RAMP[0]);
+        fillPixelOctagon(g, 32, 73, 18, 7, SLATE_RAMP[3]);
+        plotRect(g, 21, 48, 22, 26, SLATE_RAMP[2]);
+        plotRect(g, 22, 49, 7, 24, SLATE_RAMP[4]);
+        plotRect(g, 14, 34, 36, 16, SLATE_RAMP[0]);
+        plotRect(g, 16, 36, 32, 12, BRONZE_RAMP[2]);
+        plotRect(g, 18, 37, 28, 4, BRONZE_RAMP[4]);
+        plotRect(g, 26, 41, 12, 6, SLATE_RAMP[3]);
+        plotPixel(g, 22, 42, "#ffd257");
+        plotPixel(g, 41, 42, "#ffd257");
+        const shift = f === 1 ? -1 : f === 3 ? 1 : 0;
+        plotRect(g, 22, 28, 20, 8, "#165c58");
+        plotRect(g, 24 + shift, 22, 16, 10, "#2db8a8");
+        plotRect(g, 27 + shift, 16, 10, 10, "#6ef7df");
+        plotRect(g, 30, 11 - f % 2, 4, 9, "#e6fff8");
+        plotPixel(g, 24 + shift * 2, 14 - f, "#a6fff2");
+        plotPixel(g, 38 - shift, 12 + f % 2, "#ffd875");
+        applySelectiveOutline(g, W, H, "#1e2936", "#05070a");
+        fillPixelOctagon(ctx, anchorX, anchorY + 2, 20, 7, "rgba(4, 6, 10, 0.45)");
+        ctx.drawImage(tmp.canvas, 0, 0);
+        frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 15 });
+      }
+    } else if (kind === "ban_long_ruin_wall") {
+      const W = 96;
+      const H = 80;
+      const anchorX = 48;
+      const anchorY = 66;
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      if (ctx) {
+        const tmp = createPixelCanvas(W, H);
+        const g = tmp.ctx;
+        plotRect(g, 10, 32, 26, 36, SLATE_RAMP[2]);
+        plotRect(g, 36, 22, 28, 46, SLATE_RAMP[3]);
+        plotRect(g, 64, 40, 22, 28, SLATE_RAMP[2]);
+        plotRect(g, 10, 32, 26, 3, SLATE_RAMP[5]);
+        plotRect(g, 36, 22, 28, 3, SLATE_RAMP[5]);
+        plotRect(g, 64, 40, 22, 3, SLATE_RAMP[4]);
+        for (let py = 28; py < 66; py += 9) {
+          plotRect(g, 12, py, 72, 1, SLATE_RAMP[0]);
+        }
+        plotRect(g, 41, 32, 18, 16, SLATE_RAMP[1]);
+        plotPixelLine(g, 43, 44, 56, 35, BRONZE_RAMP[3], 2);
+        plotPixel(g, 55, 36, "#ffd257");
+        plotRect(g, 70, 62, 12, 8, SLATE_RAMP[3]);
+        plotRect(g, 14, 62, 14, 6, MOSS_RAMP[2]);
+        plotRect(g, 48, 56, 12, 8, MOSS_RAMP[3]);
+        applySelectiveOutline(g, W, H, "#1c2633", "#05070a");
+        plotRect(ctx, 10, 64, 76, 8, "rgba(4, 6, 10, 0.42)");
+        ctx.drawImage(tmp.canvas, 0, 0);
+      }
+      frames.push({ canvas: canvas2, anchorX, anchorY, solidRadius: 20 });
+    }
+    PROP_FRAMES_CACHE.set(kind, frames);
+    return frames;
+  }
+  function getBanLongGateSprite(frameIdx = 0) {
+    const f = (frameIdx % 4 + 4) % 4;
+    if (BAN_LONG_GATE_CACHE[f]) return BAN_LONG_GATE_CACHE[f];
+    const W = 128;
+    const H = 160;
+    const anchorX = 64;
+    const anchorY = 142;
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    if (!ctx) {
+      const stub = { canvas: canvas2, anchorX, anchorY, solidRadius: 0 };
+      BAN_LONG_GATE_CACHE[f] = stub;
+      return stub;
+    }
+    const shift = f * 3;
+    for (let y = 94; y <= 140; y++) {
+      const t = (y - 94) / 46;
+      for (let x = 36; x <= 92; x++) {
+        const fade = Math.min(1, Math.min(x - 36, 92 - x) / 14);
+        const wave = 0.25 + 0.3 * Math.sin((x + shift) * 0.14 + y * 0.2);
+        if (bayerThreshold(x + shift, y) < fade * wave * (0.45 + t * 0.45)) {
+          ctx.fillStyle = "rgba(84, 214, 198, 0.2)";
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    for (const [px, side] of [[14, -1], [96, 1]]) {
+      plotRect(ctx, px - 2, 126, 22, 14, SLATE_RAMP[0]);
+      plotRect(ctx, px, 128, 18, 10, SLATE_RAMP[3]);
+      plotRect(ctx, px, 50, 18, 78, SLATE_RAMP[0]);
+      plotRect(ctx, px + 2, 52, 14, 74, SLATE_RAMP[2]);
+      plotRect(ctx, px + 2, 52, 5, 74, SLATE_RAMP[4]);
+      for (let s = 0; s < 5; s++) {
+        const sy = 64 + s * 13;
+        const sx = px + 9 + (s % 2 === 0 ? side * 3 : -side * 2);
+        drawLayeredDragonScale(ctx, sx, sy, 8, 6, SCALE_RAMP, f === s % 4 ? "#6ef7df" : "#247870");
+      }
+      plotRect(ctx, px + (side < 0 ? 11 : 1), 110, 6, 8, MOSS_RAMP[2]);
+    }
+    plotRect(ctx, 8, 42, 112, 12, SLATE_RAMP[0]);
+    plotRect(ctx, 10, 44, 108, 8, SLATE_RAMP[3]);
+    plotRect(ctx, 10, 44, 108, 2, SLATE_RAMP[5]);
+    plotRect(ctx, 18, 28, 92, 15, SLATE_RAMP[2]);
+    plotRect(ctx, 20, 29, 88, 2, SLATE_RAMP[5]);
+    for (const dir of [-1, 1]) {
+      const dx = 64 + dir * 24;
+      plotRect(ctx, dx - 9, 21, 18, 13, SLATE_RAMP[0]);
+      plotRect(ctx, dx - 8, 22, 16, 11, SLATE_RAMP[4]);
+      plotPixelLine(ctx, dx + dir * 4, 22, dx + dir * 12, 14, HORN_RAMP[4], 2);
+      plotRect(ctx, dx - dir * 4, 26, 3, 2, "#ffd257");
+    }
+    plotRect(ctx, 58, 17, 12, 12, "#091716");
+    plotRect(ctx, 59, 18, 10, 10, f % 2 === 0 ? "#249c8e" : "#4de0c9");
+    plotRect(ctx, 61, 20, 6, 6, f === 1 || f === 2 ? "#e6fff8" : "#8cffeb");
+    const res = { canvas: canvas2, anchorX, anchorY, solidRadius: 0 };
+    BAN_LONG_GATE_CACHE[f] = res;
+    return res;
+  }
+  function getBanLongMistSprite(variant = 0) {
+    const v = (variant % 3 + 3) % 3;
+    if (MIST_CACHE[v]) return MIST_CACHE[v];
+    const W = 128;
+    const H = 42;
+    const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+    if (ctx) {
+      const cx = 64;
+      const cy = 21;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const dx = (x - cx) / 60;
+          const dy = (y - cy) / 18;
+          const d = Math.hypot(dx, dy);
+          if (d > 1) continue;
+          const n = 0.5 + 0.5 * Math.sin(x * 0.08 + v * 1.7 + Math.cos(y * 0.25));
+          const alpha = (1 - d) * n * 0.42;
+          if (bayerThreshold(x, y) < alpha) {
+            ctx.fillStyle = v === 1 ? "rgba(78, 152, 148, 0.16)" : "rgba(132, 176, 192, 0.14)";
+            ctx.fillRect(x, y, 2, 1);
+          }
+        }
+      }
+    }
+    MIST_CACHE[v] = canvas2;
+    return canvas2;
+  }
+  function bakeBanLongSentinelFrames() {
+    if (SENTINEL_CACHE) return SENTINEL_CACHE;
+    const W = 64;
+    const H = 64;
+    const anchorX = 32;
+    const anchorY = 52;
+    const barOffsetY = 52;
+    const frames = [];
+    for (let f = 0; f < 4; f++) {
+      const { canvas: canvas2, ctx } = createPixelCanvas(W, H);
+      if (!ctx) {
+        frames.push({ canvas: canvas2, anchorX, anchorY, barOffsetY });
+        continue;
+      }
+      const tmp = createPixelCanvas(W, H);
+      const g = tmp.ctx;
+      const bob = f === 1 || f === 3 ? -1 : 0;
+      const stride = f === 1 ? 2 : f === 3 ? -2 : 0;
+      plotPixelLine(g, 24, 40 + bob, 11, 46 - stride, SLATE_RAMP[3], 4);
+      plotPixelLine(g, 11, 46 - stride, 8, 41 - stride, HORN_RAMP[4], 2);
+      plotRect(g, 23 - stride, 42, 7, 10, SCALE_RAMP[2]);
+      plotRect(g, 34 + stride, 42, 7, 10, SCALE_RAMP[2]);
+      plotRect(g, 22 - stride, 50, 8, 3, HORN_RAMP[4]);
+      plotRect(g, 34 + stride, 50, 8, 3, HORN_RAMP[4]);
+      plotDitheredBlob(g, 32, 34 + bob, 12, 11, SCALE_RAMP, { bias: 0.05 });
+      plotRect(g, 27, 29 + bob, 10, 10, BRONZE_RAMP[3]);
+      plotRect(g, 29, 31 + bob, 6, 4, BRONZE_RAMP[5]);
+      plotRect(g, 20, 26 + bob, 6, 7, SLATE_RAMP[4]);
+      plotRect(g, 38, 26 + bob, 6, 7, SLATE_RAMP[4]);
+      paintDitherPolygon(g, 32, 18 + bob, [[24, 12], [40, 12], [42, 23], [22, 23]], SCALE_RAMP, { bias: 0.1 });
+      plotPixelLine(g, 26, 12 + bob, 20, 5 + bob, HORN_RAMP[4], 2);
+      plotPixelLine(g, 38, 12 + bob, 44, 5 + bob, HORN_RAMP[4], 2);
+      plotRect(g, 26, 17 + bob, 4, 2, "#ffd257");
+      plotRect(g, 34, 17 + bob, 4, 2, "#ffd257");
+      plotPixelLine(g, 46, 51, 48, 12 + bob, BRONZE_RAMP[3], 2);
+      plotRect(g, 46, 6 + bob, 4, 8, "#4de0c9");
+      plotPixel(g, 47, 7 + bob, "#e6fff8");
+      applySelectiveOutline(g, W, H, "#233345", "#05070a");
+      for (let dy = -5; dy <= 5; dy++) {
+        for (let dx = -16; dx <= 16; dx++) {
+          if (dx * dx / 256 + dy * dy / 25 > 1) continue;
+          if (bayerThreshold(dx, dy) < 0.55) {
+            ctx.fillStyle = "rgba(4, 6, 10, 0.45)";
+            ctx.fillRect(anchorX + dx, anchorY + dy + 1, 1, 1);
+          }
+        }
+      }
+      ctx.drawImage(tmp.canvas, 0, 0);
+      frames.push({ canvas: canvas2, anchorX, anchorY, barOffsetY });
+    }
+    SENTINEL_CACHE = frames;
+    return frames;
+  }
+
   // src/ui/PixelGuIcons.js
   var ICON_DATA_URL_CACHE = /* @__PURE__ */ new Map();
   function makeIconCanvas(size) {
@@ -10665,6 +11542,9 @@
       ctx.fillStyle = "#b8362a";
       ctx.fillRect(24, 16, 1, 2);
       result = { canvas: canvas2, anchorX: 14, anchorY: 22, solidRadius: 0 };
+    } else if (kind === "ban_long_statue" || kind === "ban_long_brazier" || kind === "ban_long_ruin_wall" || kind === "ban_long_cloud_pillar") {
+      const frames = getBanLongPropFrames(kind);
+      if (frames?.[0]) result = frames[0];
     }
     if (result) ATLAS_CACHE.set(kind, result);
     return result;
@@ -11401,18 +12281,18 @@
       pathEdge: "#1b1e26"
     },
     abyss: {
-      grass1: "#0e1a1f",
-      grass2: "#091217",
-      grass3: "#14262e",
-      grassDark: "#050b0e",
-      grassShort: "#122128",
-      grassDeep: "#070f12",
-      dirt1: "#18262b",
-      dirt2: "#0f191d",
-      moss1: "#0c1c20",
-      moss2: "#061013",
-      path: "#1e3036",
-      pathEdge: "#19f0c8"
+      grass1: "#141b24",
+      grass2: "#0e131a",
+      grass3: "#1d2633",
+      grassDark: "#080b10",
+      grassShort: "#19222e",
+      grassDeep: "#0b1017",
+      dirt1: "#232b38",
+      dirt2: "#151b24",
+      moss1: "#13291f",
+      moss2: "#0b1913",
+      path: "#263040",
+      pathEdge: "#141a24"
     }
   };
   var TERRACE_THEMES = {
@@ -11471,6 +12351,20 @@
       tread: "#5b635c",
       riser: "#1c211d",
       inlay: "#2f5233"
+    },
+    abyss: {
+      slabs: ["#1d2738", "#161e2c", "#253247", "#111824"],
+      mortar: "#080c12",
+      hi: "#394b66",
+      curb: "#2c3b52",
+      curbDark: "#090d14",
+      wallTop: "#2f3f57",
+      wallFaceA: "#1a2333",
+      wallFaceB: "#121926",
+      wallOut: "#06090e",
+      tread: "#2b3a50",
+      riser: "#0b1018",
+      inlay: "#785729"
     }
   };
   var MapRenderer = class {
@@ -11620,13 +12514,14 @@
           }
         }
       }
+      const isAbyss = mapDef.biome === "abyss";
       const isBluestone = mapDef.biome === "stone_dream" || mapDef.biome === "snow";
-      const slabs = isBluestone ? ["#485159", "#3f474f", "#535c66", "#373e45"] : ["#635f56", "#57534b", "#6e6a60", "#4d4a43"];
-      const mortar = isBluestone ? "#21272e" : "#2b2a26";
-      const curbA = isBluestone ? "#5e6770" : "#5c574e";
-      const curbB = isBluestone ? "#485059" : "#4a463f";
-      const curbOut = isBluestone ? "#191e24" : "#21201d";
-      const runnerCol = isBluestone ? "#636f7a" : "#706b60";
+      const slabs = isAbyss ? ["#1e293b", "#172030", "#26344a", "#121926"] : isBluestone ? ["#485159", "#3f474f", "#535c66", "#373e45"] : ["#635f56", "#57534b", "#6e6a60", "#4d4a43"];
+      const mortar = isAbyss ? "#080c12" : isBluestone ? "#21272e" : "#2b2a26";
+      const curbA = isAbyss ? "#314259" : isBluestone ? "#5e6770" : "#5c574e";
+      const curbB = isAbyss ? "#222f42" : isBluestone ? "#485059" : "#4a463f";
+      const curbOut = isAbyss ? "#070a0f" : isBluestone ? "#191e24" : "#21201d";
+      const runnerCol = isAbyss ? "#2b3b52" : isBluestone ? "#636f7a" : "#706b60";
       for (const p of pavedPaths) {
         const dx = p.x2 - p.x1;
         const dy = p.y2 - p.y1;
@@ -12115,11 +13010,23 @@
       const pal = BIOME_PALETTES[mapDef.biome] ?? BIOME_PALETTES.lakeside;
       const terrainSet = getBiomeTerrainSet(mapDef.biome, pal);
       const seed = mapDef.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      const midCols = Math.ceil(mapDef.width / 16);
-      const midRows = Math.ceil(mapDef.height / 16);
-      for (let r = 0; r < midRows; r++) {
-        for (let c = 0; c < midCols; c++) {
-          ctx.drawImage(terrainSet.midGrass[this._hash(c, r) % terrainSet.midGrass.length], c * 16, r * 16);
+      if (mapDef.biome === "abyss") {
+        const banLongTiles = getBanLongFloorTileSet();
+        const cols = Math.ceil(mapDef.width / 64);
+        const rows = Math.ceil(mapDef.height / 64);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const tile = banLongTiles[this._hash(c + seed, r + seed) % banLongTiles.length];
+            ctx.drawImage(tile, c * 64, r * 64);
+          }
+        }
+      } else {
+        const midCols = Math.ceil(mapDef.width / 16);
+        const midRows = Math.ceil(mapDef.height / 16);
+        for (let r = 0; r < midRows; r++) {
+          for (let c = 0; c < midCols; c++) {
+            ctx.drawImage(terrainSet.midGrass[this._hash(c, r) % terrainSet.midGrass.length], c * 16, r * 16);
+          }
         }
       }
       const pickBucket = (kind) => {
@@ -12155,21 +13062,6 @@
       }
       for (const ledge of mapDef.cliffLedges ?? []) {
         this._drawCliffLedge(ctx, ledge, pal);
-      }
-      if (mapDef.biome === "abyss") {
-        const cx = Math.round(mapDef.width * 0.5);
-        const cy = Math.round(mapDef.height * 0.54);
-        plotRect(ctx, 0, 0, mapDef.width, mapDef.height, "#060a0d");
-        fillPixelEllipse(ctx, cx, cy + 32, 420, 228, "#0a1c22", true);
-        for (let i = 0; i < 12; i++) {
-          const a = i / 12 * Math.PI * 2;
-          plotPixelLine(ctx, cx + Math.cos(a) * 80, cy + Math.sin(a) * 44, cx + Math.cos(a) * 410, cy + Math.sin(a) * 220, "rgba(25, 240, 200, 0.28)", 2);
-        }
-        fillPixelEllipse(ctx, cx, cy + 32, 396, 212, "#141d24", false);
-        plotPixelEllipse(ctx, cx, cy + 32, 396, 212, "#19f0c8");
-        fillPixelEllipse(ctx, cx, cy + 32, 308, 162, "#19262e", false);
-        plotPixelEllipse(ctx, cx, cy + 32, 308, 162, "#9c7a3e");
-        plotPixelEllipse(ctx, cx, cy + 32, 190, 100, "#248f82", 3, 0);
       }
       this._drawRoads(ctx, mapDef, pal);
       if (mapDef.ritualSpring) {
@@ -12452,9 +13344,16 @@
       this._minimapCache.set(mapDef.id, c);
       return c;
     }
-    renderMapBase(ctx, mapDef, time, runtimeNodes = null, playerGarden = null, highlightGuId = null) {
+    renderMapBase(ctx, mapDef, time, runtimeNodes = null, playerGarden = null, highlightGuId = null, breathWarn = 0) {
       const terrain = this._getTerrainCanvas(mapDef);
       ctx.drawImage(terrain, 0, 0);
+      if (mapDef.biome === "abyss") {
+        const fIdx = Math.floor(time * 4.5) % 4;
+        const dais = getBanLongFormationDais(fIdx, breathWarn > 0);
+        if (dais) {
+          ctx.drawImage(dais.canvas, Math.round(640 - dais.anchorX), Math.round(295 - dais.anchorY));
+        }
+      }
       if (mapDef.ritualSpring) {
         const rs = mapDef.ritualSpring;
         const span = Math.max(40, rs.endX - rs.startX + 40);
@@ -12799,9 +13698,9 @@
         if (spr2) ctx.drawImage(spr2.canvas, Math.round(prop.x - spr2.anchorX), Math.round(prop.y - spr2.anchorY));
         return;
       }
-      if (prop.kind === "gate_mountain" || prop.kind === "gate_forest" || prop.kind === "gate_cave") {
+      if (prop.kind === "gate_mountain" || prop.kind === "gate_forest" || prop.kind === "gate_cave" || prop.kind === "gate_ban_long") {
         const fIdx = Math.floor(time * 4 + prop.x * 0.05) % 4;
-        const gateSpr = getPortalGateSprite(prop.kind, fIdx, prop.gateDir || "ns", prop.gateLayer || "full");
+        const gateSpr = prop.kind === "gate_ban_long" ? getBanLongGateSprite(fIdx) : getPortalGateSprite(prop.kind, fIdx, prop.gateDir || "ns", prop.gateLayer || "full");
         if (gateSpr) {
           const dx = Math.round(prop.x - gateSpr.anchorX);
           const dy = Math.round(prop.y - gateSpr.anchorY);
@@ -12821,6 +13720,21 @@
             drawCrispPixelText(ctx, prop.label, bx + Math.round(pw * 0.5), by + 9, "#a6fff2", "#06080d");
             ctx.restore();
           }
+        }
+        return;
+      }
+      if (prop.kind === "ban_long_statue" || prop.kind === "ban_long_brazier" || prop.kind === "ban_long_cloud_pillar" || prop.kind === "ban_long_ruin_wall") {
+        const frames = getBanLongPropFrames(prop.kind);
+        const fIdx = Math.floor(time * 4.5 + prop.x * 0.05) % Math.max(1, frames.length);
+        const spr2 = frames[fIdx] ?? frames[0];
+        if (!spr2) return;
+        ctx.drawImage(spr2.canvas, Math.round(prop.x - spr2.anchorX), Math.round(prop.y - spr2.anchorY));
+        if (prop.kind === "ban_long_brazier") {
+          const glow = getDitherGlowSprite("#5ef2d6", 15, 0.34);
+          ctx.drawImage(glow, Math.round(prop.x - glow.width * 0.5), Math.round(prop.y - 58 - glow.height * 0.5));
+        } else if (prop.kind === "ban_long_statue") {
+          const glow = getDitherGlowSprite("#ffd06b", 10, 0.24);
+          ctx.drawImage(glow, Math.round(prop.x - glow.width * 0.5), Math.round(prop.y - 100 - glow.height * 0.5));
         }
         return;
       }
@@ -12978,6 +13892,20 @@
           plotRect(ctx, bx, labelY - 8, bw, 11, "rgba(6, 16, 15, 0.9)");
           plotRect(ctx, bx, labelY - 8, bw, 1, "rgba(94, 242, 214, 0.45)");
           drawCrispPixelText(ctx, lbl, mx, labelY, col, "#040a09");
+        }
+        ctx.restore();
+      }
+      if (mapDef.biome === "abyss") {
+        ctx.save();
+        for (let i = 0; i < 12; i++) {
+          const spr = getBanLongMistSprite(i % 3);
+          const baseY = 175 + i * 53 % 520;
+          const speed = 9 + i % 3 * 4;
+          const rawX = (this._hash(i * 17, 31) % mapDef.width + time * speed) % (mapDef.width + 160) - 80;
+          const mx = Math.round(rawX - spr.width * 0.5);
+          const my = Math.round(baseY + Math.sin(time * 0.65 + i) * 4 - spr.height * 0.5);
+          ctx.globalAlpha = 0.6;
+          ctx.drawImage(spr, mx, my);
         }
         ctx.restore();
       }
@@ -13357,6 +14285,21 @@
       dropItems: ["ca_linh", "thao_duoc_tram_nam", "mao_thach_trung"],
       ai: "aquatic",
       color: "#5ef2d6"
+    },
+    ban_long_thach_ve: {
+      id: "ban_long_thach_ve",
+      name: "B\xE0n Long Th\u1EA1ch V\u1EC7",
+      rank: 5,
+      tier: "Tinh anh",
+      hp: 2600,
+      speed: 62,
+      radius: 22,
+      damage: 68,
+      exp: 360,
+      stones: 145,
+      dropItems: ["bang_tuyen_tinh", "xich_nham_hoa_tuy", "mao_thach_cao"],
+      ai: "charger",
+      color: "#d9b25f"
     },
     van_thu_ban_long: {
       id: "van_thu_ban_long",
@@ -14714,58 +15657,81 @@
       ],
       portals: [
         { id: "back_xich_nham_vd", label: "\u2193 X\xEDch Nham C\u1ED1c", targetMap: "xich_nham_coc", x: 640, y: 790, spawnX: 640, spawnY: 185, gateStyle: "gate_mountain" },
-        { id: "to_vuc_van_thu", label: "\u2694 V\u1EF1c V\u1EA1n Th\u1EE7 (Boss B\xE0n Long) \u2191", targetMap: "vuc_van_thu", x: 640, y: 146, spawnX: 640, spawnY: 560, gateStyle: "gate_mountain" }
+        { id: "to_vuc_van_thu", label: "\u2694 C\u1ED5 \u0110\xE0n B\xE0n Long (V\u1EF1c V\u1EA1n Th\u1EE7) \u2191", targetMap: "vuc_van_thu", x: 640, y: 146, spawnX: 640, spawnY: 610, gateStyle: "gate_ban_long" }
       ]
     },
     vuc_van_thu: {
       id: "vuc_van_thu",
-      name: "V\u1EF1c V\u1EA1n Th\u1EE7",
-      subtitle: "Thi\xEAn Th\xFA V\u01B0\u01A1ng \xB7 V\u1EA1n Th\u1EE7 B\xE0n Long (5 \u0110\u1EA7u)",
+      name: "C\u1ED5 \u0110\xE0n B\xE0n Long",
+      subtitle: "V\u1EF1c V\u1EA1n Th\u1EE7 \xB7 V\u1EA1n Th\u1EE7 B\xE0n Long",
       biome: "abyss",
       pvpZoneType: "safe",
       recommendedRealm: "Ng\u0169 chuy\u1EC3n / T\u1ED5 \u0111\u1ED9i",
       width: 1280,
-      height: 760,
-      spawn: { x: 640, y: 560 },
-      waterRegions: [
-        { kind: "swamp_lake", x: 135, y: 380, rx: 95, ry: 185 },
-        { kind: "swamp_lake", x: 1145, y: 380, rx: 95, ry: 185 }
-      ],
+      height: 800,
+      spawn: { x: 640, y: 610 },
+      waterRegions: [],
       cliffLedges: [
-        { x1: 180, y1: 95, x2: 1100, y2: 95, height: 18 }
+        { x1: 110, y1: 88, x2: 1170, y2: 88, height: 22 },
+        { x1: 95, y1: 215, x2: 295, y2: 215, height: 14 },
+        { x1: 985, y1: 215, x2: 1185, y2: 215, height: 14 }
+      ],
+      terraces: [
+        {
+          x: 640,
+          y: 620,
+          rx: 195,
+          ry: 68,
+          height: 10,
+          theme: "abyss",
+          stairs: [{ side: "north", offset: 0, width: 72 }, { side: "south", offset: 0, width: 72 }]
+        }
       ],
       paths: [
-        { x1: 640, y1: 350, x2: 640, y2: 710, w: 72, style: "paved" }
+        { x1: 640, y1: 350, x2: 640, y2: 750, w: 78, style: "paved" },
+        { x1: 220, y1: 425, x2: 465, y2: 425, w: 46, style: "paved" },
+        { x1: 815, y1: 425, x2: 1060, y2: 425, w: 46, style: "paved" }
       ],
       buildings: [
-        { kind: "ancient_pillar", x: 340, y: 250 },
-        { kind: "ancient_pillar", x: 940, y: 250 },
-        { kind: "ancient_pillar", x: 330, y: 520 },
-        { kind: "ancient_pillar", x: 950, y: 520 },
-        { kind: "stone_lamp", x: 565, y: 600 },
-        { kind: "stone_lamp", x: 715, y: 600 },
-        { kind: "stone_lamp", x: 420, y: 560 },
-        { kind: "stone_lamp", x: 860, y: 560 },
-        { kind: "incense_burner", x: 500, y: 605 },
-        { kind: "incense_burner", x: 780, y: 605 },
-        { kind: "stone_stele", x: 495, y: 540 },
-        { kind: "stone_stele", x: 785, y: 540 }
+        { kind: "ban_long_statue", x: 380, y: 205 },
+        { kind: "ban_long_statue", x: 900, y: 205 },
+        { kind: "ban_long_statue", x: 475, y: 615 },
+        { kind: "ban_long_statue", x: 805, y: 615 },
+        { kind: "ban_long_cloud_pillar", x: 310, y: 310 },
+        { kind: "ban_long_cloud_pillar", x: 970, y: 310 },
+        { kind: "ban_long_cloud_pillar", x: 320, y: 530 },
+        { kind: "ban_long_cloud_pillar", x: 960, y: 530 },
+        { kind: "ban_long_brazier", x: 530, y: 605 },
+        { kind: "ban_long_brazier", x: 750, y: 605 },
+        { kind: "ban_long_brazier", x: 435, y: 265 },
+        { kind: "ban_long_brazier", x: 845, y: 265 },
+        { kind: "ban_long_ruin_wall", x: 185, y: 345 },
+        { kind: "ban_long_ruin_wall", x: 1095, y: 345 },
+        { kind: "ban_long_ruin_wall", x: 195, y: 565 },
+        { kind: "ban_long_ruin_wall", x: 1085, y: 565 },
+        { kind: "stone_stele", x: 545, y: 535 },
+        { kind: "stone_stele", x: 735, y: 535 }
       ],
       trees: [
-        { kind: "crystal_cyan", x: 265, y: 190 },
-        { kind: "crystal_cyan", x: 1015, y: 190 },
-        { kind: "crystal_cyan", x: 270, y: 590 },
-        { kind: "crystal_cyan", x: 1010, y: 590 },
-        { kind: "boulder_giant", x: 290, y: 120 },
-        { kind: "boulder_giant", x: 990, y: 120 }
+        { kind: "crystal_cyan", x: 175, y: 185 },
+        { kind: "crystal_cyan", x: 1105, y: 185 },
+        { kind: "crystal_cyan", x: 165, y: 650 },
+        { kind: "crystal_cyan", x: 1115, y: 650 },
+        { kind: "boulder_giant", x: 255, y: 135 },
+        { kind: "boulder_giant", x: 1025, y: 135 }
       ],
+      beastSpots: [],
       npcs: [],
       gatherNodes: [],
       monsterSpawns: [
-        { type: "van_thu_ban_long", x: 640, y: 265, respawn: 45 }
+        { type: "van_thu_ban_long", x: 640, y: 280, respawn: 45 },
+        { type: "ban_long_thach_ve", x: 245, y: 425, respawn: 14 },
+        { type: "ban_long_thach_ve", x: 1035, y: 425, respawn: 14 },
+        { type: "ban_long_thach_ve", x: 240, y: 250, respawn: 16 },
+        { type: "ban_long_thach_ve", x: 1040, y: 250, respawn: 16 }
       ],
       portals: [
-        { id: "back_vuong_dinh", label: "\u2193 R\u1EDDi V\u1EF1c V\u1EA1n Th\u1EE7", targetMap: "vuong_dinh", x: 640, y: 690, spawnX: 640, spawnY: 190, gateStyle: "gate_cave" }
+        { id: "back_vuong_dinh", label: "\u2193 R\u1EDDi C\u1ED5 \u0110\xE0n B\xE0n Long", targetMap: "vuong_dinh", x: 640, y: 735, spawnX: 640, spawnY: 190, gateStyle: "gate_ban_long" }
       ]
     }
   };
@@ -14925,10 +15891,11 @@
 
   // src/combat/MonsterSpriteBuilder.js
   function getMonsterSpriteFrames(typeId) {
+    if (typeId === "ban_long_thach_ve") return bakeBanLongSentinelFrames();
     return bakeMonsterFrames64(typeId);
   }
-  function drawBanLongBossPixelArt(ctx, boss, time) {
-    return drawPixelBanLongBoss(ctx, boss, time);
+  function drawBanLongBossPixelArt(ctx, boss, time, breathWarn = 0) {
+    return drawBanLongCoilingBoss(ctx, boss, time, breathWarn);
   }
 
   // src/combat/WorldSimulation.js
@@ -15070,7 +16037,8 @@
         hang_thach_nhu: "thach_hau",
         hac_thuy_ho: "coc_doc_hac_thuy",
         xich_nham_coc: "xich_viem_thu",
-        vuong_dinh: "soi_tuyet"
+        vuong_dinh: "soi_tuyet",
+        vuc_van_thu: "ban_long_thach_ve"
       };
       const minionType = minionMap[dungeonDef.mapId] ?? "lon_rung";
       this._spawnMonster(minionType, 520, 440);
@@ -15176,8 +16144,8 @@
         { id: "p_blood_2", kind: "blood", label: "Huy\u1EBFt M\u1EA1ch", x: 850, y: 360, hp: 900, maxHp: 900, alive: true },
         { id: "p_gold_1", kind: "gold", label: "Ho\xE0ng Kim Tr\u1EE5", x: 490, y: 480, hp: 1100, maxHp: 1100, alive: true },
         { id: "p_gold_2", kind: "gold", label: "Ho\xE0ng Kim Tr\u1EE5", x: 790, y: 480, hp: 1100, maxHp: 1100, alive: true },
-        { id: "p_stone_1", kind: "stone", label: "C\u1ED9t \u0110\xE1 Che Ch\u1EAFn", x: 560, y: 540, hp: 99999, maxHp: 99999, alive: true },
-        { id: "p_stone_2", kind: "stone", label: "C\u1ED9t \u0110\xE1 Che Ch\u1EAFn", x: 720, y: 540, hp: 99999, maxHp: 99999, alive: true }
+        { id: "p_stone_1", kind: "stone", label: "C\u1ED9t \u0110\xE1 Che Ch\u1EAFn", x: 585, y: 505, hp: 99999, maxHp: 99999, alive: true },
+        { id: "p_stone_2", kind: "stone", label: "C\u1ED9t \u0110\xE1 Che Ch\u1EAFn", x: 695, y: 505, hp: 99999, maxHp: 99999, alive: true }
       ];
       this.banLongBreathTimer = 26;
       this.banLongBreathWarn = 0;
@@ -16833,7 +17801,8 @@
         this.time,
         this.gatherNodes,
         this.player.gardenPlots,
-        !this.player.vitalUid ? this.player.targetStarterGuId : null
+        !this.player.vitalUid ? this.player.targetStarterGuId : null,
+        this.banLongBreathWarn
       );
       for (const tg of this.enemyTelegraphs) {
         const pct = Math.min(1, tg.t / tg.dur);
@@ -16898,59 +17867,7 @@
       });
     }
     _renderSingleBanLongPillar(ctx, p, boss) {
-      ctx.save();
-      const px = Math.round(p.x);
-      const py = Math.round(p.y);
-      if (p.kind === "blood" && boss) {
-        plotPixelLine(ctx, px, py - 28, boss.x, boss.y - 32, "rgba(255, 46, 76, 0.72)", 2);
-        for (let k = 0; k < 3; k++) {
-          const orbT = (this.time * 0.8 + k * 0.33) % 1;
-          const ox = Math.round(px + (boss.x - px) * orbT);
-          const oy = Math.round(py - 28 + (boss.y - 32 - (py - 28)) * orbT - Math.sin(orbT * Math.PI) * 14);
-          plotRect(ctx, ox - 2, oy - 2, 4, 4, "#ff8fa3");
-        }
-      }
-      plotRect(ctx, px - 14, py + 1, 28, 7, "rgba(0, 0, 0, 0.42)");
-      if (p.kind === "blood") {
-        plotRect(ctx, px - 13, py - 4, 26, 8, "#2b0d12");
-        plotRect(ctx, px - 11, py - 5, 22, 6, "#5c1b25");
-        plotRect(ctx, px - 9, py - 38, 18, 34, "#3b0a14");
-        plotRect(ctx, px - 5, py - 45, 10, 8, "#3b0a14");
-        plotRect(ctx, px - 7, py - 36, 14, 31, "#a81d34");
-        plotRect(ctx, px - 5, py - 41, 7, 26, "#ff4d6d");
-        plotRect(ctx, px - 2, py - 38, 2, 16, "#ffc2cd");
-      } else if (p.kind === "gold") {
-        plotPixelEllipse(ctx, px, py + 2, 18, 8, "rgba(255, 210, 87, 0.48)", 3, Math.floor(this.time * 4));
-        plotRect(ctx, px - 13, py - 4, 26, 8, "#38280b");
-        plotRect(ctx, px - 11, py - 5, 22, 6, "#a37c2e");
-        plotRect(ctx, px - 9, py - 40, 18, 36, "#4d3309");
-        plotRect(ctx, px - 7, py - 38, 14, 33, "#b8841e");
-        plotRect(ctx, px - 6, py - 38, 5, 31, "#ffd257");
-        plotRect(ctx, px - 3, py - 44, 6, 6, "#fff6bd");
-        plotRect(ctx, px - 4, py - 24, 8, 2, "#fff6bd");
-      } else {
-        if (this.banLongBreathWarn > 0) {
-          const pulse = 0.45 + Math.sin(this.time * 8) * 0.25;
-          ctx.globalAlpha = pulse * 0.4;
-          fillPixelEllipse(ctx, px, py + 18, 28, 13, "#5ef2d6", true);
-          ctx.globalAlpha = 1;
-          plotPixelEllipse(ctx, px, py + 18, 28, 13, "#5ef2d6");
-        }
-        plotRect(ctx, px - 14, py - 4, 28, 8, "#171c21");
-        plotRect(ctx, px - 11, py - 42, 22, 39, "#171c21");
-        plotRect(ctx, px - 9, py - 40, 18, 36, "#49545e");
-        plotRect(ctx, px - 9, py - 40, 6, 35, "#7b8b99");
-        plotRect(ctx, px - 2, py - 32, 4, 4, "#5ef2d6");
-        plotRect(ctx, px - 1, py - 24, 2, 8, "#5ef2d6");
-      }
-      if (p.kind !== "stone") {
-        const pct = Math.max(0, Math.min(1, p.hp / Math.max(1, p.maxHp)));
-        plotRect(ctx, px - 16, py - 52, 32, 4, "#0b0d0a");
-        plotRect(ctx, px - 15, py - 51, Math.round(30 * pct), 2, p.kind === "blood" ? "#ff4d6d" : "#ffd257");
-      }
-      ctx.font = "700 8px 'Be Vietnam Pro', sans-serif";
-      drawCrispPixelText(ctx, p.label, px, py - 56, p.kind === "blood" ? "#ffb3c1" : p.kind === "gold" ? "#ffe680" : "#b8f7eb", "#0b0d0a");
-      ctx.restore();
+      drawBanLongMechanicPillar(ctx, p, boss, this.time, this.banLongBreathWarn);
     }
     _renderSingleNpc(ctx, npc) {
       const sheets = getCharacterSheets({ hairColor: "bach_phat", outfitColor: "thanh_ngoc", trimColor: "vang_dong" });
@@ -16975,7 +17892,7 @@
         plotPixelEllipse(ctx, e.x, e.y + 3, e.radius + 7, 7, "#ffd257", 3, Math.floor(this.time * 6));
       }
       if (e.typeId === "van_thu_ban_long") {
-        drawBanLongBossPixelArt(ctx, e, this.time);
+        drawBanLongBossPixelArt(ctx, e, this.time, this.banLongBreathWarn);
         return;
       }
       const frames = getMonsterSpriteFrames(e.typeId);
@@ -17065,7 +17982,7 @@
       }
     }
     _renderBanLongSprite(ctx, boss) {
-      drawBanLongBossPixelArt(ctx, boss, this.time);
+      drawBanLongBossPixelArt(ctx, boss, this.time, this.banLongBreathWarn);
     }
     _renderProjectiles(ctx) {
       for (const pr of this.playerProjectiles) {
